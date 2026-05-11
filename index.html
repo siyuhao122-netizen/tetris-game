@@ -121,6 +121,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 .obs-toggle .obs-switch.on{background:#4a4}
 .obs-toggle .obs-switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left 0.2s}
 .obs-toggle .obs-switch.on::after{left:21px}
+.obs-toggle.disabled{opacity:0.4;cursor:not-allowed;pointer-events:none;}
 
 
 .stat-tab.active{background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important;}
@@ -212,10 +213,9 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 
 <!-- SNAKE DIFFICULTY -->
 <div class="screen" id="screenSnakeDiff">
-  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackSDiff">← 返回</button>
-  <div class="obs-toggle" id="sObsToggle" style="display:none;" onclick="var s=this.querySelector('.obs-switch');s.classList.toggle('on');_snakeObsOn=!_snakeObsOn;localStorage.setItem('goblin_snake_obs',_snakeObsOn?'1':'0');this.querySelector('.obs-label').textContent=_snakeObsOn?'障碍物: 开 (\xd72)':'障碍物: 关';"><span class="obs-icon">🧱</span><span class="obs-label" id="sObsLabel">障碍物: 关</span><span class="obs-badge">分数 ×2</span><div class="obs-switch" id="sObsSwitch"></div>
-  <div class="obs-toggle" id="sShuffleToggle" style="display:none;margin-top:6px;" onclick="var s=this.querySelector('.obs-switch');s.classList.toggle('on');_snakeObsShuffle=!_snakeObsShuffle;localStorage.setItem('goblin_snake_shuffle',_snakeObsShuffle?'1':'0');this.querySelector('.obs-label').textContent=_snakeObsShuffle?'障碍物变换: 开 (×2)':'障碍物变换: 关';"><span class="obs-icon">🔀</span><span class="obs-label" id="sShuffleLabel">障碍物变换: 关</span><span class="obs-badge">分数 ×2</span><div class="obs-switch" id="sShuffleSwitch"></div></div>
-</div>
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackSDiff">← 返回</button></div>
+  <div class="obs-toggle" id="sObsToggle" style="display:none;" onclick="var s=this.querySelector('.obs-switch');s.classList.toggle('on');_snakeObsOn=!_snakeObsOn;localStorage.setItem('goblin_snake_obs',_snakeObsOn?'1':'0');this.querySelector('.obs-label').textContent=_snakeObsOn?'🧱 障碍物: 开':'🧱 障碍物: 关';var st=document.getElementById('sShuffleToggle');if(_snakeObsOn){st.classList.remove('disabled');}else{st.classList.add('disabled');_snakeObsShuffle=false;var ss=st.querySelector('.obs-switch');if(ss)ss.classList.remove('on');st.querySelector('.obs-label').textContent='🔀 障碍物变换: 关';localStorage.setItem('goblin_snake_shuffle','0');}}"><span class="obs-label" id="sObsLabel">🧱 障碍物: 关</span><div class="obs-switch" id="sObsSwitch"></div></div>
+  <div class="obs-toggle disabled" id="sShuffleToggle" style="display:none;" onclick="if(this.classList.contains('disabled'))return;var s=this.querySelector('.obs-switch');s.classList.toggle('on');_snakeObsShuffle=!_snakeObsShuffle;localStorage.setItem('goblin_snake_shuffle',_snakeObsShuffle?'1':'0');this.querySelector('.obs-label').textContent=_snakeObsShuffle?'🔀 障碍物变换: 开':'🔀 障碍物变换: 关';"><span class="obs-label" id="sShuffleLabel">🔀 障碍物变换: 关</span><div class="obs-switch" id="sShuffleSwitch"></div></div>
 </div>
   <div class="diff-title">🎚 贪吃蛇 · 难度</div>
   <div class="diff-card" id="sDiffEasy">
@@ -289,13 +289,12 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="dhigh">🏆 最高 <span id="gdhsNormal">0</span></div>
   </div>
   <div class="diff-card" id="gDiffHard">
-    <div class="dname">🔴 困难
+    <div class="dname">🔴 困难</div><div class="ddesc">目标 4096，可能出现 4</div>
+    <div class="dhigh">🏆 最高 <span id="gdhsHard">0</span></div>
+  </div>
   <div class="diff-card" id="gDiffEndless">
     <div class="dname">♾️ 无尽</div><div class="ddesc">无上限，能走多远走多远</div>
     <div class="dhigh">🏆 最高 <span id="gdhsEndless">0</span></div>
-  </div>
-</div><div class="ddesc">目标 4096，可能出现 4</div>
-    <div class="dhigh">🏆 最高 <span id="gdhsHard">0</span></div>
   </div>
 </div>
 
@@ -464,8 +463,8 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="o-record" id="goRecord">&nbsp;</div>
     <div class="o-detail" id="goDetail">&nbsp;</div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-      <button class="o-btn" id="goRestart"><button class="o-btn secondary" id="goContinue" style="display:none;">♾️ 继续挑战</button>
-      🔄 再来一局</button>
+      <button class="o-btn secondary" id="goContinue" style="display:none;">♾️ 继续挑战</button>
+      <button class="o-btn" id="goRestart">🔄 再来一局</button>
       <button class="o-btn secondary" id="goBack">← 返回选难度</button>
     </div>
   </div>
@@ -493,7 +492,7 @@ document.getElementById("btnTheme").textContent=_theme==="dark"?"🌙":"☀️";
 var gs={};function ghs(g,d){return parseInt(localStorage.getItem(g+"_hs_"+d)||"0",10);}
 function shs(g,d,v){var o=ghs(g,d);if(v>o){localStorage.setItem(g+"_hs_"+d,""+v);return 1;}return 0;}var _confirmCb=null;var _confirmState=0;
 function _resumeGame(){if(_confirmState===1){if(tp)ttp();}else if(_confirmState===2){if(spau)sTp();}_confirmState=0;}
-function showConfirm(msg,cb){document.getElementById("confirmMsg").textContent=msg;document.getElementById("confirmOverlay").style.display="flex";_confirmCb=cb;if(window.tts&&!tp&&!tg){ttp();_confirmState=1;}if(window.sts&&!spau&&!sgov){sTp();_confirmState=2;}}
+function showConfirm(msg,a,b){var cb,desc;if(typeof b==="function"){desc=a;cb=b;}else{cb=a;desc=null;}document.getElementById("confirmMsg").textContent=desc?msg+"\n"+desc:msg;document.getElementById("confirmOverlay").style.display="flex";_confirmCb=cb;if(window.tts&&!tp&&!tg){ttp();_confirmState=1;}if(window.sts&&!spau&&!sgov){sTp();_confirmState=2;}}
 document.getElementById("confirmYes").onclick=function(){document.getElementById("confirmOverlay").style.display="none";if(_confirmCb)_confirmCb();_resumeGame();};
 document.getElementById("confirmNo").onclick=function(){document.getElementById("confirmOverlay").style.display="none";_resumeGame();};
 document.getElementById("confirmOverlay").onclick=function(e){if(e.target===this){document.getElementById("confirmOverlay").style.display="none";_resumeGame();}};
@@ -550,7 +549,7 @@ var sse=document.getElementById("sScore"),sle=document.getElementById("sLen"),ss
 var stx=0,sty=0,stt=0;
 var SZ=17,G=20;
 function sinit(){sbody=[{x:9,y:10},{x:8,y:10},{x:7,y:10}];sdir=1;snxt=2;sfood=null;ssc=0;sgt=0;spau=0;sgov=0;_sObstacles=[];if(_snakeObsOn){var oc=8+Math.floor(Math.random()*5);for(var oi=0;oi<500&&_sObstacles.length<oc;oi++){var ox=Math.floor(Math.random()*G),oy=Math.floor(Math.random()*G);var ok2=1;for(var ob=0;ob<sbody.length;ob++){if(sbody[ob].x===ox&&sbody[ob].y===oy){ok2=0;break;}}for(var oj=0;oj<_sObstacles.length;oj++){if(_sObstacles[oj].x===ox&&_sObstacles[oj].y===oy){ok2=0;break;}}if(ok2)_sObstacles.push({x:ox,y:oy});}}sspawn();sda();sdir=snxt;sstep();}
-function sspawn(){if(sfood)return;var cells=[];for(var x=0;x<G;x++)for(var y=0;y<G;y++){var ok=1;for(var i=0;i<sbody.length;i++){if(sbody[i].x===x&&sbody[i].y===y){ok=0;break;}}if(ok)cells.push({x:x,y:y});}if(cells.length===0){sgov=1;return;}sfood=cells[Math.floor(Math.random()*cells.length)];}
+function sspawn(){if(sfood)return;var cells=[];for(var x=0;x<G;x++)for(var y=0;y<G;y++){var ok=1;for(var i=0;i<sbody.length;i++){if(sbody[i].x===x&&sbody[i].y===y){ok=0;break;}}if(ok){for(var oi=0;oi<_sObstacles.length;oi++){if(_sObstacles[oi].x===x&&_sObstacles[oi].y===y){ok=0;break;}}}if(ok)cells.push({x:x,y:y});}if(cells.length===0){sgov=1;return;}sfood=cells[Math.floor(Math.random()*cells.length)];}
 function sstep(){if(sgov||spau)return;var h=sbody[0];var nh={x:h.x,y:h.y};switch(sdir){case 0:nh.y--;break;case 1:nh.x++;break;case 2:nh.y++;break;case 3:nh.x--;break;}if(nh.x<0||nh.x>=G||nh.y<0||nh.y>=G){sgov=1;return;}for(var i=0;i<_sObstacles.length;i++){if(_sObstacles[i].x===nh.x&&_sObstacles[i].y===nh.y){sgov=1;return;}}for(var i=0;i<sbody.length;i++){if(sbody[i].x===nh.x&&sbody[i].y===nh.y){sgov=1;return;}}sbody.unshift(nh);if(nh.x===sfood.x&&nh.y===sfood.y){_playEat();var sm=(sc==="hard"?2:sc==="normal"?1.5:1)*(_snakeObsOn?2:1)*(_snakeObsShuffle?2:1);ssc+=Math.floor(10*sm);sfood=null;if(_snakeObsShuffle){var _oc=_sObstacles.length;_sObstacles=[];var _hd=sbody[0];for(var _oi=0;_oi<500&&_sObstacles.length<_oc;_oi++){var ox=Math.floor(Math.random()*G),oy=Math.floor(Math.random()*G);if(Math.abs(ox-_hd.x)<=2&&Math.abs(oy-_hd.y)<=2)continue;var _ok2=1;for(var _oj=0;_oj<_sObstacles.length;_oj++)if(_sObstacles[_oj].x===ox&&_sObstacles[_oj].y===oy){_ok2=0;break;}if(_ok2)_sObstacles.push({x:ox,y:oy});}}sspawn();;}else{sbody.pop();}sle.textContent=sbody.length;sse.textContent=ssc;if(!sgov)sda();}
 function schd(d){if(sgov||spau)return;if(Math.abs(d-sdir)===2)return;snxt=d;}
 function sRd(){if(sdi)clearInterval(sdi);if(!sgov&&!spau&&sts)sdi=setInterval(function(){sdir=snxt;sstep();},SD[sc].s);}
@@ -989,7 +988,7 @@ document.getElementById("btnBackG2048").onclick=function(){
   ss("screen2048Diff");
 };
 
-["easy","normal","hard"].forEach(function(d){
+["easy","normal","hard","endless"].forEach(function(d){
   document.getElementById("gDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){
     gc=d;
     gBadgeEl.textContent=GD[d].e+" "+GD[d].l;
@@ -1198,7 +1197,7 @@ mCanvas.addEventListener("touchend",function(e){
 mCanvas.addEventListener("touchmove",function(){if(_mlTimer){clearTimeout(_mlTimer);_mlTimer=null;_mtCell=null;}});
 
 function mUseHint(){if(mGameOver||mPause||!mStarted)return;if(mHints<=0)return;showConfirm("使用提示？","剩余 "+(mHints-1)+" 次",function(){mHints--;mHintEl.textContent=mHints;var cls=[];for(var r=0;r<mRows;r++)for(var c=0;c<mCols;c++)if(mBoard[r][c].mine&&!mBoard[r][c].flag&&!mBoard[r][c].rev)cls.push({r:r,c:c});if(cls.length>0){var hc=cls[Math.floor(Math.random()*cls.length)];mBoard[hc.r][hc.c].hint=1;mDraw();}},function(){});}
-function mInit(){
+function mInit(){mDraw();
   var g=MG[mc];mRows=g.r;mCols=g.c;mMines=g.mines;mCell=g.cell;mHints=mc==="easy"?1:mc==="normal"?2:3;mHintEl.textContent=mHints;
   var sz=mRows*mCell;
   mCanvas.width=sz;mCanvas.height=sz;
