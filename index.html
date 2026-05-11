@@ -72,6 +72,11 @@
     .ctrl-btn.sdir { width: 54px; padding: 12px 0; font-size: 20px; }
     .dpad { grid-template-columns: 54px 54px 54px; }
   }
+
+  /* 2048 Tile Colors */
+  .g-tile { position: absolute; border-radius: 3px; font-weight: bold; display: flex; justify-content: center; align-items: center; transition: all 0.1s ease; }
+  .g-cell-bg { background: rgba(255,255,255,0.03); border-radius: 3px; }
+
 </style>
 </head>
 <body>
@@ -107,6 +112,15 @@
     </div>
   </div>
 </div>
+
+  </div>
+  <div class="game-card" id="card2048">
+    <div class="name">🧩 2048</div>
+    <div class="desc">合并数字，挑战2048！滑动触屏版</div>
+    <div class="high-score-row" id="gHsRow">
+      <span>最高: <span id="ghsBest">0</span></span>
+    </div>
+  </div>
 
 <!-- TETRIS DIFFICULTY -->
 <div class="screen" id="screenTetrisDiff">
@@ -182,6 +196,64 @@
         <button class="ctrl-btn wide" id="tPause" style="background:#1a1a3e;border-color:#55f;">⏸ 暂停</button>
         <button class="ctrl-btn wide" id="tClear" style="background:#3e1a1a;border-color:#f55;">🗑 消除 <span id="tClearCount">3/3</span></button>
         <button class="ctrl-btn" id="btnSound" style="font-size:18px;width:44px;padding:8px 10px;background:#333;border-color:#666;">🔊</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- 2048 DIFFICULTY -->
+<div class="screen" id="screen2048Diff">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackG2048Diff">← 返回</button></div>
+  <div class="diff-title">🎚 2048 · 难度</div>
+  <div class="diff-card" id="gDiffEasy">
+    <div class="dname">🟢 简单</div><div class="ddesc">目标 1024，初始只有 2</div>
+    <div class="dhigh">🏆 最高 <span id="gdhsEasy">0</span></div>
+  </div>
+  <div class="diff-card" id="gDiffNormal">
+    <div class="dname">🟡 普通</div><div class="ddesc">目标 2048，经典规则</div>
+    <div class="dhigh">🏆 最高 <span id="gdhsNormal">0</span></div>
+  </div>
+  <div class="diff-card" id="gDiffHard">
+    <div class="dname">🔴 困难</div><div class="ddesc">目标 4096，可能出现 4</div>
+    <div class="dhigh">🏆 最高 <span id="gdhsHard">0</span></div>
+  </div>
+</div>
+
+
+<!-- 2048 GAME SCREEN -->
+<div class="screen" id="screen2048">
+  <div style="width:100%;text-align:left;margin-bottom:4px;">
+    <button class="back-btn" id="btnBackG2048">← 返回选难度</button>
+    <span class="diff-badge" id="gDiffBadge">普通</span>
+  </div>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="board-wrap" style="position:relative;">
+        <canvas id="gBoard" class="gcanvas" width="400" height="400"></canvas>
+        <div id="gPauseOverlay"><span>⏸ 已暂停</span></div>
+      </div>
+      <div class="side-panel">
+        <div class="info-box"><div class="label">分数</div><div class="value" id="gScore">0</div></div>
+        <div class="info-box"><div class="label">最高</div><div class="value" id="gBest">0</div></div>
+      </div>
+    </div>
+    <div class="status-msg" id="gStatus">&nbsp;</div>
+    <div class="controls">
+      <div class="dpad">
+        <div class="empty"></div>
+        <button class="ctrl-btn sdir" id="gUp">▲</button>
+        <div class="empty"></div>
+        <button class="ctrl-btn sdir" id="gLeft">◀</button>
+        <button class="ctrl-btn sdir" id="gDown">▼</button>
+        <button class="ctrl-btn sdir" id="gRight">▶</button>
+      </div>
+      <div style="width:100%;margin-top:4px;">
+        <button class="ctrl-btn wide" id="gRestart" style="background:#1a2a1e;border-color:#484;width:100%;">🔄 重新开始</button>
+      </div>
+      <div style="width:100%;margin-top:2px;display:flex;gap:8px;justify-content:center;">
+        <button class="ctrl-btn wide" id="gPause" style="background:#1a1a3e;border-color:#55f;flex:1;">⏸ 暂停</button>
+        <button class="ctrl-btn" id="btnSound2048" style="font-size:18px;width:44px;padding:8px 10px;background:#333;border-color:#666;">🔊</button>
       </div>
     </div>
   </div>
@@ -364,6 +436,469 @@ var s_check_iv = setInterval(function(){
   }
 }, 200);
 _initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();
+
+// ====== 2048 GAME ======
+var GD={easy:{l:"简单",t:1024,e:"🟢",f2:true},normal:{l:"普通",t:2048,e:"🟡",f2:false},hard:{l:"困难",t:4096,e:"🔴",f2:false}};
+var gc="normal",gBoardArr=[],gScore=0,gGameOver=0,gPause=0,gStarted=0,gTimer=0,gTimerId=null,gMerged=[];
+var gCanvas=document.getElementById("gBoard"),gCtx=gCanvas.getContext("2d");
+var gScoreEl=document.getElementById("gScore"),gBestEl=document.getElementById("gBest"),gStatusEl=document.getElementById("gStatus"),gBadgeEl=document.getElementById("gDiffBadge");
+var G_SIZE=4,G_CELL=100,G_GAP=4,G_PAD=8;
+var gTileColors={
+  0:null,
+  2:"#eee4da",4:"#ede0c8",8:"#f2b179",16:"#f59563",32:"#f67c5f",64:"#f65e3b",
+  128:"#edcf72",256:"#edcc61",512:"#edc850",1024:"#edc53f",2048:"#edc22e",
+  4096:"#3c3a32",8192:"#3c3a32"
+};
+var gTileTextColors={
+  2:"#776e65",4:"#776e65",8:"#f9f6f2",16:"#f9f6f2",32:"#f9f6f2",64:"#f9f6f2",
+  128:"#f9f6f2",256:"#f9f6f2",512:"#f9f6f2",1024:"#f9f6f2",2048:"#f9f6f2",
+  4096:"#f9f6f2",8192:"#f9f6f2"
+};
+
+function gInit(){
+  gBoardArr=[];
+  for(var i=0;i<G_SIZE;i++){gBoardArr[i]=new Array(G_SIZE).fill(0);}
+  gScore=0;gGameOver=0;gPause=0;gTimer=0;gMerged=[];
+  if(gTimerId){clearInterval(gTimerId);gTimerId=null;}
+  gSpawn();gSpawn();
+  gDraw();gStarted=1;
+  gScoreEl.textContent="0";gBestEl.textContent=ghs("2048",gc);
+  gStatusEl.textContent="🎮 游戏开始！";
+  // Start timer
+  gTimerId=setInterval(function(){if(!gPause&&!gGameOver&&gStarted){gTimer++;}},1000);
+}
+
+function gSpawn(){
+  var cfg=GD[gc];
+  var empty=[];
+  for(var r=0;r<G_SIZE;r++)for(var c=0;c<G_SIZE;c++){if(gBoardArr[r][c]===0)empty.push({r:r,c:c});}
+  if(empty.length===0)return;
+  var cell=empty[Math.floor(Math.random()*empty.length)];
+  var val=2;
+  if(!cfg.f2&&Math.random()<0.1)val=4;
+  gBoardArr[cell.r][cell.c]=val;
+}
+
+function gSpawnWithoutMerge(){
+  gSpawn();
+  gDraw();
+}
+
+function gCanMove(){
+  for(var r=0;r<G_SIZE;r++){
+    for(var c=0;c<G_SIZE;c++){
+      if(gBoardArr[r][c]===0)return true;
+      if(c<G_SIZE-1&&gBoardArr[r][c]===gBoardArr[r][c+1])return true;
+      if(r<G_SIZE-1&&gBoardArr[r][c]===gBoardArr[r+1][c])return true;
+    }
+  }
+  return false;
+}
+
+function gSlideRow(row){
+  // Remove zeros
+  var arr=row.filter(function(v){return v!==0;});
+  var merged=[];
+  for(var i=0;i<arr.length;i++)merged.push(false);
+  var newArr=[];
+  var score=0;
+  var i=0;
+  while(i<arr.length){
+    if(i+1<arr.length&&arr[i]===arr[i+1]&&!merged[i]&&!merged[i+1]){
+      var val=arr[i]*2;
+      newArr.push(val);
+      score+=val;
+      arr[i+1]=0; // mark used
+      i+=2;
+    }else{
+      newArr.push(arr[i]);
+      i+=1;
+    }
+  }
+  while(newArr.length<G_SIZE)newArr.push(0);
+  return {arr:newArr,score:score};
+}
+
+function gGetCol(n){
+  var col=[];
+  for(var r=0;r<G_SIZE;r++)col.push(gBoardArr[r][n]);
+  return col;
+}
+
+function gSetCol(n,col){
+  for(var r=0;r<G_SIZE;r++)gBoardArr[r][n]=col[r];
+}
+
+function gGetRow(n){
+  return gBoardArr[n].slice();
+}
+
+function gSetRow(n,row){
+  gBoardArr[n]=row.slice();
+}
+
+function gReverse(arr){
+  return arr.slice().reverse();
+}
+
+function gSwipeUp(){
+  var moved=false,ts=0;
+  for(var c=0;c<G_SIZE;c++){
+    var col=gGetCol(c);
+    var result=gSlideRow(col);
+    gSetCol(c,result.arr);
+    if(result.score>0){
+      for(var r=0;r<G_SIZE;r++){
+        if(col[r]!==result.arr[r])moved=true;
+      }
+    }else{
+      for(var r=0;r<G_SIZE;r++){
+        if(col[r]!==result.arr[r])moved=true;
+      }
+    }
+    ts+=result.score;
+  }
+  return {moved:moved,score:ts};
+}
+
+function gSwipeDown(){
+  var moved=false,ts=0;
+  for(var c=0;c<G_SIZE;c++){
+    var col=gGetCol(c);
+    col=col.reverse();
+    var result=gSlideRow(col);
+    result.arr=result.arr.reverse();
+    gSetCol(c,result.arr);
+    if(result.score>0){
+      var orig=col.reverse();
+      for(var r=0;r<G_SIZE;r++){
+        if(orig[r]!==result.arr[r])moved=true;
+      }
+    }else{
+      var orig2=col;
+      for(var r=0;r<G_SIZE;r++){
+        if(orig2[r]!==result.arr[r])moved=true;
+      }
+    }
+    ts+=result.score;
+  }
+  return {moved:moved,score:ts};
+}
+
+function gSwipeLeft(){
+  var moved=false,ts=0;
+  for(var r=0;r<G_SIZE;r++){
+    var row=gGetRow(r);
+    var result=gSlideRow(row);
+    gSetRow(r,result.arr);
+    for(var c=0;c<G_SIZE;c++){
+      if(row[c]!==result.arr[c])moved=true;
+    }
+    ts+=result.score;
+  }
+  return {moved:moved,score:ts};
+}
+
+function gSwipeRight(){
+  var moved=false,ts=0;
+  for(var r=0;r<G_SIZE;r++){
+    var row=gGetRow(r);
+    row=row.reverse();
+    var result=gSlideRow(row);
+    result.arr=result.arr.reverse();
+    gSetRow(r,result.arr);
+    var orig=row.reverse();
+    for(var c=0;c<G_SIZE;c++){
+      if(orig[c]!==result.arr[c])moved=true;
+    }
+    ts+=result.score;
+  }
+  return {moved:moved,score:ts};
+}
+
+function gMove(dir){
+  if(gGameOver||gPause||!gStarted)return;
+  var result;
+  switch(dir){
+    case 0:result=gSwipeUp();break;
+    case 1:result=gSwipeRight();break;
+    case 2:result=gSwipeDown();break;
+    case 3:result=gSwipeLeft();break;
+  }
+  if(result.moved){
+    _playMove();
+    var cfg=GD[gc];
+    var mult=gc==="hard"?2:gc==="normal"?1.5:1;
+    gScore+=Math.floor(result.score*mult);
+    gScoreEl.textContent=gScore;
+    gSpawn();
+    gDraw();
+    gCheckWinLose(cfg.t);
+  }
+}
+
+function gCheckWinLose(target){
+  // Check win
+  for(var r=0;r<G_SIZE;r++){
+    for(var c=0;c<G_SIZE;c++){
+      if(gBoardArr[r][c]>=target){
+        // Win! Show victory in overlay
+        gWin();
+        return;
+      }
+    }
+  }
+  // Check lose
+  if(!gCanMove()){
+    gGameOver=1;
+    gLose();
+  }
+}
+
+function gShowBoard(){
+  // Score animation via canvas, nothing extra needed
+}
+
+var gWonAlready=false;
+
+function gWin(){
+  gWonAlready=true;
+  _playClear();
+  var cfg=GD[gc];
+  var nw=shs("2048",gc,gScore);
+  document.getElementById("goScore").textContent=gScore;
+  document.getElementById("goDiff").textContent=cfg.e+" "+cfg.l+"模式 · 2048";
+  var m=String(Math.floor(gTimer/60)).padStart(2,"0"),s=String(gTimer%60).padStart(2,"0");
+  document.getElementById("goDetail").textContent="用时 "+m+":"+s+" · 达成目标 "+cfg.t+"！";
+  document.getElementById("goRecord").textContent=nw?"🏆 新纪录！":"🏆 最高 "+ghs("2048",gc);
+  document.getElementById("gameOverOverlay").classList.add("active");
+  // Show win message
+  gameOverTitleEl=document.querySelector("#gameOverOverlay .o-title");
+  if(gameOverTitleEl)gameOverTitleEl.textContent="🎉 恭喜通关！";
+  // Store which game
+  window._gog="g2048";
+  _initAudio();
+  document.addEventListener("click",function(){_initAudio();},{once:true});
+  uhs();
+}
+
+function gLose(){
+  _playGameOver();
+  var cfg=GD[gc];
+  var nw=shs("2048",gc,gScore);
+  document.getElementById("goScore").textContent=gScore;
+  document.getElementById("goDiff").textContent=cfg.e+" "+cfg.l+"模式 · 2048";
+  var m=String(Math.floor(gTimer/60)).padStart(2,"0"),s=String(gTimer%60).padStart(2,"0");
+  document.getElementById("goDetail").textContent="用时 "+m+":"+s+" · 最高方块 "+gMaxTile();
+  document.getElementById("goRecord").textContent=nw?"🏆 新纪录！":"🏆 最高 "+ghs("2048",gc);
+  document.getElementById("gameOverOverlay").classList.add("active");
+  window._gog="g2048";
+  _initAudio();
+  document.addEventListener("click",function(){_initAudio();},{once:true});
+  uhs();
+}
+
+function gMaxTile(){
+  var m=0;
+  for(var r=0;r<G_SIZE;r++)for(var c=0;c<G_SIZE;c++){
+    if(gBoardArr[r][c]>m)m=gBoardArr[r][c];
+  }
+  return m;
+}
+
+function gDraw(){
+  gCtx.clearRect(0,0,400,400);
+  // Background grid
+  gCtx.fillStyle="#1a1a2e";
+  gCtx.fillRect(0,0,400,400);
+  for(var r=0;r<G_SIZE;r++){
+    for(var c=0;c<G_SIZE;c++){
+      var x=c*(G_CELL+G_GAP)+G_PAD;
+      var y=r*(G_CELL+G_GAP)+G_PAD;
+      gCtx.fillStyle="rgba(255,255,255,0.05)";
+      gCtx.fillRect(x,y,G_CELL,G_CELL);
+    }
+  }
+  // Tiles
+  for(var r=0;r<G_SIZE;r++){
+    for(var c=0;c<G_SIZE;c++){
+      var val=gBoardArr[r][c];
+      if(val===0)continue;
+      var x=c*(G_CELL+G_GAP)+G_PAD;
+      var y=r*(G_CELL+G_GAP)+G_PAD;
+      var color=gTileColors[val]||"#3c3a32";
+      var textColor=gTileTextColors[val]||"#f9f6f2";
+      gCtx.fillStyle=color;
+      gCtx.fillRect(x,y,G_CELL,G_CELL);
+      gCtx.fillStyle=textColor;
+      var fs=val<100?40:val<1000?32:val<10000?24:18;
+      gCtx.font="bold "+fs+"px -apple-system, 'Segoe UI', sans-serif";
+      gCtx.textAlign="center";
+      gCtx.textBaseline="middle";
+      gCtx.fillText(val,x+G_CELL/2,y+G_CELL/2);
+    }
+  }
+}
+
+function gTogglePause(){
+  if(gGameOver)return;
+  gPause=!gPause;
+  if(gPause)_playPause();else _playResume();
+  document.getElementById("gPauseOverlay").classList.toggle("active",gPause);
+  if(gPause){
+    document.getElementById("gPause").textContent="▶ 继续";
+    gStatusEl.textContent="⏸ 已暂停";
+  }else{
+    document.getElementById("gPause").textContent="⏸ 暂停";
+    gStatusEl.textContent="";
+  }
+}
+
+function gRestartConfirm(){
+  if(!gStarted)return;
+  showConfirm("确定要重新开始吗？当前进度将丢失",function(){
+    gInit();
+    document.getElementById("gPauseOverlay").classList.remove("active");
+    document.getElementById("gPause").textContent="⏸ 暂停";
+    gBestEl.textContent=ghs("2048",gc);
+  });
+}
+
+// Touch handling for 2048
+var gtx=0,gty=0,gtt=0;
+gCanvas.addEventListener("touchstart",function(e){
+  e.preventDefault();
+  if(!gStarted||gGameOver)return;
+  gtx=e.changedTouches[0].clientX;
+  gty=e.changedTouches[0].clientY;
+  gtt=Date.now();
+},{passive:false});
+gCanvas.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
+gCanvas.addEventListener("touchend",function(e){
+  e.preventDefault();
+  if(!gStarted||gGameOver)return;
+  var dx=e.changedTouches[0].clientX-gtx,dy=e.changedTouches[0].clientY-gty;
+  var adx=Math.abs(dx),ady=Math.abs(dy);
+  if(adx<15&&ady<15)return;
+  if(adx>ady){
+    gMove(dx>0?1:3);
+  }else{
+    gMove(dy>0?2:0);
+  }
+},{passive:false});
+
+// Event wiring
+document.getElementById("card2048").onclick=function(){
+  _initAudio();
+  document.addEventListener("click",function(){_initAudio();},{once:true});
+  uhs();
+  ss("screen2048Diff");
+};
+document.getElementById("btnBackG2048Diff").onclick=function(){ss("screenSelect");};
+document.getElementById("btnBackG2048").onclick=function(){
+  if(gTimerId){clearInterval(gTimerId);gTimerId=null;}
+  gStarted=0;
+  ss("screen2048Diff");
+};
+
+["easy","normal","hard"].forEach(function(d){
+  document.getElementById("gDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){
+    gc=d;
+    gBadgeEl.textContent=GD[d].e+" "+GD[d].l;
+    ss("screen2048");
+    // Pre-hide pause overlay
+    document.getElementById("gPauseOverlay").classList.remove("active");
+    document.getElementById("gPause").textContent="⏸ 暂停";
+    gWonAlready=false;
+    gInit();
+    gBestEl.textContent=ghs("2048",gc);
+  };
+});
+
+function ab2048(id,fn){
+  var el=document.getElementById(id);
+  if(el){
+    el.onclick=fn;
+    el.addEventListener("touchend",function(e){e.preventDefault();fn();});
+  }
+}
+ab2048("gUp",function(){gMove(0);});
+ab2048("gDown",function(){gMove(2);});
+ab2048("gLeft",function(){gMove(3);});
+ab2048("gRight",function(){gMove(1);});
+ab2048("gRestart",gRestartConfirm);
+ab2048("gPause",gTogglePause);
+ab2048("btnSound2048",function(){_initAudio();_soundOn=!_soundOn;["btnSound","btnSoundSnake","btnSound2048"].forEach(function(id2){var el2=document.getElementById(id2);if(el2)el2.textContent=_soundOn?"🔊":"🔇";});_playSelect();});
+
+// Keyboard handling for 2048 - extend existing handler
+var _origKeydown=document.onkeydown;
+document.onkeydown=function(e){
+  var s3=document.getElementById("screen2048");
+  if(s3.classList.contains("active")&&gStarted){
+    if(e.key==="p"||e.key==="P"){e.preventDefault();gTogglePause();return;}
+    if(!gGameOver&&!gPause){
+      switch(e.key){
+        case"ArrowUp":case"w":case"W":e.preventDefault();gMove(0);break;
+        case"ArrowRight":case"d":case"D":e.preventDefault();gMove(1);break;
+        case"ArrowDown":case"s":case"S":e.preventDefault();gMove(2);break;
+        case"ArrowLeft":case"a":case"A":e.preventDefault();gMove(3);break;
+      }
+    }
+    return;
+  }
+  if(_origKeydown)_origKeydown(e);
+};
+
+// Extend uhs to include 2048 high scores
+var _origUhs=uhs;
+uhs=function(){
+  _origUhs();
+  ["easy","normal","hard"].forEach(function(k){
+    var el=document.getElementById("gdhs"+k[0].toUpperCase()+k.slice(1));
+    if(el){el.textContent=ghs("2048",k);}
+  });
+  var bestEl=document.getElementById("ghsBest");
+  if(bestEl){
+    // Show max of all difficulties
+    var mx=0;
+    ["easy","normal","hard"].forEach(function(k){var v=ghs("2048",k);if(v>mx)mx=v;});
+    bestEl.textContent=mx;
+  }
+  var gbe=document.getElementById("gBest");
+  if(gbe&&gStarted)gbe.textContent=ghs("2048",gc);
+};
+
+// Extend goRestart for 2048
+var _origGoRestart=document.getElementById("goRestart").onclick;
+document.getElementById("goRestart").onclick=function(){
+  document.getElementById("gameOverOverlay").classList.remove("active");
+  var titleEl=document.querySelector("#gameOverOverlay .o-title");
+  if(titleEl)titleEl.textContent="💀 游戏结束";
+  if(window._gog==="g2048"){
+    document.getElementById("gPauseOverlay").classList.remove("active");
+    document.getElementById("gPause").textContent="⏸ 暂停";
+    gWonAlready=false;
+    gInit();
+  }else{
+    _origGoRestart();
+  }
+};
+
+// Extend goBack for 2048
+var _origGoBack=document.getElementById("goBack").onclick;
+document.getElementById("goBack").onclick=function(){
+  document.getElementById("gameOverOverlay").classList.remove("active");
+  var titleEl=document.querySelector("#gameOverOverlay .o-title");
+  if(titleEl)titleEl.textContent="💀 游戏结束";
+  if(window._gog==="g2048"){
+    if(gTimerId){clearInterval(gTimerId);gTimerId=null;}
+    gStarted=0;
+    ss("screen2048Diff");
+  }else{
+    _origGoBack();
+  }
+};
+
 </script>
 </body>
 </html>
