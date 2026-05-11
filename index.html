@@ -1049,7 +1049,8 @@ var mCanvas,mCtx,mFlagEl,mTimerEl,mStatusEl,mBadgeEl,mMinesEl;
 // Get cell coords from event
 var _mlTimer=null,_mtCell=null;
 function _getMCell(x,y){
-  var rect=mCanvas.getBoundingClientRect();
+  if(!mCanvas||!mCell)return null;
+  var rect=mCanvas.getBoundingClientRect();if(!rect||rect.width===0)return null;
   var sx=mCanvas.width/rect.width,sy=mCanvas.height/rect.height;
   var r=Math.floor((y-rect.top)*sy/mCell),c=Math.floor((x-rect.left)*sx/mCell);
   if(r>=0&&r<mRows&&c>=0&&c<mCols)return{r:r,c:c};
@@ -1148,7 +1149,7 @@ function mFlood(r,c){
 function mReveal(r,c){
   if(r<0||r>=mRows||c<0||c>=mCols)return;
   var cell=mBoard[r][c];if(cell.rev||cell.flag)return;
-  cell.rev=1;
+  cell.rev=1;if(typeof mDraw!=="function")return;
   if(cell.mine){
     mGameOver=1;mWin=0;
     if(mTimerId){clearInterval(mTimerId);mTimerId=null;}
@@ -1180,8 +1181,9 @@ function mCheckWin(){
   setTimeout(function(){mGO(1);},400);
 }
 
-var _mNC=["","#4af","#4a4","#f44","#448","#844","#488","#000","#888"];
+var _mNC=["","#5cf","#5f5","#f55","#8af","#f88","#6dd","#ddd","#aaa"];
 function mDraw(){
+  if(!mCtx)return;
   mCtx.clearRect(0,0,mCanvas.width,mCanvas.height);
   for(var r=0;r<mRows;r++){
     for(var c=0;c<mCols;c++){
@@ -1189,11 +1191,11 @@ function mDraw(){
       if(cell.rev){
         mCtx.fillStyle=cell.mine?"#633":"#1a2a3a";mCtx.fillRect(x+1,y+1,mCell-2,mCell-2);
         if(cell.mine){
-          mCtx.font=Math.floor(mCell*0.6)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
+          mCtx.font=Math.floor(mCell*0.7)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
           mCtx.fillText("💣",x+mCell/2,y+mCell/2);
         }else if(cell.adj>0){
           mCtx.fillStyle=_mNC[cell.adj];
-          mCtx.font="bold "+Math.floor(mCell*0.55)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
+          mCtx.font="bold "+Math.floor(mCell*0.68)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
           mCtx.fillText(cell.adj,x+mCell/2,y+mCell/2);
         }
       }else{
@@ -1201,7 +1203,7 @@ function mDraw(){
         mCtx.fillStyle="#5a7aaa";mCtx.fillRect(x+1,y+1,mCell-2,2);mCtx.fillRect(x+1,y+1,2,mCell-2);
         mCtx.fillStyle="#1a3a5a";mCtx.fillRect(x+1,y+mCell-3,mCell-2,2);mCtx.fillRect(x+mCell-3,y+1,2,mCell-2);
         if(cell.flag){
-          mCtx.font=Math.floor(mCell*0.6)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
+          mCtx.font=Math.floor(mCell*0.7)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
           mCtx.fillText("🚩",x+mCell/2,y+mCell/2);
         }
       }
