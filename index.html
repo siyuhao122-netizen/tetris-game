@@ -403,29 +403,26 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <span class="diff-badge" id="mDiffBadge">普通</span>
   </div>
   <div class="game-wrapper">
-    <div class="game-container">
-      <div class="board-wrap" style="position:relative;">
-        <canvas id="mBoard" class="gcanvas" width="324" height="324"></canvas>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%;max-width:360px;margin-bottom:6px;">
+      <div class="info-box" style="flex:1;min-width:55px;"><div class="label">💣 地雷</div><div class="value" id="mMines">10</div></div>
+      <div class="info-box" style="flex:1;min-width:55px;"><div class="label">🚩 标记</div><div class="value" id="mFlags">0</div></div>
+      <div class="info-box" style="flex:1;min-width:55px;"><div class="label">💡 提示</div><div class="value" id="mHints">0</div></div>
+      <div class="info-box" style="flex:1;min-width:55px;"><div class="label">⏱ 时间</div><div class="value small" id="mTime">00:00</div></div>
+    </div>
+    <div class="game-container" style="flex-direction:column;">
+      <div class="board-wrap" style="position:relative;margin:0 auto;">
+        <canvas id="mBoard" class="gcanvas" style="max-width:100%;height:auto;"></canvas>
         <div id="mPauseOverlay"><span>⏸ 已暂停</span></div>
-      </div>
-      <div class="side-panel">
-        <div class="info-box"><div class="label">💣 地雷</div><div class="value" id="mMines">10</div></div>
-        <div class="info-box"><div class="label">🚩 标记</div><div class="value" id="mFlags">0</div>
-        <div class="info-box"><div class="label">提示</div><div class="value" id="mHints">0</div></div>
-</div></div>
-        <div class="info-box"><div class="label">⏱ 时间</div><div class="value small" id="mTime">00:00</div></div>
       </div>
     </div>
     <div class="status-msg" id="mStatus">&nbsp;</div>
     <div class="controls">
-      <div style="display:flex;gap:8px;justify-content:center;width:100%;margin-bottom:6px;">
-        <button class="ctrl-btn wide" id="mRestart" style="background:#1a2a1e;border-color:#484;">🔄 重新开始</button>
-        <button class="ctrl-btn wide m-flag-btn" id="mFlagToggle">🚩 标记模式</button>
-          <button class="ctrl-btn" id="mHintBtn" style="background:#2a2a1e;border-color:#aa0;font-size:14px;">💡 提示</button>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:center;width:100%;">
-        <button class="ctrl-btn wide" id="mPause" style="background:#1a1a3e;border-color:#55f;">⏸ 暂停</button>
-        <button class="ctrl-btn" id="btnSoundMine" style="font-size:18px;width:44px;padding:8px 10px;background:#333;border-color:#666;">🔊</button>
+      <div style="display:flex;gap:8px;justify-content:center;width:100%;flex-wrap:wrap;">
+        <button class="ctrl-btn wide" id="mRestart" style="background:#1a2a1e;border-color:#484;font-size:15px;padding:8px 16px;">🔄 重新开始</button>
+        <button class="ctrl-btn wide m-flag-btn" id="mFlagToggle" style="font-size:15px;padding:8px 16px;">🚩 标记模式</button>
+        <button class="ctrl-btn wide" id="mHintBtn" style="background:#2a2a1e;border-color:#aa0;font-size:15px;padding:8px 16px;">💡 提示</button>
+        <button class="ctrl-btn wide" id="mPause" style="background:#1a1a3e;border-color:#55f;font-size:15px;padding:8px 16px;">⏸ 暂停</button>
+        <button class="ctrl-btn" id="btnSoundMine" style="font-size:18px;width:40px;padding:8px;background:#333;border-color:#666;">🔊</button>
       </div>
     </div>
   </div>
@@ -486,7 +483,7 @@ var _theme=localStorage.getItem("goblin_theme")||"dark";
 document.body.classList.add("theme-"+_theme);
 function _toggleTheme(){_theme=_theme==="dark"?"light":"dark";document.body.classList.remove("theme-dark","theme-light");document.body.classList.add("theme-"+_theme);localStorage.setItem("goblin_theme",_theme);var tb=document.getElementById("btnTheme");if(tb)tb.textContent=_theme==="dark"?"🌙":"☀️";}
 document.getElementById("btnTheme").onclick=_toggleTheme;
-document.getElementById("btnTheme").textContent=_theme==="dark"?"🌙":"☀️";
+document.getElementById("btnTheme").textContent=_theme==="dark"?"🌙":"☀️";_syncSnakeToggles();
 
 var gs={};function ghs(g,d){return parseInt(localStorage.getItem(g+"_hs_"+d)||"0",10);}
 function shs(g,d,v){var o=ghs(g,d);if(v>o){localStorage.setItem(g+"_hs_"+d,""+v);return 1;}return 0;}var _confirmCb=null;var _confirmState=0;
@@ -543,6 +540,24 @@ function tgo(){_playGameOver();var c=TD[tc];var m=String(Math.floor(tgt/60)).pad
 var SD={easy:{l:"\u7b80\u5355",s:400,e:"🟢"},normal:{l:"\u666e\u901a",s:250,e:"🟡"},hard:{l:"\u56f0\u96be",s:150,e:"🔴"}};
 var _snakeObsOn=parseInt(localStorage.getItem("goblin_snake_obs")||"1",10);var _snakeObsShuffle=parseInt(localStorage.getItem("goblin_snake_shuffle")||"0",10);
 var sc="normal",sbody=[],sdir=1,snxt=2,sfood=null,ssc=0,sgt=0,spau=0,sgov=0,sdi=null,sti=null,sts=0,_sObstacles=[];
+
+function _syncSnakeToggles(){
+  var to=document.getElementById("sObsToggle");
+  var st=document.getElementById("sShuffleToggle");
+  if(!to)return;
+  to.style.display="flex";
+  var sw=to.querySelector(".obs-switch");
+  if(_snakeObsOn){sw.classList.add("on");to.querySelector(".obs-label").textContent="🧱 障碍物: 开";}
+  else{sw.classList.remove("on");to.querySelector(".obs-label").textContent="🧱 障碍物: 关";}
+  if(st){
+    st.style.display="flex";
+    if(_snakeObsOn){st.classList.remove("disabled");}
+    else{st.classList.add("disabled");}
+    var sw2=st.querySelector(".obs-switch");
+    if(_snakeObsShuffle){sw2.classList.add("on");st.querySelector(".obs-label").textContent="🔀 障碍物变换: 开";}
+    else{sw2.classList.remove("on");st.querySelector(".obs-label").textContent="🔀 障碍物变换: 关";}
+  }
+}
 var sca=document.getElementById("sBoard"),scx=sca.getContext("2d");
 var sse=document.getElementById("sScore"),sle=document.getElementById("sLen"),sste=document.getElementById("sStatus"),ste2=document.getElementById("sTime"),sbe=document.getElementById("sBest");
 var stx=0,sty=0,stt=0;
@@ -565,7 +580,7 @@ document.getElementById("btnBackTT").onclick=function(){if(tdi)clearInterval(tdi
 document.getElementById("btnBackSS").onclick=function(){if(sdi)clearInterval(sdi);sStpc();sts=0;ss("screenSnakeDiff");};
 ["easy","normal","hard"].forEach(function(d){
   document.getElementById("tDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){tc=d;document.getElementById("tDiffBadge").textContent=TD[d].e+" "+TD[d].l;ss("screenTetris");tib();tsc=0;tln=0;tlv=1;tg=0;tp=0;tu=3;tgt=0;_tBag=[];tn=null;tste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";tte.textContent="00:00";document.getElementById("tClearCount").textContent="3/3";document.getElementById("tPauseOverlay").classList.remove("active");document.getElementById("tPause").textContent="\u23f8 \u6682\u505c";tui();tsp();trd();tstc();tts=1;};
-  document.getElementById("sDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){sc=d;document.getElementById("sDiffBadge").textContent=SD[d].e+" "+SD[d].l;var to=document.getElementById("sObsToggle");if(to){to.style.display="flex";if(typeof _snakeObsOn!=="undefined"){var sw=to.querySelector(".obs-switch");if(_snakeObsOn)sw.classList.add("on");else sw.classList.remove("on");to.querySelector(".obs-label").textContent=_snakeObsOn?"障碍物: 开 (×2)":"障碍物: 关";}var so=document.getElementById("sShuffleToggle");if(so){so.style.display="flex";var sw2=so.querySelector(".obs-switch");if(_snakeObsShuffle)sw2.classList.add("on");else sw2.classList.remove("on");so.querySelector(".obs-label").textContent=_snakeObsShuffle?"障碍物变换: 开 (×2)":"障碍物变换: 关";}}ss("screenSnake");sinit();ssc=0;sgt=0;spau=0;sgov=0;ste2.textContent="00:00";sbe.textContent=ghs("snake",sc);sle.textContent=3;sse.textContent=0;document.getElementById("sPauseOverlay").classList.remove("active");document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";sts=1;sda();sRd();sStc();};
+  document.getElementById("sDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){sc=d;document.getElementById("sDiffBadge").textContent=SD[d].e+" "+SD[d].l;_syncSnakeToggles();ss("screenSnake");sinit();ssc=0;sgt=0;spau=0;sgov=0;ste2.textContent="00:00";sbe.textContent=ghs("snake",sc);sle.textContent=3;sse.textContent=0;document.getElementById("sPauseOverlay").classList.remove("active");document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";sts=1;sda();sRd();sStc();};
 });
 document.getElementById("goRestart").onclick=function(){document.getElementById("gameOverOverlay").classList.remove("active");if(window._gog==="tetris"){tib();tsc=0;tln=0;tlv=1;tg=0;tp=0;tu=3;tgt=0;_tBag=[];tn=null;tste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";tte.textContent="00:00";document.getElementById("tClearCount").textContent="3/3";document.getElementById("tPauseOverlay").classList.remove("active");document.getElementById("tPause").textContent="\u23f8 \u6682\u505c";tui();tsp();trd();tstc();tts=1;}else if(window._gog==="snake"){sinit();ssc=0;sgt=0;spau=0;sgov=0;ste2.textContent="00:00";sle.textContent=3;sse.textContent=0;document.getElementById("sPauseOverlay").classList.remove("active");document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";sda();sRd();sStc();sts=1;}};
 document.getElementById("goBack").onclick=function(){document.getElementById("gameOverOverlay").classList.remove("active");document.getElementById("goContinue").onclick=function(){_gContinue();this.style.display="none";document.getElementById("gameOverOverlay").classList.remove("active");};if(window._gog==="tetris"){if(tdi)clearInterval(tdi);tstpc();tts=0;ss("screenTetrisDiff");}else if(window._gog==="snake"){if(sdi)clearInterval(sdi);sStpc();sts=0;ss("screenSnakeDiff");}};
@@ -1200,7 +1215,7 @@ function mInit(){mDraw();
   var g=MG[mc];mRows=g.r;mCols=g.c;mMines=g.mines;mCell=g.cell;mHints=mc==="easy"?1:mc==="normal"?2:3;mHintEl.textContent=mHints;
   var sz=mRows*mCell;
   mCanvas.width=sz;mCanvas.height=sz;
-  mCanvas.style.width=Math.min(sz,360)+"px";
+  mCanvas.style.maxWidth="100%";mCanvas.style.width=Math.min(sz,Math.min(360,window.innerWidth-32))+"px";mCanvas.style.height="auto";
   mBoard=[];for(var r=0;r<mRows;r++){mBoard[r]=[];for(var c=0;c<mCols;c++)mBoard[r][c]={mine:0,rev:0,flag:0,adj:0,hint:0};}
   mStarted=0;mGameOver=0;mPause=0;mWin=0;mFlagMode=0;mFirstClick=1;mFlags=0;mTimer=0;
   if(mTimerId){clearInterval(mTimerId);mTimerId=null;}
@@ -1294,7 +1309,7 @@ function mDraw(){
         mCtx.fillStyle="#3a5a8a";mCtx.fillRect(x+1,y+1,mCell-2,mCell-2);
         mCtx.fillStyle="#5a7aaa";mCtx.fillRect(x+1,y+1,mCell-2,2);mCtx.fillRect(x+1,y+1,2,mCell-2);
         mCtx.fillStyle="#1a3a5a";mCtx.fillRect(x+1,y+mCell-3,mCell-2,2);mCtx.fillRect(x+mCell-3,y+1,2,mCell-2);
-        if(cell.flag){
+        if(cell.hint){mCtx.fillStyle="rgba(255,200,0,0.35)";mCtx.fillRect(x+1,y+1,mCell-2,mCell-2);mCtx.font=Math.floor(mCell*0.5)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";mCtx.fillText("💡",x+mCell/2,y+mCell/2);}else if(cell.flag){
           mCtx.font=Math.floor(mCell*0.7)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
           mCtx.fillText("🚩",x+mCell/2,y+mCell/2);
         }
