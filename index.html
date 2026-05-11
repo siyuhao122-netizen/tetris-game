@@ -77,6 +77,21 @@
   .g-tile { position: absolute; border-radius: 3px; font-weight: bold; display: flex; justify-content: center; align-items: center; transition: all 0.1s ease; }
   .g-cell-bg { background: rgba(255,255,255,0.03); border-radius: 3px; }
 
+
+#mPauseOverlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:10;border-radius:4px}
+#mPauseOverlay.active{display:flex}
+#mPauseOverlay span{font-size:32px;font-weight:bold;color:#fff}
+.m-flag-btn{background:#2a1a1a;border:1px solid #f55;border-radius:8px;color:#faa;font-size:14px;padding:6px 14px;cursor:pointer;touch-action:manipulation}
+.m-flag-btn:active{background:#3a2a2a}
+.m-flag-btn.on{background:#5a1a1a;border-color:#f00;color:#f00}
+.stats-table{width:100%;max-width:380px;border-collapse:collapse;margin-top:12px}
+.stats-table th{background:#1a1a2e;border-bottom:2px solid #333;padding:8px 6px;font-size:12px;color:#aaa}
+.stats-table td{border-bottom:1px solid #222;padding:8px 6px;font-size:13px;text-align:center}
+.stats-table .game-name{text-align:left;font-weight:bold;font-size:15px}
+.stats-table .win-rate{color:#4af}
+.stats-table .best{color:#f90}
+.stats-empty{color:#555;font-size:14px;margin-top:30px}
+
 </style>
 </head>
 <body>
@@ -86,6 +101,7 @@
   <div class="menu-goblin">👺</div>
   <div class="menu-title">哥布林小游戏</div>
   <div class="menu-sub">Goblin's Game Land</div>
+  <button class="menu-btn" id="btnStats" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#ff0;font-size:16px;padding:10px 40px;margin-bottom:14px;">📊 数据统计</button>
   <button class="menu-btn" id="btnStartMenu">🎮 开始游戏</button>
 </div>
 
@@ -118,6 +134,17 @@
       <span>最高: <span id="ghsBest">0</span></span>
     </div>
   </div>
+
+  <div class="game-card" id="cardMinesweeper">
+    <div class="name">💣 扫雷</div>
+    <div class="desc">经典扫雷游戏，触屏标记版</div>
+    <div class="high-score-row" id="mHsRow">
+      <span>简单: <span id="mhsEasy">0</span>s</span>
+      <span>普通: <span id="mhsNormal">0</span>s</span>
+      <span>困难: <span id="mhsHard">0</span>s</span>
+    </div>
+  </div>
+
 </div>
 
 
@@ -143,10 +170,10 @@
   </div>
 </div>
 
-  </div>
   
   
-</div>
+  
+
 
 <!-- SNAKE DIFFICULTY -->
 <div class="screen" id="screenSnakeDiff">
@@ -306,6 +333,71 @@
     </div>
   </div>
 </div>
+
+
+<!-- MINESWEEPER DIFFICULTY -->
+<div class="screen" id="screenMinesweeperDiff">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackMDiff">← 返回</button></div>
+  <div class="diff-title">🎚 扫雷 · 难度</div>
+  <div class="diff-card" id="mDiffEasy">
+    <div class="dname">🟢 简单</div><div class="ddesc">9×9 棋盘，10 个地雷</div>
+    <div class="dhigh">🏆 最快 <span id="mdhsEasy">--</span> 秒</div>
+  </div>
+  <div class="diff-card" id="mDiffNormal">
+    <div class="dname">🟡 普通</div><div class="ddesc">14×14 棋盘，35 个地雷</div>
+    <div class="dhigh">🏆 最快 <span id="mdhsNormal">--</span> 秒</div>
+  </div>
+  <div class="diff-card" id="mDiffHard">
+    <div class="dname">🔴 困难</div><div class="ddesc">18×18 棋盘，65 个地雷</div>
+    <div class="dhigh">🏆 最快 <span id="mdhsHard">--</span> 秒</div>
+  </div>
+</div>
+
+<!-- MINESWEEPER GAME SCREEN -->
+<div class="screen" id="screenMinesweeper">
+  <div style="width:100%;text-align:left;margin-bottom:4px;">
+    <button class="back-btn" id="btnBackMM">← 返回选难度</button>
+    <span class="diff-badge" id="mDiffBadge">普通</span>
+  </div>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="board-wrap" style="position:relative;">
+        <canvas id="mBoard" class="gcanvas" width="324" height="324"></canvas>
+        <div id="mPauseOverlay"><span>⏸ 已暂停</span></div>
+      </div>
+      <div class="side-panel">
+        <div class="info-box"><div class="label">💣 地雷</div><div class="value" id="mMines">10</div></div>
+        <div class="info-box"><div class="label">🚩 标记</div><div class="value" id="mFlags">0</div></div>
+        <div class="info-box"><div class="label">⏱ 时间</div><div class="value small" id="mTime">00:00</div></div>
+      </div>
+    </div>
+    <div class="status-msg" id="mStatus">&nbsp;</div>
+    <div class="controls">
+      <div style="display:flex;gap:8px;justify-content:center;width:100%;margin-bottom:6px;">
+        <button class="ctrl-btn wide" id="mRestart" style="background:#1a2a1e;border-color:#484;">🔄 重新开始</button>
+        <button class="ctrl-btn wide m-flag-btn" id="mFlagToggle">🚩 标记模式</button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;width:100%;">
+        <button class="ctrl-btn wide" id="mPause" style="background:#1a1a3e;border-color:#55f;">⏸ 暂停</button>
+        <button class="ctrl-btn" id="btnSoundMine" style="font-size:18px;width:44px;padding:8px 10px;background:#333;border-color:#666;">🔊</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS SCREEN -->
+<div class="screen" id="screenStats">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackStats">← 返回</button></div>
+  <div class="select-title">📊 游戏统计</div>
+  <table class="stats-table" id="statsTable">
+    <thead><tr><th>游戏</th><th>难度</th><th>局数</th><th>胜率</th><th>最高分</th></tr></thead>
+    <tbody id="statsBody"></tbody>
+  </table>
+  <div class="stats-empty" id="statsEmpty">暂无数据，快去玩两局吧 👺</div>
+</div>
+
+
+
 
 <!-- GAME OVER OVERLAY -->
 <div class="overlay" id="gameOverOverlay">
@@ -905,6 +997,322 @@ document.getElementById("goBack").onclick=function(){
   }else{
     _origGoBack();
   }
+};
+
+
+
+// ===== STATS SYSTEM =====
+function statsKey(g,d){return g+"_"+d+"_stats";}
+function loadStats(g,d){
+  try{var v=localStorage.getItem(statsKey(g,d));return v?JSON.parse(v):{played:0,won:0,bestScore:0,totalTime:0,bestTime:0};}
+  catch(e){return{played:0,won:0,bestScore:0,totalTime:0,bestTime:0};}
+}
+function saveStats(g,d,s){localStorage.setItem(statsKey(g,d),JSON.stringify(s));}
+function recordGame(g,d,score,timeSec,won){
+  var s=loadStats(g,d);s.played++;if(won)s.won++;
+  if(score>s.bestScore)s.bestScore=score;
+  s.totalTime+=timeSec;
+  if(won&&(s.bestTime===0||timeSec<s.bestTime))s.bestTime=timeSec;
+  saveStats(g,d,s);
+}
+
+document.getElementById("btnStats").onclick=function(){
+  _initAudio();
+  var rows=[];
+  var games=[{id:"tetris",name:"🧱 俄罗斯方块",score:"分"},{id:"snake",name:"🐍 贪吃蛇",score:"分"},{id:"2048",name:"🧩 2048",score:"分"},{id:"minesweeper",name:"💣 扫雷",score:"秒"}];
+  games.forEach(function(g){
+    ["easy","normal","hard"].forEach(function(d){
+      var s=loadStats(g.id,d);
+      if(s.played>0){
+        var wr=Math.round(s.won/s.played*100);
+        var best=g.id==="minesweeper"?(s.bestTime>0?s.bestTime+"s":"--"):s.bestScore;
+        var dl={"easy":"简单","normal":"普通","hard":"困难"}[d];
+        rows.push('<tr><td class="game-name">'+g.name+'</td><td>'+dl+'</td><td>'+s.played+'</td><td class="win-rate">'+wr+'%</td><td class="best">'+best+'</td></tr>');
+      }
+    });
+  });
+  var body=document.getElementById("statsBody"),empty=document.getElementById("statsEmpty");
+  if(rows.length===0){body.innerHTML="";empty.style.display="block";}
+  else{body.innerHTML=rows.join("");empty.style.display="none";}
+  ss("screenStats");
+};
+document.getElementById("btnBackStats").onclick=function(){ss("screenMenu");};
+document.getElementById("cardMinesweeper").onclick=function(){_initAudio();ss("screenMinesweeperDiff");};
+
+// ===== MINESWEEPER =====
+var MG={easy:{r:9,c:9,mines:10,cell:36,label:"简单",e:"🟢"},normal:{r:14,c:14,mines:35,cell:24,label:"普通",e:"🟡"},hard:{r:18,c:18,mines:65,cell:20,label:"困难",e:"🔴"}};
+var mc="normal",mRows=14,mCols=14,mMines=35,mCell=24;
+var mBoard=[],mStarted=0,mGameOver=0,mPause=0,mWin=0,mFlagMode=0;
+var mTimer=0,mTimerId=null,mFlags=0,mFirstClick=1;
+var mCanvas,mCtx,mFlagEl,mTimerEl,mStatusEl,mBadgeEl,mMinesEl;
+
+// Get cell coords from event
+var _mlTimer=null,_mtCell=null;
+function _getMCell(x,y){
+  var rect=mCanvas.getBoundingClientRect();
+  var sx=mCanvas.width/rect.width,sy=mCanvas.height/rect.height;
+  var r=Math.floor((y-rect.top)*sy/mCell),c=Math.floor((x-rect.left)*sx/mCell);
+  if(r>=0&&r<mRows&&c>=0&&c<mCols)return{r:r,c:c};
+  return null;
+}
+function _doClick(r,c){
+  if(mFlagMode){mToggleFlag(r,c);return;}
+  var cell=mBoard[r][c];
+  if(cell.flag||cell.rev||mGameOver||mPause)return;
+  if(mFirstClick){mPlaceMines(r,c);mFirstClick=0;mStarted=1;
+    mTimerId=setInterval(function(){if(!mPause&&!mGameOver){mTimer++;mTimerEl.textContent=String(Math.floor(mTimer/60)).padStart(2,"0")+":"+String(mTimer%60).padStart(2,"0");}},1000);
+    mStatusEl.textContent="💣 扫雷中...";
+  }
+  mReveal(r,c);
+}
+
+mCanvas=document.getElementById("mBoard");mCtx=mCanvas.getContext("2d");
+mFlagEl=document.getElementById("mFlags");mTimerEl=document.getElementById("mTime");
+mStatusEl=document.getElementById("mStatus");mBadgeEl=document.getElementById("mDiffBadge");
+mMinesEl=document.getElementById("mMines");
+
+// Mouse events
+mCanvas.onmousedown=function(e){
+  if(!mCanvas||mGameOver||mPause)return;
+  var cell=_getMCell(e.clientX,e.clientY);if(!cell)return;
+  if(!mStarted){_doClick(cell.r,cell.c);return;}
+  _mtCell=cell;
+  _mlTimer=setTimeout(function(){if(_mtCell){mToggleFlag(_mtCell.r,_mtCell.c);_mtCell=null;}_mlTimer=null;},500);
+};
+mCanvas.onmouseup=function(e){
+  if(_mlTimer){clearTimeout(_mlTimer);_mlTimer=null;
+    if(_mtCell&&!mGameOver&&!mPause&&mStarted)_doClick(_mtCell.r,_mtCell.c);
+    _mtCell=null;
+  }
+};
+mCanvas.onmouseleave=function(){if(_mlTimer){clearTimeout(_mlTimer);_mlTimer=null;_mtCell=null;}};
+
+// Touch events
+mCanvas.addEventListener("touchstart",function(e){
+  if(!mCanvas||mGameOver||mPause)return;e.preventDefault();
+  if(!mStarted){var cell=_getMCell(e.touches[0].clientX,e.touches[0].clientY);if(cell){_doClick(cell.r,cell.c);}return;}
+  _mtCell=_getMCell(e.touches[0].clientX,e.touches[0].clientY);if(!_mtCell)return;
+  _mlTimer=setTimeout(function(){if(_mtCell){mToggleFlag(_mtCell.r,_mtCell.c);}_mtCell=null;_mlTimer=null;},500);
+},{passive:false});
+mCanvas.addEventListener("touchend",function(e){
+  e.preventDefault();
+  if(_mlTimer){clearTimeout(_mlTimer);_mlTimer=null;
+    if(_mtCell&&!mGameOver&&!mPause&&mStarted)_doClick(_mtCell.r,_mtCell.c);
+    _mtCell=null;
+  }
+});
+mCanvas.addEventListener("touchmove",function(){if(_mlTimer){clearTimeout(_mlTimer);_mlTimer=null;_mtCell=null;}});
+
+function mInit(){
+  var g=MG[mc];mRows=g.r;mCols=g.c;mMines=g.mines;mCell=g.cell;
+  var sz=mRows*mCell;
+  mCanvas.width=sz;mCanvas.height=sz;
+  mCanvas.style.width=Math.min(sz,360)+"px";
+  mBoard=[];for(var r=0;r<mRows;r++){mBoard[r]=[];for(var c=0;c<mCols;c++)mBoard[r][c]={mine:0,rev:0,flag:0,adj:0};}
+  mStarted=0;mGameOver=0;mPause=0;mWin=0;mFlagMode=0;mFirstClick=1;mFlags=0;mTimer=0;
+  if(mTimerId){clearInterval(mTimerId);mTimerId=null;}
+  document.getElementById("mPauseOverlay").classList.remove("active");
+  document.getElementById("mPause").textContent="⏸ 暂停";
+  updateFlagBtn();
+  mFlagEl.textContent="0";mTimerEl.textContent="00:00";
+  mStatusEl.textContent="💣 点击任意格子开始";
+  mMinesEl.textContent=mMines;
+  mDraw();
+}
+
+function mPlaceMines(sr,sc){
+  var safe={};safe[sr*mCols+sc]=1;
+  for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++){
+    var nr=sr+dr,nc=sc+dc;
+    if(nr>=0&&nr<mRows&&nc>=0&&nc<mCols)safe[nr*mCols+nc]=1;
+  }
+  var list=[];for(var i=0;i<mRows*mCols;i++)if(!safe[i])list.push(i);
+  for(var i=list.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=list[i];list[i]=list[j];list[j]=t;}
+  for(var i=0;i<Math.min(mMines,list.length);i++){
+    var r=Math.floor(list[i]/mCols),c=list[i]%mCols;
+    mBoard[r][c].mine=1;
+    for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++){
+      var nr2=r+dr,nc2=c+dc;
+      if(nr2>=0&&nr2<mRows&&nc2>=0&&nc2<mCols&&!mBoard[nr2][nc2].mine)mBoard[nr2][nc2].adj++;
+    }
+  }
+}
+
+function mFlood(r,c){
+  if(r<0||r>=mRows||c<0||c>=mCols)return;
+  var cell=mBoard[r][c];if(cell.rev||cell.flag||cell.mine)return;
+  cell.rev=1;
+  if(cell.adj===0)for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++)mFlood(r+dr,c+dc);
+}
+
+function mReveal(r,c){
+  if(r<0||r>=mRows||c<0||c>=mCols)return;
+  var cell=mBoard[r][c];if(cell.rev||cell.flag)return;
+  cell.rev=1;
+  if(cell.mine){
+    mGameOver=1;mWin=0;
+    if(mTimerId){clearInterval(mTimerId);mTimerId=null;}
+    for(var rr=0;rr<mRows;rr++)for(var cc=0;cc<mCols;cc++)if(mBoard[rr][cc].mine)mBoard[rr][cc].rev=1;
+    mDraw();_playGameOver();
+    recordGame("minesweeper",mc,0,mTimer,0);
+    setTimeout(function(){if(mGameOver)mGO(0);},600);
+    return;
+  }
+  if(cell.adj===0)mFlood(r,c);
+  mCheckWin();mDraw();
+}
+
+function mToggleFlag(r,c){
+  if(r<0||r>=mRows||c<0||c>=mCols)return;
+  var cell=mBoard[r][c];if(cell.rev)return;
+  cell.flag=!cell.flag;mFlags+=cell.flag?1:-1;
+  mFlagEl.textContent=mFlags;mDraw();
+}
+
+function mCheckWin(){
+  for(var r=0;r<mRows;r++)for(var c=0;c<mCols;c++)if(!mBoard[r][c].mine&&!mBoard[r][c].rev)return;
+  mWin=1;mGameOver=1;
+  if(mTimerId){clearInterval(mTimerId);mTimerId=null;}
+  for(var r=0;r<mRows;r++)for(var c=0;c<mCols;c++)if(mBoard[r][c].mine&&!mBoard[r][c].flag){mBoard[r][c].flag=1;mFlags++;}
+  mFlagEl.textContent=mFlags;_playClear();
+  recordGame("minesweeper",mc,0,mTimer,1);
+  mDraw();
+  setTimeout(function(){mGO(1);},400);
+}
+
+var _mNC=["","#4af","#4a4","#f44","#448","#844","#488","#000","#888"];
+function mDraw(){
+  mCtx.clearRect(0,0,mCanvas.width,mCanvas.height);
+  for(var r=0;r<mRows;r++){
+    for(var c=0;c<mCols;c++){
+      var x=c*mCell,y=r*mCell;var cell=mBoard[r][c];
+      if(cell.rev){
+        mCtx.fillStyle=cell.mine?"#633":"#1a2a3a";mCtx.fillRect(x+1,y+1,mCell-2,mCell-2);
+        if(cell.mine){
+          mCtx.font=Math.floor(mCell*0.6)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
+          mCtx.fillText("💣",x+mCell/2,y+mCell/2);
+        }else if(cell.adj>0){
+          mCtx.fillStyle=_mNC[cell.adj];
+          mCtx.font="bold "+Math.floor(mCell*0.55)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
+          mCtx.fillText(cell.adj,x+mCell/2,y+mCell/2);
+        }
+      }else{
+        mCtx.fillStyle="#3a5a8a";mCtx.fillRect(x+1,y+1,mCell-2,mCell-2);
+        mCtx.fillStyle="#5a7aaa";mCtx.fillRect(x+1,y+1,mCell-2,2);mCtx.fillRect(x+1,y+1,2,mCell-2);
+        mCtx.fillStyle="#1a3a5a";mCtx.fillRect(x+1,y+mCell-3,mCell-2,2);mCtx.fillRect(x+mCell-3,y+1,2,mCell-2);
+        if(cell.flag){
+          mCtx.font=Math.floor(mCell*0.6)+"px sans-serif";mCtx.textAlign="center";mCtx.textBaseline="middle";
+          mCtx.fillText("🚩",x+mCell/2,y+mCell/2);
+        }
+      }
+      mCtx.strokeStyle="#1a2a3a";mCtx.lineWidth=0.5;mCtx.strokeRect(x+0.5,y+0.5,mCell-1,mCell-1);
+    }
+  }
+}
+
+function mToggleFlagMode(){mFlagMode=!mFlagMode;updateFlagBtn();mStatusEl.textContent=mFlagMode?"🚩 标记模式已开启":"💣 扫雷中...";}
+function updateFlagBtn(){
+  var b=document.getElementById("mFlagToggle");
+  b.textContent=mFlagMode?"🚩 标记中":"🚩 标记模式";b.classList.toggle("on",mFlagMode);
+}
+function mTogglePause(){
+  if(mGameOver)return;mPause=!mPause;
+  if(mPause)_playPause();else _playResume();
+  document.getElementById("mPauseOverlay").classList.toggle("active",mPause);
+  if(mPause){document.getElementById("mPause").textContent="▶ 继续";mStatusEl.textContent="⏸ 已暂停";}
+  else{document.getElementById("mPause").textContent="⏸ 暂停";mStatusEl.textContent=mFlagMode?"🚩 标记模式已开启":"💣 扫雷中...";}
+}
+function mGO(won){
+  document.querySelector("#gameOverOverlay .o-title").textContent=won?"🎉 你赢了！":"💣 踩雷了！";
+  document.getElementById("goDiff").textContent=MG[mc].e+" "+MG[mc].label;
+  var se=document.getElementById("goScore");se.textContent=mTimer+"s";se.style.color=won?"#4f4":"#f44";
+  var best=loadStats("minesweeper",mc).bestTime;
+  document.getElementById("goRecord").textContent="☼ 最佳: "+(best>0?best+"s":"--");
+  document.getElementById("goDetail").innerHTML="🚩 "+mFlags+"/"+mMines;
+  window._mog="minesweeper";document.getElementById("gameOverOverlay").classList.add("active");
+}
+function mRestartConfirm(){
+  if(!mStarted)return;
+  showConfirm("确定重新开始？当前进度将丢失",function(){mInit();});
+}
+
+// Button bindings
+document.getElementById("btnBackMDiff").onclick=function(){ss("screenSelect");};
+document.getElementById("btnBackMM").onclick=function(){if(mTimerId){clearInterval(mTimerId);mTimerId=null;}mStarted=0;ss("screenMinesweeperDiff");};
+document.getElementById("mRestart").onclick=mRestartConfirm;
+document.getElementById("mPause").onclick=mTogglePause;
+document.getElementById("mFlagToggle").onclick=mToggleFlagMode;
+document.getElementById("btnSoundMine").onclick=function(){
+  _initAudio();_soundOn=!_soundOn;
+  ["btnSound","btnSoundSnake","btnSound2048","btnSoundMine"].forEach(function(id2){
+    var el2=document.getElementById(id2);if(el2)el2.textContent=_soundOn?"🔊":"🔇";
+  });_playSelect();
+};
+
+// Difficulty buttons
+["easy","normal","hard"].forEach(function(d){
+  document.getElementById("mDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){
+    mc=d;var g=MG[d];
+    mBadgeEl.textContent=g.e+" "+g.label;ss("screenMinesweeper");mInit();
+  };
+});
+
+// Keyboard for minesweeper
+var _kd2=document.onkeydown;
+document.onkeydown=function(e){
+  var ms=document.getElementById("screenMinesweeper");
+  if(ms&&ms.classList.contains("active")&&mStarted){
+    if(e.key==="p"||e.key==="P"){e.preventDefault();mTogglePause();return;}
+    if(!mGameOver&&!mPause&&(e.key==="f"||e.key==="F")){e.preventDefault();mToggleFlagMode();return;}
+    return;
+  }
+  if(_kd2)_kd2(e);
+};
+
+// Extend uhs for minesweeper
+var _uhs2=uhs;
+uhs=function(){
+  _uhs2();
+  ["easy","normal","hard"].forEach(function(k){
+    var el=document.getElementById("mdhs"+k[0].toUpperCase()+k.slice(1));
+    if(el){var bt=loadStats("minesweeper",k).bestTime;el.textContent=bt>0?bt:"--";}
+    var el2=document.getElementById("mhs"+k[0].toUpperCase()+k.slice(1));
+    if(el2){var bt2=loadStats("minesweeper",k).bestTime;el2.textContent=bt2>0?bt2:"0";}
+  });
+};
+
+// Extend goRestart/goBack for minesweeper + stats recording
+var _gor3=document.getElementById("goRestart").onclick;
+document.getElementById("goRestart").onclick=function(){
+  var ov=document.getElementById("gameOverOverlay");
+  // Record stats for tetris/snake on restart click
+  if(ov.classList.contains("active")){
+    if(window._mog==="tetris")recordGame("tetris",window.tc||"normal",window.tsc||0,Math.floor(((window.tts?Date.now()-window.tts:0))/1000),0);
+    if(window._mog==="snake")recordGame("snake",window.sc||"normal",window.ssc||0,Math.floor(((window.sst?Date.now()-window.sst:0))/1000),0);
+  }
+  ov.classList.remove("active");
+  var t=document.querySelector("#gameOverOverlay .o-title");if(t)t.textContent="💀 游戏结束";
+  if(window._mog==="minesweeper"){document.getElementById("mPauseOverlay").classList.remove("active");document.getElementById("mPause").textContent="⏸ 暂停";mInit();}
+  else if(window._mog==="g2048"){document.getElementById("gPauseOverlay").classList.remove("active");document.getElementById("gPause").textContent="⏸ 暂停";gWonAlready=false;gInit();}
+  else if(_gor3){_gor3();}
+};
+
+var _gob3=document.getElementById("goBack").onclick;
+document.getElementById("goBack").onclick=function(){
+  document.getElementById("gameOverOverlay").classList.remove("active");
+  var t=document.querySelector("#gameOverOverlay .o-title");if(t)t.textContent="💀 游戏结束";
+  if(window._mog==="minesweeper"){if(mTimerId){clearInterval(mTimerId);mTimerId=null;}mStarted=0;ss("screenMinesweeperDiff");}
+  else if(window._mog==="g2048"){if(gTimerId){clearInterval(gTimerId);gTimerId=null;}gStarted=0;ss("screen2048Diff");}
+  else if(_gob3){_gob3();}
+};
+
+// Extend confirm/pause for minesweeper
+var _res3=_resumeGame;
+_resumeGame=function(){_res3();if(_confirmState===3){if(mPause)mTogglePause();_confirmState=0;}};
+var _sc3=showConfirm;
+showConfirm=function(msg,cb){
+  _sc3(msg,cb);
+  if(window.mc&&!mPause&&mStarted&&!mGameOver){mTogglePause();_confirmState=3;}
 };
 
 </script>
