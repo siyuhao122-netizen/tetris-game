@@ -450,7 +450,7 @@ var GD={easy:{l:"简单",t:1024,e:"🟢",f2:true},normal:{l:"普通",t:2048,e:"�
 var gc="normal",gBoardArr=[],gScore=0,gGameOver=0,gPause=0,gStarted=0,gTimer=0,gTimerId=null,gMerged=[];
 var gCanvas=document.getElementById("gBoard"),gCtx=gCanvas.getContext("2d");
 var gScoreEl=document.getElementById("gScore"),gBestEl=document.getElementById("gBest"),gStatusEl=document.getElementById("gStatus"),gBadgeEl=document.getElementById("gDiffBadge");
-var G_SIZE=4,G_CELL=100,G_GAP=4,G_PAD=8;
+var G_SIZE=4,G_CELL=93,G_GAP=4,G_PAD=8;
 var gTileColors={
   0:null,
   2:"#eee4da",4:"#ede0c8",8:"#f2b179",16:"#f59563",32:"#f67c5f",64:"#f65e3b",
@@ -739,7 +739,7 @@ function gDraw(){
       gCtx.fillStyle=color;
       gCtx.fillRect(x,y,G_CELL,G_CELL);
       gCtx.fillStyle=textColor;
-      var fs=val<100?40:val<1000?32:val<10000?24:18;
+      var fs=val<100?38:val<1000?30:val<10000?22:16;
       gCtx.font="bold "+fs+"px -apple-system, 'Segoe UI', sans-serif";
       gCtx.textAlign="center";
       gCtx.textBaseline="middle";
