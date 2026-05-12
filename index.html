@@ -584,7 +584,7 @@ if (typeof cloudbase === 'undefined') {
       _achieveBadge('云端认证失败: '+e.message,'❌');
       _tcbAuthPromise = null;
     });
-  } catch(e) { _achieveBadge('云端初始化失败','❌'); }
+  } catch(e) { _achieveBadge('初始化失败: '+(e.message||e),'❌'); }
 }
 
 var _theme=localStorage.getItem("goblin_theme")||"dark";
