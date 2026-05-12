@@ -557,7 +557,6 @@ function _playResume(){_playTone(250,0.08,0.1);setTimeout(function(){_playTone(3
 function _setupHiDPI(canvas,ctx,w,h){
   var dpr=window.devicePixelRatio||1;
   canvas.width=w*dpr;canvas.height=h*dpr;
-  canvas.style.width=w+"px";canvas.style.height=h+"px";
   ctx.scale(dpr,dpr);
 }
 function uhs(){["easy","normal","hard"].forEach(function(k){["ths","tdhs","shs","sdhs"].forEach(function(p){var e=document.getElementById(p+k[0].toUpperCase()+k.slice(1));if(e){var v=(p==="ths"||p==="tdhs")?ghs("tetris",k):ghs("snake",k);e.textContent=v;}});});}
