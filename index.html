@@ -717,31 +717,17 @@ function _showAuthModal(mode) {
         return r.json();
       }).then(function(data) {
         if (!data || !data.length) return;
-        var row = data[0];
-        _saveSession(String(row.id), user, dname);
-        // Show success in modal for 2s then close
+        // Show success then switch to login
         var titleEl = document.getElementById("authTitle");
         titleEl.textContent = '✅ 注册成功！';
         titleEl.style.color = '#4f4';
-        document.getElementById("authPass").style.display = 'none';
-        document.getElementById("authPass2").style.display = 'none';
-        document.getElementById("authDisplay").style.display = 'none';
-        document.getElementById("authUser").style.display = 'none';
         document.getElementById("authConfirm").style.display = 'none';
-        document.getElementById("authSwitch").style.display = 'none';
         document.getElementById("authError").style.display = 'none';
         setTimeout(function() {
-          document.getElementById("authOverlay").style.display = 'none';
-          titleEl.textContent = '👋 注册账号';
+          _showAuthModal('login');
           titleEl.style.color = '';
-          document.getElementById("authPass").style.display = '';
-          document.getElementById("authUser").style.display = '';
-          document.getElementById("authConfirm").style.display = '';
-          document.getElementById("authSwitch").style.display = '';
-          document.getElementById("authDisplay").style.display = 'block';
-          document.getElementById("authPass2").style.display = 'block';
         }, 1500);
-        _achieveBadge('欢迎 '+dname+'！','👋');
+        _achieveBadge('注册成功，请登录','👋');
       }).catch(function() { errEl.textContent = '注册失败，请重试'; errEl.style.display = 'block'; });
     } else {
       // Login
