@@ -187,6 +187,10 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <div class="screen" id="screenSelect">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackMenu">← 返回</button></div>
   <div class="select-title">🎯 选择游戏</div>
+  <div class="game-card" id="cardBattle">
+    <div class="name">🆚 方块对战</div>
+    <div class="desc">实时对战，消行给对方加垃圾！</div>
+  </div>
   <div class="game-card" id="cardTetris">
     <div class="name">🧱 俄罗斯方块</div>
     <div class="desc">经典下落消除，手机触屏优化版</div>
@@ -234,6 +238,63 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 
 
   
+
+<!-- BATTLE LOBBY -->
+<div class="screen" id="screenBattleLobby">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackBattle">← 返回</button></div>
+  <div class="select-title">🆚 方块对战</div>
+  <div class="o-detail" style="margin-bottom:20px;font-size:14px;color:#aaa;">创建房间或输入房间码加入</div>
+  <button class="menu-btn" id="btnCreateRoom" style="margin-bottom:20px;">🏠 创建房间</button>
+  <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
+    <input id="roomCodeInput" type="text" maxlength="6" placeholder="输入6位房间码" style="width:160px;padding:12px;border-radius:10px;border:1px solid var(--bdr);background:var(--surface);color:var(--txt);font-size:18px;text-align:center;text-transform:uppercase;" autocomplete="off">
+    <button class="menu-btn" id="btnJoinRoom" style="font-size:16px;padding:12px 24px;">🔗 加入</button>
+  </div>
+  <div class="o-detail" id="lobbyMsg" style="margin-top:14px;font-size:13px;color:#f44;display:none;"></div>
+</div>
+
+<!-- BATTLE WAITING -->
+<div class="screen" id="screenBattleWait">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackWait">← 退出</button></div>
+  <div class="select-title">⏳ 等待对手...</div>
+  <div class="o-detail" style="font-size:16px;color:#aaa;margin-bottom:20px;">房间码：<span id="waitCode" style="color:#4af;font-size:24px;font-weight:bold;"></span></div>
+  <div class="o-detail" id="waitStatus" style="font-size:14px;color:#888;">等待对手加入...</div>
+</div>
+
+<!-- BATTLE GAME -->
+<div class="screen" id="screenBattle">
+  <div style="width:100%;text-align:left;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+    <button class="back-btn" id="btnBackBG">← 退出</button>
+    <span class="o-detail" id="battleInfo" style="font-size:13px;color:#888;margin:0;"></span>
+  </div>
+  <div class="game-wrapper">
+    <div style="display:flex;gap:4px;align-items:flex-start;justify-content:center;flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-size:12px;color:#4af;margin-bottom:2px;">你</div>
+        <div class="board-wrap" style="position:relative;">
+          <canvas id="b1Board" class="gcanvas" width="150" height="300"></canvas>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:12px;color:#f44;margin-bottom:2px;">对手</div>
+        <div class="board-wrap" style="position:relative;">
+          <canvas id="b2Board" class="gcanvas" width="150" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="status-msg" id="battleStatus" style="min-height:20px;">&nbsp;</div>
+    <div class="controls" style="margin-top:2px;">
+      <div class="ctrl-row" style="gap:6px;">
+        <button class="ctrl-btn sdir" id="b1Left">◀</button>
+        <button class="ctrl-btn sdir" id="b1Rotate">↻</button>
+        <button class="ctrl-btn sdir" id="b1Right">▶</button>
+      </div>
+      <div class="ctrl-row" style="gap:6px;margin-top:2px;">
+        <button class="ctrl-btn wide" id="b1Down">▼ 下落</button>
+        <button class="ctrl-btn wide special" id="b1Drop">⬇ 硬降</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- TETRIS DIFFICULTY -->
 <div class="screen" id="screenTetrisDiff">
@@ -649,10 +710,16 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0/dist/umd/supabase.min.js"></script>
 <script>
 // ===== SUPABASE =====
 var _sbUrl = 'https://apazkbetrmqvrtnmhmih.supabase.co';
 var _sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwYXprYmV0cm1xdnJ0bm1obWloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NjE4MDAsImV4cCI6MjA5NDEzNzgwMH0.PLF1qUPVkhGbAJT77OBS-tqw-3iv9E9GPfqNJOA5C9E';
+var _sbClient = null;
+var _sbChannel = null;
+if (typeof supabase !== 'undefined' && supabase.createClient) {
+  _sbClient = supabase.createClient(_sbUrl, _sbKey);
+}
 
 // ===== AUTH =====
 var _userId = null;
@@ -1618,6 +1685,187 @@ document.getElementById("goBack").onclick=function(){
   if(tEl)tEl.textContent="💀 游戏结束";
   if(window._gog==="breakout"){if(bTimerId){clearInterval(bTimerId);}if(bLoopId){clearInterval(bLoopId);}bStarted=0;ss("screenBreakoutDiff");return;}
   _origGBb();
+};
+
+// ====== BATTLE TETRIS ======
+var _bRoom=null,_bPlayer=0,_bOppName="",_bGarbage=0,_bSentLines=0;
+var _b1Board=[],_b1Cur=null,_b1Next=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
+var _b2Board=[],_b2Data=[]; // opponent board rendered from remote data
+var _b1Canvas,_b1Ctx,_b2Canvas,_b2Ctx,_b1Loop=null,_b1Speed=600;
+
+function _b1Init(){
+  _b1Canvas=document.getElementById("b1Board");_b1Ctx=_b1Canvas.getContext("2d");_setupHiDPI(_b1Canvas,_b1Ctx,150,300);
+  _b2Canvas=document.getElementById("b2Board");_b2Ctx=_b2Canvas.getContext("2d");_setupHiDPI(_b2Canvas,_b2Ctx,150,300);
+  _b1Board=[];for(var r=0;r<20;r++)_b1Board.push(new Array(10).fill(0));
+  _b2Board=[];for(var r=0;r<20;r++)_b2Board.push(new Array(10).fill(0));
+  _b1Score=0;_b1GameOver=0;_bGarbage=0;_bSentLines=0;
+  _b1Bag=[];_b1Cur=null;_b1Next=null;
+  document.getElementById("battleStatus").textContent="";
+  _b1Spawn();_b1Draw();_b2Draw();
+  _b1Speed=600;
+  if(_b1Loop)clearInterval(_b1Loop);
+  _b1Loop=setInterval(function(){if(!_b1GameOver)_b1Tick();},_b1Speed);
+}
+
+function _b1Spawn(){
+  if(_b1Bag.length===0){_b1Bag=[0,1,2,3,4,5,6];for(var i=_b1Bag.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=_b1Bag[i];_b1Bag[i]=_b1Bag[j];_b1Bag[j]=t;}}
+  var type=_b1Bag.pop();var S=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]]];
+  _b1Cur={shape:S[type].map(function(r){return r.slice();}),x:Math.floor((10-S[type][0].length)/2),y:0,type:type};
+  if(!_b1CanPlace(_b1Cur.shape,_b1Cur.x,_b1Cur.y)){_b1GameOver=1;_bLose();}
+}
+function _b1CanPlace(sh,px,py){for(var r=0;r<sh.length;r++)for(var c=0;c<sh[r].length;c++){if(!sh[r][c])continue;var bx=px+c,by=py+r;if(bx<0||bx>=10||by>=20)return 0;if(by<0)continue;if(_b1Board[by][bx])return 0;}return 1;}
+
+function _b1Tick(){
+  if(_b1GameOver||!_b1Cur)return;
+  if(_b1CanPlace(_b1Cur.shape,_b1Cur.x,_b1Cur.y+1)){_b1Cur.y++;}
+  else{_b1Lock();}
+  _b1Draw();
+}
+function _b1Lock(){
+  if(!_b1Cur)return;
+  for(var r=0;r<_b1Cur.shape.length;r++)for(var c=0;c<_b1Cur.shape[r].length;c++){
+    if(!_b1Cur.shape[r][c])continue;var by=_b1Cur.y+r;if(by>=0)_b1Board[by][_b1Cur.x+c]=_b1Cur.type+1;
+  }
+  var cleared=0;
+  for(var r=19;r>=0;r--){if(_b1Board[r].every(function(v){return v!==0;})){_b1Board.splice(r,1);_b1Board.unshift(new Array(10).fill(0));cleared++;r++;}}
+  if(cleared>0){
+    _b1Score+=cleared;
+    // Send garbage to opponent
+    var gc=cleared===4?4:cleared-1;
+    if(gc>0&&_sbChannel){_sbChannel.send({type:'broadcast',event:'garbage',payload:{count:gc}});}
+    document.getElementById("battleStatus").textContent="消行 +"+cleared+"！发送垃圾 "+gc;
+  }
+  // Apply pending garbage
+  if(_bGarbage>0){
+    var g=Math.min(_bGarbage,8);_bGarbage-=g;
+    for(var i=0;i<g;i++){_b1Board.shift();var gr=new Array(10).fill(8);var hole=Math.floor(Math.random()*10);gr[hole]=0;_b1Board.push(gr);}
+  }
+  _b1Spawn();_b1Draw();
+}
+function _b1Move(dx){if(_b1Cur&&_b1GameOver===0&&_b1CanPlace(_b1Cur.shape,_b1Cur.x+dx,_b1Cur.y)){_b1Cur.x+=dx;_b1Draw();}}
+function _b1Rotate(){if(!_b1Cur||_b1GameOver)return;
+  var rot=_b1Cur.shape[0].map(function(_,i){return _b1Cur.shape.map(function(r){return r[i];}).reverse();});
+  for(var k=0;k<5;k++){var kk=[0,-1,1,-2,2][k];if(_b1CanPlace(rot,_b1Cur.x+kk,_b1Cur.y)){_b1Cur.shape=rot;_b1Cur.x+=kk;_b1Draw();return;}}
+}
+function _b1Down(){if(_b1Cur&&_b1GameOver===0){if(_b1CanPlace(_b1Cur.shape,_b1Cur.x,_b1Cur.y+1)){_b1Cur.y++;}else{_b1Lock();}_b1Draw();}}
+function _b1Drop(){if(_b1Cur&&_b1GameOver===0){while(_b1CanPlace(_b1Cur.shape,_b1Cur.x,_b1Cur.y+1))_b1Cur.y++;_b1Lock();_b1Draw();}}
+
+function _b1Draw(){
+  _b1Ctx.clearRect(0,0,150,300);_b1Ctx.fillStyle="#1a1a2e";_b1Ctx.fillRect(0,0,150,300);
+  _b1Ctx.strokeStyle="#333";_b1Ctx.lineWidth=0.5;
+  for(var r=0;r<=20;r++){_b1Ctx.beginPath();_b1Ctx.moveTo(0,r*15);_b1Ctx.lineTo(150,r*15);_b1Ctx.stroke();}
+  for(var c=0;c<=10;c++){_b1Ctx.beginPath();_b1Ctx.moveTo(c*15,0);_b1Ctx.lineTo(c*15,300);_b1Ctx.stroke();}
+  var colors=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];
+  for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(_b1Board[r][c]){_b1Ctx.fillStyle=colors[_b1Board[r][c]-1]||"#888";_b1Ctx.fillRect(c*15+1,r*15+1,13,13);}}
+  if(_b1Cur)for(var r=0;r<_b1Cur.shape.length;r++)for(var c=0;c<_b1Cur.shape[r].length;c++){
+    if(_b1Cur.shape[r][c]){var by=_b1Cur.y+r;if(by>=0){_b1Ctx.fillStyle=colors[_b1Cur.type]||"#888";_b1Ctx.fillRect((_b1Cur.x+c)*15+1,by*15+1,13,13);}}
+  }
+  // Ghost
+  if(_b1Cur){var gy=_b1Cur.y;while(_b1CanPlace(_b1Cur.shape,_b1Cur.x,gy+1))gy++;if(gy>_b1Cur.y){_b1Ctx.fillStyle="rgba(255,255,255,0.1)";for(var r=0;r<_b1Cur.shape.length;r++)for(var c=0;c<_b1Cur.shape[r].length;c++){if(_b1Cur.shape[r][c]&&gy+r>=0)_b1Ctx.fillRect((_b1Cur.x+c)*15+1,(gy+r)*15+1,13,13);}}
+  }
+}
+function _b2Draw(){
+  _b2Ctx.clearRect(0,0,150,300);_b2Ctx.fillStyle="#1a1a2e";_b2Ctx.fillRect(0,0,150,300);
+  var colors=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];
+  for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(_b2Board[r][c]){_b2Ctx.fillStyle=colors[_b2Board[r][c]-1]||"#888";_b2Ctx.fillRect(c*15+1,r*15+1,13,13);}}
+}
+function _bLose(){
+  _b1GameOver=1;
+  document.getElementById("battleStatus").textContent="💀 你输了！";
+  if(_sbChannel){_sbChannel.send({type:'broadcast',event:'lose',payload:{}});_sbChannel.unsubscribe();_sbChannel=null;}
+  setTimeout(function(){_showBattleResult();},2000);
+}
+function _bWin(){
+  document.getElementById("battleStatus").textContent="🎉 你赢了！";
+  if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}
+  setTimeout(function(){_showBattleResult();},2000);
+}
+
+function _showBattleResult(){
+  if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}
+  ss("screenBattleLobby");
+}
+
+// Room management
+function _bGenCode(){var c="";for(var i=0;i<6;i++)c+="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)];return c;}
+
+document.getElementById("btnCreateRoom").onclick=function(){
+  if(!_sbClient){document.getElementById("lobbyMsg").textContent="SDK未加载";document.getElementById("lobbyMsg").style.display="block";return;}
+  var code=_bGenCode();
+  _sbReq('POST','/rest/v1/rooms',{code:code,status:'waiting',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();})
+  .then(function(data){
+    if(!data||!data.length){document.getElementById("lobbyMsg").textContent="创建失败";document.getElementById("lobbyMsg").style.display="block";return;}
+    var room=data[0];_bRoom=room;_bPlayer=1;
+    document.getElementById("waitCode").textContent=room.code;
+    document.getElementById("waitStatus").textContent="等待对手加入...";
+    ss("screenBattleWait");
+    // Listen for opponent
+    _sbChannel=_sbClient.channel('room-'+room.id);
+    _sbChannel.on('broadcast',{event:'join'},function(){_bStartGame();}).subscribe();
+    _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;}).subscribe();
+    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();}).subscribe();
+  });
+};
+
+document.getElementById("btnJoinRoom").onclick=function(){
+  if(!_sbClient){document.getElementById("lobbyMsg").textContent="SDK未加载";document.getElementById("lobbyMsg").style.display="block";return;}
+  var code=document.getElementById("roomCodeInput").value.trim().toUpperCase();
+  if(code.length!==6){document.getElementById("lobbyMsg").textContent="请输入6位房间码";document.getElementById("lobbyMsg").style.display="block";return;}
+  _sbReq('GET','/rest/v1/rooms?code=eq.'+code+'&select=*&limit=1').then(function(r){return r.json();})
+  .then(function(data){
+    if(!data||!data.length){document.getElementById("lobbyMsg").textContent="房间不存在";document.getElementById("lobbyMsg").style.display="block";return;}
+    var room=data[0];
+    if(room.status!=='waiting'){document.getElementById("lobbyMsg").textContent="房间已满";document.getElementById("lobbyMsg").style.display="block";return;}
+    _bRoom=room;_bPlayer=2;
+    // Update room
+    return _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:_userId?parseInt(_userId):null});
+  }).then(function(r){return r?r.json():null;}).then(function(){
+    if(!_bRoom)return;
+    _sbChannel=_sbClient.channel('room-'+_bRoom.id);
+    _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;}).subscribe();
+    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();}).subscribe();
+    _sbChannel.subscribe().then(function(){
+      // Notify creator
+      _sbChannel.send({type:'broadcast',event:'join',payload:{}});
+      _bStartGame();
+    });
+  });
+};
+
+function _bStartGame(){
+  ss("screenBattle");_b1Init();
+  document.getElementById("battleInfo").textContent="房间: "+_bRoom.code;
+}
+
+document.getElementById("btnBackBattle").onclick=function(){ss("screenSelect");};
+document.getElementById("btnBackWait").onclick=function(){if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenBattleLobby");};
+document.getElementById("btnBackBG").onclick=function(){if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}ss("screenBattleLobby");};
+document.getElementById("cardBattle").onclick=function(){_initAudio();ss("screenBattleLobby");};
+
+// Battle button wiring
+(function(){
+  var b1l=document.getElementById("b1Left"),b1r=document.getElementById("b1Right"),b1rt=document.getElementById("b1Rotate"),b1d=document.getElementById("b1Down"),b1dr=document.getElementById("b1Drop");
+  if(b1l){b1l.addEventListener("click",function(e){e.preventDefault();_b1Move(-1);});b1l.addEventListener("touchstart",function(e){e.preventDefault();_b1Move(-1);});}
+  if(b1r){b1r.addEventListener("click",function(e){e.preventDefault();_b1Move(1);});b1r.addEventListener("touchstart",function(e){e.preventDefault();_b1Move(1);});}
+  if(b1rt){b1rt.addEventListener("click",function(e){e.preventDefault();_b1Rotate();});b1rt.addEventListener("touchstart",function(e){e.preventDefault();_b1Rotate();});}
+  if(b1d){b1d.addEventListener("click",function(e){e.preventDefault();_b1Down();});b1d.addEventListener("touchstart",function(e){e.preventDefault();_b1Down();});}
+  if(b1dr){b1dr.addEventListener("click",function(e){e.preventDefault();_b1Drop();});b1dr.addEventListener("touchstart",function(e){e.preventDefault();_b1Drop();});}
+})();
+
+// Keyboard for battle
+var _origKBattle=document.onkeydown;
+document.onkeydown=function(e){
+  var bs=document.getElementById("screenBattle");
+  if(bs&&bs.classList.contains("active")&&!_b1GameOver){
+    switch(e.key){
+      case"ArrowLeft":e.preventDefault();_b1Move(-1);return;
+      case"ArrowRight":e.preventDefault();_b1Move(1);return;
+      case"ArrowUp":e.preventDefault();_b1Rotate();return;
+      case"ArrowDown":e.preventDefault();_b1Down();return;
+      case" ":e.preventDefault();_b1Drop();return;
+    }
+  }
+  if(_origKBattle)_origKBattle(e);
 };
 
 // ===== STATS SYSTEM =====
