@@ -1509,7 +1509,7 @@ function mReveal(r,c){
     setTimeout(function(){if(mGameOver)mGO(0);},600);
     return;
   }
-  if(cell.adj===0)mFlood(r,c);
+  if(cell.adj===0)for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++)mFlood(r+dr,c+dc);
   mCheckWin();mDraw();
 }
 
