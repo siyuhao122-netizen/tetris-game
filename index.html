@@ -158,6 +158,9 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 #lbBody .me{background:rgba(80,120,255,0.15);}
 #lbBody .me td{color:var(--accent);font-weight:bold;}
 #lbRefresh:active{background:#2a2a4e;}
+#bPauseOverlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:10;border-radius:4px}
+#bPauseOverlay.active{display:flex}
+#bPauseOverlay span{font-size:32px;font-weight:bold;color:#fff}
 </style>
 </head>
 <body>
@@ -215,6 +218,13 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     </div>
   </div>
 
+  <div class="game-card" id="cardBreakout">
+    <div class="name">🧱 打砖块</div>
+    <div class="desc">滑动挡板，消灭砖块！</div>
+    <div class="high-score-row" id="bHsRow">
+      <span>最高: <span id="bhsBest">0</span></span>
+    </div>
+  </div>
 </div>
 
 
@@ -331,6 +341,24 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
+
+<!-- BREAKOUT DIFFICULTY -->
+<div class="screen" id="screenBreakoutDiff">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackBDiff">← 返回</button></div>
+  <div class="diff-title">🧱 打砖块 · 难度</div>
+  <div class="diff-card" id="bDiffEasy">
+    <div class="dname">🟢 简单</div><div class="ddesc">3行砖块，球速较慢</div>
+    <div class="dhigh">🏆 最高 <span id="bdhsEasy">0</span></div>
+  </div>
+  <div class="diff-card" id="bDiffNormal">
+    <div class="dname">🟡 普通</div><div class="ddesc">5行砖块，经典速度</div>
+    <div class="dhigh">🏆 最高 <span id="bdhsNormal">0</span></div>
+  </div>
+  <div class="diff-card" id="bDiffHard">
+    <div class="dname">🔴 困难</div><div class="ddesc">7行砖块，球速更快</div>
+    <div class="dhigh">🏆 最高 <span id="bdhsHard">0</span></div>
+  </div>
+</div>
 
 <!-- 2048 GAME SCREEN -->
 <div class="screen" id="screen2048">
@@ -484,6 +512,33 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
+<!-- BREAKOUT GAME SCREEN -->
+<div class="screen" id="screenBreakout">
+  <div style="width:100%;text-align:left;margin-bottom:4px;">
+    <button class="back-btn" id="btnBackB">← 返回选难度</button>
+    <span class="diff-badge" id="bDiffBadge">普通</span>
+  </div>
+  <div class="game-wrapper">
+    <div class="game-container">
+      <div class="board-wrap" style="position:relative;">
+        <canvas id="bBoard" class="gcanvas" width="380" height="500"></canvas>
+        <div id="bPauseOverlay"><span>⏸ 已暂停</span></div>
+      </div>
+      <div class="side-panel">
+        <div class="info-box"><div class="label">分数</div><div class="value" id="bScore">0</div></div>
+        <div class="info-box"><div class="label">最高</div><div class="value" id="bBest">0</div></div>
+        <div class="info-box"><div class="label">生命</div><div class="value" id="bLives">3</div></div>
+        <div class="info-box"><div class="label">关卡</div><div class="value small" id="bLevel">1</div></div>
+      </div>
+    </div>
+    <div class="status-msg" id="bStatus">&nbsp;</div>
+    <div class="controls">
+      <button class="ctrl-btn" id="bPause" style="background:#1a1a3e;border-color:#55f;min-width:48px;" onclick="bTogglePause()">⏸ 暂停</button>
+      <button class="ctrl-btn" id="bRestart" style="background:#1a2a1e;border-color:#484;min-width:48px;" onclick="bRestartConfirm()">🔄 重新开始</button>
+    </div>
+  </div>
+</div>
+
 <!-- STATS SCREEN -->
 <div class="screen" id="screenStats">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackStats">← 返回</button></div>
@@ -495,6 +550,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="snake">🐍 蛇</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="2048">🧩 2048</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="minesweeper">💣 扫雷</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="breakout">🧱 打砖块</button>
   </div>
 <table class="stats-table" id="statsTable">
     <thead><tr><th>游戏</th><th>难度</th><th>局数</th><th>胜率</th><th>最高分</th></tr></thead>
@@ -511,6 +567,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-game="tetris">🧱 方块</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="snake">🐍 蛇</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="minesweeper">💣 扫雷</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="breakout">🧱 打砖块</button>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbDiffTabs">
     <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button>
@@ -1355,6 +1412,197 @@ document.getElementById("goBack").onclick=function(){
 
 
 
+// ====== BREAKOUT GAME ======
+var BD={easy:{l:"简单",rows:3,speed:4,e:"🟢"},normal:{l:"普通",rows:5,speed:5,e:"🟡"},hard:{l:"困难",rows:7,speed:7,e:"🔴"}};
+var bc="normal",bScore=0,bLives=3,bLevel=1,bGameOver=0,bPause=0,bStarted=0,bTimer=0,bTimerId=null;
+var bCanvas,bCtx,bScoreEl,bBestEl,bLivesEl,bLevelEl,bStatusEl,bBadgeEl;
+var bBall={x:190,y:420,r:6,dx:0,dy:0},bPaddle={x:140,y:460,w:100,h:12},bBricks=[];
+var bBallSpeed=5,bBallLaunched=0,bLoopId=null;
+var bBrickColors=["#f44","#f80","#ff0","#4f4","#4af"];
+
+function bInit(){
+  bCanvas=document.getElementById("bBoard");bCtx=bCanvas.getContext("2d");_setupHiDPI(bCanvas,bCtx,380,500);
+  bScoreEl=document.getElementById("bScore");bBestEl=document.getElementById("bBest");bLivesEl=document.getElementById("bLives");
+  bLevelEl=document.getElementById("bLevel");bStatusEl=document.getElementById("bStatus");bBadgeEl=document.getElementById("bDiffBadge");
+  bScore=0;bLives=3;bLevel=1;bGameOver=0;bPause=0;bStarted=0;bBallLaunched=0;bTimer=0;
+  if(bTimerId){clearInterval(bTimerId);bTimerId=null;}
+  bPaddle={x:140,y:460,w:100,h:12};
+  bBall={x:190,y:420,r:6,dx:0,dy:0};
+  bBallSpeed=BD[bc].speed;
+  bBricks=[];
+  var cfg=BD[bc];
+  for(var r=0;r<cfg.rows;r++){for(var c=0;c<8;c++){bBricks.push({x:c*46+6,y:r*22+10,w:42,h:18,alive:1,color:r%5});}}
+  bScoreEl.textContent="0";bBestEl.textContent=ghs("breakout",bc);
+  bLivesEl.textContent="3";bLevelEl.textContent="1";
+  bStatusEl.textContent="👆 点击屏幕发射球";
+  document.getElementById("bPauseOverlay").classList.remove("active");
+  document.getElementById("bPause").textContent="⏸ 暂停";
+  bDraw();bStarted=1;
+  bTimerId=setInterval(function(){if(!bPause&&!bGameOver&&bStarted){bTimer++;}},1000);
+  if(bLoopId)clearInterval(bLoopId);
+  bLoopId=setInterval(function(){bUpdate();},16);
+}
+
+function bDraw(){
+  bCtx.clearRect(0,0,380,500);
+  bCtx.fillStyle="#1a1a2e";bCtx.fillRect(0,0,380,500);
+  for(var i=0;i<bBricks.length;i++){
+    var br=bBricks[i];if(!br.alive)continue;
+    bCtx.fillStyle=bBrickColors[br.color];
+    bCtx.fillRect(br.x,br.y,br.w,br.h);
+    bCtx.strokeStyle="rgba(255,255,255,0.2)";bCtx.strokeRect(br.x,br.y,br.w,br.h);
+  }
+  bCtx.fillStyle="#4af";bCtx.fillRect(bPaddle.x,bPaddle.y,bPaddle.w,bPaddle.h);
+  bCtx.fillStyle="#fff";bCtx.beginPath();bCtx.arc(bBall.x,bBall.y,bBall.r,0,Math.PI*2);bCtx.fill();
+}
+
+function bUpdate(){
+  if(bPause||bGameOver||!bStarted||!bBallLaunched)return;
+  bBall.x+=bBall.dx;bBall.y+=bBall.dy;
+  if(bBall.x-bBall.r<=0){bBall.x=bBall.r;bBall.dx=-bBall.dx;}
+  if(bBall.x+bBall.r>=380){bBall.x=380-bBall.r;bBall.dx=-bBall.dx;}
+  if(bBall.y-bBall.r<=0){bBall.y=bBall.r;bBall.dy=-bBall.dy;}
+  if(bBall.dy>0&&bBall.y+bBall.r>=bPaddle.y&&bBall.y-bBall.r<=bPaddle.y+bPaddle.h&&bBall.x>=bPaddle.x&&bBall.x<=bPaddle.x+bPaddle.w){
+    bBall.y=bPaddle.y-bBall.r;
+    var hitPos=(bBall.x-bPaddle.x)/bPaddle.w;
+    var angle=(hitPos-0.5)*Math.PI*0.7;
+    var spd=Math.sqrt(bBall.dx*bBall.dx+bBall.dy*bBall.dy);
+    bBall.dx=spd*Math.sin(angle);bBall.dy=-spd*Math.cos(angle);
+    if(Math.abs(bBall.dy)<2)bBall.dy=bBall.dy>0?-2:2;
+    _playMove();
+  }
+  for(var i=0;i<bBricks.length;i++){
+    var br=bBricks[i];if(!br.alive)continue;
+    if(bBall.x+bBall.r>br.x&&bBall.x-bBall.r<br.x+br.w&&bBall.y+bBall.r>br.y&&bBall.y-bBall.r<br.y+br.h){
+      br.alive=0;
+      bScore+=Math.floor(10*(br.color+1)*(BD[bc].rows/3));
+      bScoreEl.textContent=bScore;_scorePop(bScoreEl);
+      _playEat();
+      var ol=(bBall.x+bBall.r)-br.x,orr=(br.x+br.w)-(bBall.x-bBall.r),ot=(bBall.y+bBall.r)-br.y,ob=(br.y+br.h)-(bBall.y-bBall.r);
+      var mx=Math.min(ol,orr),my=Math.min(ot,ob);
+      if(mx<my)bBall.dx=-bBall.dx;else bBall.dy=-bBall.dy;
+      break;
+    }
+  }
+  if(bBall.y>520){
+    bLives--;bLivesEl.textContent=bLives;bBallLaunched=0;
+    bBall={x:bPaddle.x+bPaddle.w/2,y:420,r:6,dx:0,dy:0};
+    if(bLives<=0){bGameOver=1;bGO();}
+    else bStatusEl.textContent="👆 点击屏幕发射球";
+  }
+  var alive=0;for(var i=0;i<bBricks.length;i++)if(bBricks[i].alive)alive++;
+  if(alive===0){bLevel++;bLives++;bLevelEl.textContent=bLevel;bLivesEl.textContent=bLives;bBallLaunched=0;
+    bBall={x:bPaddle.x+bPaddle.w/2,y:420,r:6,dx:0,dy:0};bBallSpeed+=1;
+    var cfg=BD[bc];
+    bBricks=[];
+    for(var r=0;r<cfg.rows;r++){for(var c=0;c<8;c++){bBricks.push({x:c*46+6,y:r*22+10,w:42,h:18,alive:1,color:(r+bLevel-1)%5});}}
+    bStatusEl.textContent="🎉 第 "+bLevel+" 关！点击发射";_playClear();}
+  bDraw();
+}
+
+function bTogglePause(){
+  if(bGameOver)return;
+  bPause=!bPause;
+  if(bPause)_playPause();else _playResume();
+  document.getElementById("bPauseOverlay").classList.toggle("active",bPause);
+  document.getElementById("bPause").textContent=bPause?"▶ 继续":"⏸ 暂停";
+}
+function bRestartConfirm(){
+  if(!bStarted)return;
+  showConfirm("确定重新开始？",function(){bInit();});
+}
+function bGO(){
+  _playGameOver();recordGame("breakout",bc,bScore,bTimer,0);
+  var c=BD[bc];var m=String(Math.floor(bTimer/60)).padStart(2,"0"),s=String(bTimer%60).padStart(2,"0");
+  document.getElementById("goScore").textContent=bScore;
+  document.getElementById("goDiff").textContent=c.e+" "+c.l+" · 打砖块";
+  document.getElementById("goDetail").textContent="到达第 "+bLevel+" 关 · 用时 "+m+":"+s;
+  var nw=shs("breakout",bc,bScore);
+  document.getElementById("goRecord").textContent=nw?"🏆 新纪录！":"🏆 最高 "+ghs("breakout",bc);
+  document.getElementById("gameOverOverlay").classList.add("active");window._gog="breakout";
+  _initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();
+  if(_userId)_submitLB("breakout",bc,bScore,0);
+}
+
+// Touch/mouse input for Breakout
+var btx=0;
+document.getElementById("bBoard").addEventListener("touchstart",function(e){
+  e.preventDefault();
+  if(!bStarted||bGameOver)return;
+  if(!bBallLaunched){bBall.dx=bBallSpeed*(Math.random()>0.5?1:-1);bBall.dy=-bBallSpeed;bBallLaunched=1;bStatusEl.textContent="";return;}
+  btx=e.touches[0].clientX;
+},{passive:false});
+document.getElementById("bBoard").addEventListener("touchmove",function(e){
+  e.preventDefault();
+  if(!bStarted||bGameOver||!bBallLaunched)return;
+  var dx=e.touches[0].clientX-btx;
+  bPaddle.x=Math.max(0,Math.min(380-bPaddle.w,bPaddle.x+dx));
+  if(!bBallLaunched){bBall.x=bPaddle.x+bPaddle.w/2;}
+  btx=e.touches[0].clientX;
+},{passive:false});
+document.getElementById("bBoard").addEventListener("mousemove",function(e){
+  if(!bStarted||bGameOver||!bBallLaunched)return;
+  var rect=bCanvas.getBoundingClientRect();
+  var mx=e.clientX-rect.left;
+  bPaddle.x=Math.max(0,Math.min(380-bPaddle.w,(mx/rect.width)*380-bPaddle.w/2));
+});
+document.getElementById("bBoard").addEventListener("click",function(e){
+  if(!bStarted||bGameOver||bBallLaunched)return;
+  bBall.dx=bBallSpeed*(Math.random()>0.5?1:-1);bBall.dy=-bBallSpeed;
+  bBallLaunched=1;bStatusEl.textContent="";
+});
+
+// Button wiring for Breakout
+["easy","normal","hard"].forEach(function(d){
+  document.getElementById("bDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){
+    bc=d;window._gog=null;window._mog=null;
+    bBadgeEl.textContent=BD[d].e+" "+BD[d].l;
+    ss("screenBreakout");bInit();
+    bBestEl.textContent=ghs("breakout",bc);
+  };
+});
+document.getElementById("btnBackBDiff").onclick=function(){ss("screenSelect");};
+document.getElementById("btnBackB").onclick=function(){
+  if(bTimerId){clearInterval(bTimerId);bTimerId=null;}
+  if(bLoopId){clearInterval(bLoopId);bLoopId=null;}
+  bStarted=0;ss("screenBreakoutDiff");
+};
+document.getElementById("cardBreakout").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenBreakoutDiff");};
+
+// Extend uhs for Breakout
+var _uhsB=uhs;
+uhs=function(){
+  _uhsB();
+  ["easy","normal","hard"].forEach(function(k){
+    var el=document.getElementById("bdhs"+k[0].toUpperCase()+k.slice(1));
+    if(el)el.textContent=ghs("breakout",k);
+  });
+  var be=document.getElementById("bhsBest");
+  if(be){var mx=0;["easy","normal","hard"].forEach(function(k){var v=ghs("breakout",k);if(v>mx)mx=v;});be.textContent=mx;}
+  var bge=document.getElementById("bBest");
+  if(bge&&bStarted)bge.textContent=ghs("breakout",bc);
+};
+
+// Extend goRestart for Breakout
+var _origGRb=document.getElementById("goRestart").onclick;
+document.getElementById("goRestart").onclick=function(){
+  document.getElementById("gameOverOverlay").classList.remove("active");
+  var tEl=document.querySelector("#gameOverOverlay .o-title");
+  if(tEl)tEl.textContent="💀 游戏结束";
+  if(window._gog==="breakout"){bInit();return;}
+  _origGRb();
+};
+
+// Extend goBack for Breakout
+var _origGBb=document.getElementById("goBack").onclick;
+document.getElementById("goBack").onclick=function(){
+  document.getElementById("gameOverOverlay").classList.remove("active");
+  var tEl=document.querySelector("#gameOverOverlay .o-title");
+  if(tEl)tEl.textContent="💀 游戏结束";
+  if(window._gog==="breakout"){if(bTimerId){clearInterval(bTimerId);}if(bLoopId){clearInterval(bLoopId);}bStarted=0;ss("screenBreakoutDiff");return;}
+  _origGBb();
+};
+
 // ===== STATS SYSTEM =====
 function statsKey(g,d){return g+"_"+d+"_stats";}
 function loadStats(g,d){
@@ -1477,7 +1725,7 @@ document.getElementById("btnLeaderboard").onclick = function() { _showLB(); };
 document.getElementById("btnStats").onclick=function(){
   _initAudio();
   var rows=[];
-  var games=[{id:"tetris",name:"🧱 俄罗斯方块",score:"分"},{id:"snake",name:"🐍 贪吃蛇",score:"分"},{id:"2048",name:"🧩 2048",score:"分"},{id:"minesweeper",name:"💣 扫雷",score:"秒"}];
+  var games=[{id:"tetris",name:"🧱 俄罗斯方块",score:"分"},{id:"snake",name:"🐍 贪吃蛇",score:"分"},{id:"2048",name:"🧩 2048",score:"分"},{id:"minesweeper",name:"💣 扫雷",score:"秒"},{id:"breakout",name:"🧱 打砖块",score:"分"}];
   games.forEach(function(g){
     ["easy","normal","hard"].forEach(function(d){
       var s=loadStats(g.id,d);
@@ -1767,6 +2015,14 @@ document.onkeydown=function(e){
   if(ms&&ms.classList.contains("active")&&mStarted){
     if(e.key==="p"||e.key==="P"){e.preventDefault();mTogglePause();return;}
     if(!mGameOver&&!mPause&&(e.key==="f"||e.key==="F")){e.preventDefault();mToggleFlagMode();return;}
+    return;
+  }
+  var bs=document.getElementById("screenBreakout");
+  if(bs&&bs.classList.contains("active")&&bStarted){
+    if(e.key==="p"||e.key==="P"){e.preventDefault();bTogglePause();return;}
+    if(e.key==="ArrowLeft"){e.preventDefault();bPaddle.x=Math.max(0,bPaddle.x-20);return;}
+    if(e.key==="ArrowRight"){e.preventDefault();bPaddle.x=Math.min(380-bPaddle.w,bPaddle.x+20);return;}
+    if((e.key===" "||e.key==="ArrowUp")&&!bBallLaunched){e.preventDefault();bBall.dx=bBallSpeed*(Math.random()>0.5?1:-1);bBall.dy=-bBallSpeed;bBallLaunched=1;bStatusEl.textContent="";return;}
     return;
   }
   if(_kd2)_kd2(e);
