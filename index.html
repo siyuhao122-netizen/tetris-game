@@ -272,7 +272,8 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
         <div class="info-box"><div class="label">等级</div><div class="value" id="tLevel">1</div></div>
         <div class="info-box"><div class="label">时间</div><div class="value small" id="tTime">00:00</div></div>
         <div class="info-box"><div class="label">行数</div><div class="value" id="tLines">0</div></div>
-        <div class="info-box"><div class="label">下一个</div><canvas id="tNext" width="80" height="80"></canvas></div>
+        <div class="info-box" style="padding:4px;"><div class="label" style="font-size:10px;">HOLD</div><canvas id="tHold" width="80" height="80"></canvas></div>
+	        <div class="info-box" style="padding:4px;"><div class="label" style="font-size:10px;">NEXT</div><canvas id="tNext" width="80" height="80"></canvas></div>
       </div>
     </div>
     <div class="status-msg" id="tStatus">&nbsp;</div>
@@ -546,7 +547,7 @@ var tc="normal",tb=[],tcu=null,tn=null,tsc=0,tln=0,tlv=1,tg=0,tp=0,tu=3,tgt=0,td
 function dm(d){return d==="hard"?2:d==="normal"?1.5:1;}
 var ttx=0,tty=0,ttt=0;var thold=null,_tholdUsed=0;
 var T_CELL=20;
-var tca=document.getElementById("tBoard"),tcx=tca.getContext("2d");_setupHiDPI(tca,tcx,200,400),tnc=document.getElementById("tNext"),tncx=tnc.getContext("2d");_setupHiDPI(tnc,tncx,80,80);
+var tca=document.getElementById("tBoard"),tcx=tca.getContext("2d");_setupHiDPI(tca,tcx,200,400);var tnc=document.getElementById("tNext"),tncx=tnc.getContext("2d");_setupHiDPI(tnc,tncx,80,80);var thc=document.getElementById("tHold"),thcx=thc.getContext("2d");_setupHiDPI(thc,thcx,80,80);
 var tse=document.getElementById("tScore"),tle=document.getElementById("tLevel"),tlie=document.getElementById("tLines"),tste=document.getElementById("tStatus"),tte=document.getElementById("tTime");
 function tib(){var _flashRows=[];for(var fy=0;fy<tb.length;fy++){var full=1;for(var fx=0;fx<10;fx++){if(!tb[fy][fx]){full=0;break;}}if(full)_flashRows.push(fy);}if(_flashRows.length>0){tcx.fillStyle="rgba(255,255,255,0.7)";for(var fi=0;fi<_flashRows.length;fi++)tcx.fillRect(0,_flashRows[fi]*T_CELL,10*T_CELL,T_CELL);}tb=[];for(var r=0;r<20;r++)tb.push(new Array(10).fill(0));}
 var _tBag=[];function trp(){if(_tBag.length===0){_tBag=[0,1,2,3,4,5,6];for(var i=_tBag.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=_tBag[i];_tBag[i]=_tBag[j];_tBag[j]=tmp;}}var t=_tBag.pop();var S=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]]];return{shape:S[t].map(function(r){return r.slice();}),type:t};}
@@ -818,7 +819,7 @@ function gSwipeUp(){
     }
     ts+=result.score;
   }
-  return {moved:moved,score:ts};
+  return {moved:moved,score:ts,merges:[]};
 }
 
 function gSwipeDown(){
