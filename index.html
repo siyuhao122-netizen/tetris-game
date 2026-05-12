@@ -187,10 +187,6 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <div class="screen" id="screenSelect">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackMenu">← 返回</button></div>
   <div class="select-title">🎯 选择游戏</div>
-  <div class="game-card" id="cardBattle">
-    <div class="name">🆚 方块对战</div>
-    <div class="desc">实时对战，消行给对方加垃圾！</div>
-  </div>
   <div class="game-card" id="cardTetris">
     <div class="name">🧱 俄罗斯方块</div>
     <div class="desc">经典下落消除，手机触屏优化版</div>
@@ -322,6 +318,9 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="diff-card" id="tDiffHard">
     <div class="dname">🔴 困难</div><div class="ddesc">速度逐步增至 2 倍</div>
     <div class="dhigh">🏆 最高 <span id="tdhsHard">0</span></div>
+  </div>
+  <div class="diff-card" id="tDiffBattle" style="border-color:#f90;">
+    <div class="dname">🆚 对战</div><div class="ddesc">实时对战，消行给对方加垃圾！</div>
   </div>
 </div>
 
@@ -1877,7 +1876,7 @@ function _bCleanupRoom(){
 }
 document.getElementById("btnBackWait").onclick=function(){_bCleanupRoom();ss("screenBattleLobby");};
 document.getElementById("btnBackBG").onclick=function(){if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}_bCleanupRoom();ss("screenBattleLobby");};
-document.getElementById("cardBattle").onclick=function(){_initAudio();ss("screenBattleLobby");};
+document.getElementById("tDiffBattle").onclick=function(){_initAudio();ss("screenBattleLobby");};
 
 // Battle button wiring
 (function(){
