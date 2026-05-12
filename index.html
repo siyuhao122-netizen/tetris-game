@@ -1800,11 +1800,12 @@ document.getElementById("btnCreateRoom").onclick=function(){
     document.getElementById("waitCode").textContent=room.code;
     document.getElementById("waitStatus").textContent="等待对手加入...";
     ss("screenBattleWait");
-    // Listen for opponent
+    // Listen for opponent join
     _sbChannel=_sbClient.channel('room-'+room.id);
-    _sbChannel.on('broadcast',{event:'join'},function(){_bStartGame();}).subscribe();
-    _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;}).subscribe();
-    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();}).subscribe();
+    _sbChannel.on('broadcast',{event:'join'},function(){_bStartGame();});
+    _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
+    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
+    _sbChannel.subscribe();
   });
 };
 
@@ -1822,13 +1823,13 @@ document.getElementById("btnJoinRoom").onclick=function(){
     return _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:_userId?parseInt(_userId):null});
   }).then(function(r){return r?r.json():null;}).then(function(){
     if(!_bRoom)return;
+    // Start game immediately, setup channel in background
+    _bStartGame();
     _sbChannel=_sbClient.channel('room-'+_bRoom.id);
-    _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;}).subscribe();
-    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();}).subscribe();
-    _sbChannel.subscribe().then(function(){
-      // Notify creator
-      _sbChannel.send({type:'broadcast',event:'join',payload:{}});
-      _bStartGame();
+    _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
+    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
+    _sbChannel.subscribe(function(status){
+      if(status==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}
     });
   });
 };
