@@ -629,6 +629,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="o-detail" style="font-size:13px;color:#888;margin-bottom:4px;">修改密码</div>
     <input id="setPass" type="password" maxlength="16" placeholder="新密码（4-16个字符）" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #555;background:#111;color:#fff;font-size:16px;text-align:center;margin-bottom:10px;box-sizing:border-box;">
     <button class="o-btn" id="setPassBtn" style="min-width:90px;margin-bottom:14px;">保存密码</button>
+    <button class="o-btn secondary" id="setLogout" style="min-width:90px;margin-bottom:8px;color:#f66;border-color:#f66;">退出登录</button>
     <button class="o-btn secondary" id="setClose" style="min-width:90px;">关闭</button>
     <div class="o-detail" id="setMsg" style="margin-top:8px;font-size:12px;color:#4a4;display:none;"></div>
   </div>
@@ -772,6 +773,11 @@ function _showSettings() {
       if (r.ok) { el.textContent = '密码已更新'; el.style.display = 'block'; }
       else { el.textContent = '更新失败'; el.style.display = 'block'; }
     });
+  };
+  document.getElementById("setLogout").onclick = function() {
+    document.getElementById("settingsOverlay").style.display = 'none';
+    _clearSession();
+    _achieveBadge('已退出登录','👋');
   };
   document.getElementById("setClose").onclick = function() {
     document.getElementById("settingsOverlay").style.display = 'none';
