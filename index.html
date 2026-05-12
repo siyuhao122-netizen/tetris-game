@@ -1694,6 +1694,10 @@ function _loadLB(callback) {
     + '&select=id,score,time,created_at,user_id,users(display_name)'
     + '&order=' + orderCol + '.' + orderDir + '&limit=50';
   if (_lbGame === 'minesweeper') q += '&time=gt.0';
+  if (_lbDiff === 'daily') {
+    var today=new Date();today.setHours(0,0,0,0);
+    q += '&created_at=gte.' + today.toISOString();
+  }
   _sbReq('GET', q).then(function(r) { return r.json(); })
   .then(function(data) {
     var rows = [];
