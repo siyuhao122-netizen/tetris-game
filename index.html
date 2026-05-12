@@ -326,9 +326,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
         <button class="ctrl-btn sdir" id="gRight">▶</button>
       </div>
       <div style="width:100%;margin-top:4px;">
-        <button class="ctrl-btn wide" id="gRestart" style="background:#1a2a1e;border-color:#484;width:100%;">🔄 重新开始</button>
-      
-        <button class="ctrl-btn wide" id="gUndoBtn" style="background:#1a1a2e;border-color:#555;width:100%;margin-top:4px;">↩ 撤销</button></div>
+        <button class="ctrl-btn wide" id="gRestart" style="background:#1a2a1e;border-color:#484;width:100%;">🔄 重新开始</button></div>
       <div style="width:100%;margin-top:2px;display:flex;gap:8px;justify-content:center;">
         <button class="ctrl-btn wide" id="gPause" style="background:#1a1a3e;border-color:#55f;flex:1;">⏸ 暂停</button>
         <button class="ctrl-btn" id="btnSound2048" style="font-size:18px;width:44px;padding:8px 10px;background:#333;border-color:#666;">🔊</button>
@@ -573,7 +571,7 @@ function sTp(){if(sgov){return;}spau=!spau;if(spau)_playPause();else _playResume
 function sda(){scx.clearRect(0,0,340,340);scx.strokeStyle="#1a2";scx.lineWidth=0.5;for(var r=0;r<=G;r++){scx.beginPath();scx.moveTo(0,r*SZ);scx.lineTo(340,r*SZ);scx.stroke();}for(var c=0;c<=G;c++){scx.beginPath();scx.moveTo(c*SZ,0);scx.lineTo(c*SZ,340);scx.stroke();}if(sfood){scx.fillStyle="#f44";scx.beginPath();scx.arc(sfood.x*SZ+SZ/2,sfood.y*SZ+SZ/2,6,0,Math.PI*2);scx.fill();}for(var oi2=0;oi2<_sObstacles.length;oi2++){var ob2=_sObstacles[oi2];scx.fillStyle="#822";scx.fillRect(ob2.x*SZ+1,ob2.y*SZ+1,SZ-2,SZ-2);scx.fillStyle="#622";scx.fillRect(ob2.x*SZ+SZ/2-3,ob2.y*SZ+SZ/2-3,6,6);}for(var i=0;i<sbody.length;i++){var b=sbody[i];var gr=Math.max(0,1-i/20);scx.fillStyle="rgb("+Math.floor(50+80*gr)+","+Math.floor(180+40*gr)+","+Math.floor(50+80*gr)+")";scx.fillRect(b.x*SZ+1,b.y*SZ+1,SZ-2,SZ-2);if(i===0){scx.fillStyle="#fff";scx.fillRect(b.x*SZ+4,b.y*SZ+4,2,2);scx.fillRect(b.x*SZ+10,b.y*SZ+4,2,2);}}}
 function sgo(){_playGameOver();var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);}
 document.getElementById("cardTetris").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenTetrisDiff");};
-document.getElementById("cardSnake").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenSnakeDiff");};
+document.getElementById("cardSnake").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenSnakeDiff");_syncSnakeToggles();};
 document.getElementById("btnBackTTDiff").onclick=function(){ss("screenSelect");};
 document.getElementById("btnBackSDiff").onclick=function(){ss("screenSelect");};
 document.getElementById("btnBackTT").onclick=function(){if(tdi)clearInterval(tdi);tstpc();tts=0;ss("screenTetrisDiff");};
@@ -583,7 +581,8 @@ document.getElementById("btnBackSS").onclick=function(){if(sdi)clearInterval(sdi
   document.getElementById("sDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){sc=d;document.getElementById("sDiffBadge").textContent=SD[d].e+" "+SD[d].l;_syncSnakeToggles();ss("screenSnake");sinit();ssc=0;sgt=0;spau=0;sgov=0;ste2.textContent="00:00";sbe.textContent=ghs("snake",sc);sle.textContent=3;sse.textContent=0;document.getElementById("sPauseOverlay").classList.remove("active");document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";sts=1;sda();sRd();sStc();};
 });
 document.getElementById("goRestart").onclick=function(){document.getElementById("gameOverOverlay").classList.remove("active");if(window._gog==="tetris"){tib();tsc=0;tln=0;tlv=1;tg=0;tp=0;tu=3;tgt=0;_tBag=[];tn=null;tste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";tte.textContent="00:00";document.getElementById("tClearCount").textContent="3/3";document.getElementById("tPauseOverlay").classList.remove("active");document.getElementById("tPause").textContent="\u23f8 \u6682\u505c";tui();tsp();trd();tstc();tts=1;}else if(window._gog==="snake"){sinit();ssc=0;sgt=0;spau=0;sgov=0;ste2.textContent="00:00";sle.textContent=3;sse.textContent=0;document.getElementById("sPauseOverlay").classList.remove("active");document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";sda();sRd();sStc();sts=1;}};
-document.getElementById("goBack").onclick=function(){document.getElementById("gameOverOverlay").classList.remove("active");document.getElementById("goContinue").onclick=function(){_gContinue();this.style.display="none";document.getElementById("gameOverOverlay").classList.remove("active");};if(window._gog==="tetris"){if(tdi)clearInterval(tdi);tstpc();tts=0;ss("screenTetrisDiff");}else if(window._gog==="snake"){if(sdi)clearInterval(sdi);sStpc();sts=0;ss("screenSnakeDiff");}};
+document.getElementById("goBack").onclick=function(){document.getElementById("gameOverOverlay").classList.remove("active");if(window._gog==="tetris"){if(tdi)clearInterval(tdi);tstpc();tts=0;ss("screenTetrisDiff");}else if(window._gog==="snake"){if(sdi)clearInterval(sdi);sStpc();sts=0;ss("screenSnakeDiff");}};
+document.getElementById("goContinue").onclick=function(){_gContinue();this.style.display="none";};
 document.onkeydown=function(e){
   if(e.key==="p"||e.key==="P"){var s1=document.getElementById("screenTetris");var s2=document.getElementById("screenSnake");if(s1.classList.contains("active")&&tts){e.preventDefault();ttp();}if(s2.classList.contains("active")&&sts){e.preventDefault();sTp();}return;}
   if(document.getElementById("screenSnake").classList.contains("active")&&sts&&!sgov&&!spau){
@@ -618,7 +617,7 @@ _initAudio();document.addEventListener("click",function(){_initAudio();},{once:t
 
 // ====== 2048 GAME ======
 var GD={easy:{l:"简单",t:1024,e:"🟢",f2:true},normal:{l:"普通",t:2048,e:"🟡",f2:false},hard:{l:"困难",t:4096,e:"🔴",f2:false},endless:{l:"无尽",t:Infinity,e:"♾️",f2:false}};
-var gc="normal",gBoardArr=[],gScore=0,gGameOver=0,gPause=0,gStarted=0,gTimer=0,gTimerId=null,gMerged=[],_gPrevState=null,_gUndoDone=0;
+var gc="normal",gBoardArr=[],gScore=0,gGameOver=0,gPause=0,gStarted=0,gTimer=0,gTimerId=null,gMerged=[];
 var gCanvas=document.getElementById("gBoard"),gCtx=gCanvas.getContext("2d");
 var gScoreEl=document.getElementById("gScore"),gBestEl=document.getElementById("gBest"),gStatusEl=document.getElementById("gStatus"),gBadgeEl=document.getElementById("gDiffBadge");
 var G_SIZE=4,G_CELL=93,G_GAP=4,G_PAD=8;
@@ -642,7 +641,7 @@ function _scorePop(el){el.classList.remove("score-pop");void el.offsetWidth;el.c
 function _achieveBadge(title,emoji){var toast=document.createElement("div");toast.className="achieve-toast";toast.textContent=emoji+" "+title;document.body.appendChild(toast);setTimeout(function(){if(toast.parentNode)toast.parentNode.removeChild(toast);},2600);}
 function _checkAchieve(game,won,score,oldBest){if(won){_streak[game]++;localStorage.setItem("goblin_streak_"+game,_streak[game]);var s=_streak[game];if(s>=10)_achieveBadge("十连胜！","👑");else if(s>=5)_achieveBadge("势不可挡 ×"+s,"💪");else if(s>=3)_achieveBadge("连胜 ×"+s,"🔥");else _achieveBadge("赢了！","🎉");}else{_streak[game]=0;localStorage.setItem("goblin_streak_"+game,"0");}if(score>oldBest&&score>0)_achieveBadge("新纪录！","🎉");}
 
-var _gContinueTarget=null;function _gContinue(){if(!_gContinueTarget)return;var cfg=GD[gc];cfg.t=_gContinueTarget;_gContinueTarget=null;gGameOver=0;gWin=0;gPause=0;clearInterval(gTimerId);gInit();gStatusEl.textContent="挑战 "+cfg.t+"！";}
+function _gContinue(){var cfg=GD[gc];if(cfg.t===1024)cfg.t=2048;else if(cfg.t===2048)cfg.t=4096;else if(cfg.t===4096)cfg.t=8192;else if(cfg.t===8192)cfg.t=16384;else cfg.t=Infinity;gGameOver=0;gWonAlready=false;gPause=false;document.getElementById("gameOverOverlay").classList.remove("active");gStatusEl.textContent="🎯 新目标: "+cfg.t+"！";}
 function gInit(){
   gBoardArr=[];
   for(var i=0;i<G_SIZE;i++){gBoardArr[i]=new Array(G_SIZE).fill(0);}
@@ -814,8 +813,6 @@ function gMove(dir){
     case 3:result=gSwipeLeft();break;
   }
   if(result.moved){
-    _gPrevState={grid:gBoardArr.map(function(r){return r.slice();}),score:gScore};
-    _gUndoDone=0;
     _playMove();
     var cfg=GD[gc];
     var mult=gc==="hard"?2:gc==="normal"?1.5:1;
@@ -930,16 +927,6 @@ function gDraw(){
   }
 }
 
-function gUndo(){
-  if(!gGameOver&&_gPrevState&&!_gUndoDone&&gStarted){
-    _gUndoDone=1;
-    gBoardArr=_gPrevState.grid;
-    gScore=_gPrevState.score;
-    _gPrevState=null;
-    gScoreEl.textContent=gScore;
-    gDraw();
-  }
-}
 
 function gTogglePause(){
   if(gGameOver)return;
@@ -1028,7 +1015,6 @@ ab2048("gDown",function(){gMove(2);});
 ab2048("gLeft",function(){gMove(3);});
 ab2048("gRight",function(){gMove(1);});
 ab2048("gRestart",gRestartConfirm);
-ab2048("gUndoBtn",gUndo);
 ab2048("gPause",gTogglePause);
 ab2048("btnSound2048",_toggleSound);
 
@@ -1210,12 +1196,13 @@ mCanvas.addEventListener("touchend",function(e){
 });
 mCanvas.addEventListener("touchmove",function(){if(_mlTimer){clearTimeout(_mlTimer);_mlTimer=null;_mtCell=null;}});
 
-function mUseHint(){if(mGameOver||mPause||!mStarted)return;if(mHints<=0)return;showConfirm("使用提示？","剩余 "+(mHints-1)+" 次",function(){mHints--;mHintEl.textContent=mHints;var cls=[];for(var r=0;r<mRows;r++)for(var c=0;c<mCols;c++)if(mBoard[r][c].mine&&!mBoard[r][c].flag&&!mBoard[r][c].rev)cls.push({r:r,c:c});if(cls.length>0){var hc=cls[Math.floor(Math.random()*cls.length)];mBoard[hc.r][hc.c].hint=1;mDraw();}},function(){});}
-function mInit(){mDraw();
+function mUseHint(){if(mGameOver||mPause||!mStarted)return;if(mHints<=0)return;mHints--;mHintEl.textContent=mHints;var cls=[];for(var r=0;r<mRows;r++)for(var c=0;c<mCols;c++)if(mBoard[r][c].mine&&!mBoard[r][c].flag&&!mBoard[r][c].rev)cls.push({r:r,c:c});if(cls.length>0){var hc=cls[Math.floor(Math.random()*cls.length)];mBoard[hc.r][hc.c].rev=1;mDraw();}}
+function mInit(){
   var g=MG[mc];mRows=g.r;mCols=g.c;mMines=g.mines;mCell=g.cell;mHints=mc==="easy"?1:mc==="normal"?2:3;mHintEl.textContent=mHints;
   var sz=mRows*mCell;
   mCanvas.width=sz;mCanvas.height=sz;
-  mCanvas.style.maxWidth="100%";mCanvas.style.width=Math.min(sz,Math.min(360,window.innerWidth-32))+"px";mCanvas.style.height="auto";
+  var maxW=Math.min(window.innerWidth-16,500);
+  mCanvas.style.maxWidth="100%";mCanvas.style.width=Math.min(sz,maxW)+"px";mCanvas.style.height="auto";
   mBoard=[];for(var r=0;r<mRows;r++){mBoard[r]=[];for(var c=0;c<mCols;c++)mBoard[r][c]={mine:0,rev:0,flag:0,adj:0,hint:0};}
   mStarted=0;mGameOver=0;mPause=0;mWin=0;mFlagMode=0;mFirstClick=1;mFlags=0;mTimer=0;
   if(mTimerId){clearInterval(mTimerId);mTimerId=null;}
@@ -1322,7 +1309,6 @@ function mDraw(){
 function mToggleFlagMode(){mFlagMode=!mFlagMode;updateFlagBtn();mStatusEl.textContent=mFlagMode?"🚩 标记模式已开启":"💣 扫雷中...";}
 function updateFlagBtn(){
   var b=document.getElementById("mFlagToggle");
-abM("mHintBtn",mUseHint);
   b.textContent=mFlagMode?"🚩 标记中":"🚩 标记模式";b.classList.toggle("on",mFlagMode);
 }
 function mTogglePause(){
@@ -1353,6 +1339,8 @@ document.getElementById("mRestart").onclick=mRestartConfirm;
 document.getElementById("mPause").onclick=mTogglePause;
 document.getElementById("mFlagToggle").onclick=mToggleFlagMode;
 document.getElementById("btnSoundMine").onclick=_toggleSound;
+function abM(id,fn){var el=document.getElementById(id);if(el){el.onclick=fn;el.addEventListener("touchend",function(e){e.preventDefault();fn();});}}
+abM("mHintBtn",mUseHint);
 
 // Difficulty buttons
 ["easy","normal","hard"].forEach(function(d){
