@@ -63,18 +63,17 @@
   .dpad .empty { visibility: hidden; }
   @media (max-width: 480px) {
     .menu-title { font-size: 26px; } .menu-goblin { font-size: 56px; }
-    .game-wrapper { gap: 4px; padding: 4px; } .game-container { gap: 8px; flex-wrap: wrap; justify-content: center; }
-    .side-panel { min-width: auto; flex-direction: row; flex-wrap: wrap; gap: 4px; justify-content: center; }
-    .side-panel .info-box { flex: 0 0 auto; min-width: 50px; padding: 4px 6px; }
-    .info-box .value { font-size: 16px; } .info-box .value.small { font-size: 12px; }
+    .game-wrapper { gap: 4px; padding: 4px; } .game-container { gap: 6px; }
+    .side-panel { min-width: 64px; gap: 4px; }
+    .info-box { padding: 4px; } .info-box .value { font-size: 14px; } .info-box .value.small { font-size: 11px; }
     .info-box .label { font-size: 9px; }
-    .ctrl-btn { font-size: 18px; padding: 10px 14px; min-width: 44px; }
-    .ctrl-btn.wide { min-width: 64px; }
-    .ctrl-btn.sdir { width: 54px; padding: 12px 0; font-size: 20px; }
-    .dpad { grid-template-columns: 54px 54px 54px; }
-    .board-wrap canvas { max-width: 100% !important; max-height: 60vh !important; }
-    #tBoard, #gBoard { max-width: 280px; }
-    #sBoard { max-width: 300px; }
+    .ctrl-btn { font-size: 16px; padding: 8px 10px; min-width: 40px; }
+    .ctrl-btn.wide { min-width: 56px; }
+    .ctrl-btn.sdir { width: 48px; padding: 10px 0; font-size: 18px; }
+    .dpad { grid-template-columns: 48px 48px 48px; gap: 3px; }
+    .board-wrap canvas { max-width: 100% !important; max-height: 55vh !important; }
+    #tBoard, #gBoard { max-width: 240px; }
+    #sBoard { max-width: 260px; }
   }
 
   /* 2048 Tile Colors */
