@@ -296,6 +296,15 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
+<!-- BATTLE RESULT OVERLAY -->
+<div class="overlay" id="battleResultOverlay" style="display:none;z-index:200;">
+  <div class="overlay-box">
+    <div class="o-title" id="battleResultTitle" style="font-size:28px;">🎉 你赢了！</div>
+    <div class="o-detail" id="battleResultDetail" style="font-size:14px;color:#aaa;"></div>
+    <button class="o-btn" id="battleResultBtn" style="margin-top:12px;">返回大厅</button>
+  </div>
+</div>
+
 <!-- TETRIS DIFFICULTY -->
 <div class="screen" id="screenTetrisDiff">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTTDiff">← 返回</button></div>
@@ -1744,6 +1753,8 @@ function _b1Lock(){
     for(var i=0;i<g;i++){_b1Board.shift();var gr=new Array(10).fill(8);var hole=Math.floor(Math.random()*10);gr[hole]=0;_b1Board.push(gr);}
     document.getElementById("battleStatus").textContent+=" | 收到 "+g+" 行垃圾！";
   }
+  // Broadcast board state to opponent
+  if(_sbChannel){_sbChannel.send({type:'broadcast',event:'board',payload:{board:_b1Board.map(function(r){return r.slice();})}});}
   _b1Spawn();_b1Draw();
 }
 function _b1Move(dx){if(_b1Cur&&_b1GameOver===0&&_b1CanPlace(_b1Cur.shape,_b1Cur.x+dx,_b1Cur.y)){_b1Cur.x+=dx;_b1Draw();}}
@@ -1775,20 +1786,25 @@ function _b2Draw(){
 }
 function _bLose(){
   _b1GameOver=1;_bStarted=0;
-  document.getElementById("battleStatus").textContent="💀 你输了！";
+  if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}
   if(_sbChannel){_sbChannel.send({type:'broadcast',event:'lose',payload:{}});}
-  setTimeout(function(){_bCleanupRoom();_showBattleResult();},3000);
+  document.getElementById("battleResultTitle").textContent="💀 你输了！";
+  document.getElementById("battleResultDetail").textContent="房间: "+(_bRoom?_bRoom.code:"");
+  document.getElementById("battleResultOverlay").style.display="flex";
+  setTimeout(function(){_bCleanupRoom();},1000);
 }
 function _bWin(){
   _bStarted=0;
-  document.getElementById("battleStatus").textContent="🎉 你赢了！";
-  setTimeout(function(){_bCleanupRoom();_showBattleResult();},3000);
-}
-
-function _showBattleResult(){
   if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}
-  ss("screenBattleLobby");
+  document.getElementById("battleResultTitle").textContent="🎉 你赢了！";
+  document.getElementById("battleResultDetail").textContent="房间: "+(_bRoom?_bRoom.code:"");
+  document.getElementById("battleResultOverlay").style.display="flex";
+  setTimeout(function(){_bCleanupRoom();},1000);
 }
+document.getElementById("battleResultBtn").onclick=function(){
+  document.getElementById("battleResultOverlay").style.display="none";
+  _bCleanupRoom();ss("screenBattleLobby");
+};
 
 // Room management
 function _bGenCode(){var c="";for(var i=0;i<6;i++)c+="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)];return c;}
@@ -1810,6 +1826,7 @@ document.getElementById("btnCreateRoom").onclick=function(){
     });
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
     _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
+    _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Draw();});
     _sbChannel.subscribe();
   });
 };
@@ -1832,6 +1849,7 @@ document.getElementById("btnJoinRoom").onclick=function(){
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
     _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
     _sbChannel.on('broadcast',{event:'start'},function(){_bStarted=1;});
+    _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Draw();});
     _sbChannel.subscribe(function(status){
       if(status==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}
     });
