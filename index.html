@@ -1696,9 +1696,9 @@ document.getElementById("goBack").onclick=function(){
 };
 
 // ====== BATTLE TETRIS ======
-var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0;
+var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0,_bTotalCleared=0;
 var _b1Board=[],_b1Cur=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
-var _b2Board=[],_b2Piece=null; // opponent board + current piece
+var _b2Board=[],_b2Piece=null;
 var _b1Canvas,_b1Ctx,_b2Canvas,_b2Ctx,_b1Loop=null;
 
 function _b1Init(){
@@ -1706,7 +1706,7 @@ function _b1Init(){
   _b2Canvas=document.getElementById("b2Board");_b2Ctx=_b2Canvas.getContext("2d");_setupHiDPI(_b2Canvas,_b2Ctx,150,300);
   _b1Board=[];for(var r=0;r<20;r++)_b1Board.push(new Array(10).fill(0));
   _b2Board=[];for(var r=0;r<20;r++)_b2Board.push(new Array(10).fill(0));
-  _b1Score=0;_b1GameOver=0;_bGarbage=0;_bStarted=0;
+  _b1Score=0;_b1GameOver=0;_bGarbage=0;_bStarted=0;_bTotalCleared=0;
   _b1Bag=[];_b1Cur=null;
   document.getElementById("battleStatus").textContent="";
   _b1Spawn();_b1Draw();_b2Draw();
@@ -1737,7 +1737,8 @@ function _b1Lock(){
   for(var r=19;r>=0;r--){if(_b1Board[r].every(function(v){return v!==0;})){_b1Board.splice(r,1);_b1Board.unshift(new Array(10).fill(0));cleared++;r++;}}
   if(cleared>0){
     _b1Score+=cleared;
-    var gc=Math.floor(cleared/3);
+    var prev3=Math.floor(_bTotalCleared/3);_bTotalCleared+=cleared;var curr3=Math.floor(_bTotalCleared/3);
+    var gc=curr3-prev3;
     if(gc>0&&_sbChannel){
       _sbChannel.send({type:'broadcast',event:'garbage',payload:{count:gc}});
       for(var i=0;i<gc;i++){var gr2=new Array(10).fill(8);var hole2=Math.floor(Math.random()*10);gr2[hole2]=0;_b2Board.push(gr2);_b2Board.shift();}
