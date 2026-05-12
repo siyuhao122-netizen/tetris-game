@@ -1699,7 +1699,7 @@ document.getElementById("goBack").onclick=function(){
 // ====== BATTLE TETRIS ======
 var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0;
 var _b1Board=[],_b1Cur=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
-var _b2Board=[]; // opponent board
+var _b2Board=[],_b2Piece=null; // opponent board + current piece
 var _b1Canvas,_b1Ctx,_b2Canvas,_b2Ctx,_b1Loop=null;
 
 function _b1Init(){
@@ -1738,10 +1738,9 @@ function _b1Lock(){
   for(var r=19;r>=0;r--){if(_b1Board[r].every(function(v){return v!==0;})){_b1Board.splice(r,1);_b1Board.unshift(new Array(10).fill(0));cleared++;r++;}}
   if(cleared>0){
     _b1Score+=cleared;
-    var gc=cleared===4?4:cleared-1;
+    var gc=cleared>=3?1:0;
     if(gc>0&&_sbChannel){
       _sbChannel.send({type:'broadcast',event:'garbage',payload:{count:gc}});
-      // Show sent garbage on opponent board
       for(var i=0;i<gc;i++){var gr2=new Array(10).fill(8);var hole2=Math.floor(Math.random()*10);gr2[hole2]=0;_b2Board.push(gr2);_b2Board.shift();}
       _b2Draw();
     }
@@ -1753,8 +1752,12 @@ function _b1Lock(){
     for(var i=0;i<g;i++){_b1Board.shift();var gr=new Array(10).fill(8);var hole=Math.floor(Math.random()*10);gr[hole]=0;_b1Board.push(gr);}
     document.getElementById("battleStatus").textContent+=" | 收到 "+g+" 行垃圾！";
   }
-  // Broadcast board state to opponent
-  if(_sbChannel){_sbChannel.send({type:'broadcast',event:'board',payload:{board:_b1Board.map(function(r){return r.slice();})}});}
+  // Broadcast board state + current piece to opponent
+  if(_sbChannel){
+    var pdata=null;
+    if(_b1Cur){pdata={shape:_b1Cur.shape.map(function(r){return r.slice();}),x:_b1Cur.x,y:_b1Cur.y,type:_b1Cur.type};}
+    _sbChannel.send({type:'broadcast',event:'board',payload:{board:_b1Board.map(function(r){return r.slice();}),piece:pdata}});
+  }
   _b1Spawn();_b1Draw();
 }
 function _b1Move(dx){if(_b1Cur&&_b1GameOver===0&&_b1CanPlace(_b1Cur.shape,_b1Cur.x+dx,_b1Cur.y)){_b1Cur.x+=dx;_b1Draw();}}
@@ -1781,8 +1784,13 @@ function _b1Draw(){
 }
 function _b2Draw(){
   _b2Ctx.clearRect(0,0,150,300);_b2Ctx.fillStyle="#1a1a2e";_b2Ctx.fillRect(0,0,150,300);
+  _b2Ctx.strokeStyle="#333";_b2Ctx.lineWidth=0.5;
+  for(var r=0;r<=20;r++){_b2Ctx.beginPath();_b2Ctx.moveTo(0,r*15);_b2Ctx.lineTo(150,r*15);_b2Ctx.stroke();}
+  for(var c=0;c<=10;c++){_b2Ctx.beginPath();_b2Ctx.moveTo(c*15,0);_b2Ctx.lineTo(c*15,300);_b2Ctx.stroke();}
   var colors=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];
-  for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(_b2Board[r][c]){_b2Ctx.fillStyle=colors[_b2Board[r][c]-1]||"#888";_b2Ctx.fillRect(c*15+1,r*15+1,13,13);}}
+  for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(_b2Board[r][c]){_b2Ctx.fillStyle="rgba(255,255,255,0.3)";_b2Ctx.fillRect(c*15+1,r*15+1,13,13);}}
+  // Opponent's current piece
+  if(_b2Piece){_b2Ctx.fillStyle="#f44";for(var r=0;r<_b2Piece.shape.length;r++)for(var c=0;c<_b2Piece.shape[r].length;c++){if(_b2Piece.shape[r][c]&&_b2Piece.y+r>=0){_b2Ctx.fillRect((_b2Piece.x+c)*15+1,(_b2Piece.y+r)*15+1,13,13);}}}
 }
 function _bLose(){
   _b1GameOver=1;_bStarted=0;
@@ -1826,7 +1834,7 @@ document.getElementById("btnCreateRoom").onclick=function(){
     });
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
     _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
-    _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Draw();});
+    _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
     _sbChannel.subscribe();
   });
 };
@@ -1849,7 +1857,7 @@ document.getElementById("btnJoinRoom").onclick=function(){
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
     _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
     _sbChannel.on('broadcast',{event:'start'},function(){_bStarted=1;});
-    _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Draw();});
+    _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
     _sbChannel.subscribe(function(status){
       if(status==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}
     });
