@@ -103,7 +103,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 .board-wrap{background:var(--bboard);border-color:var(--bdrb);box-shadow:0 0 30px var(--bshadow);}
 .theme-toggle{position:fixed;top:10px;right:16px;z-index:150;background:var(--surface);border:1px solid var(--bdr);border-radius:20px;color:var(--txt);font-size:18px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 /* Screen fade */
-.screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:420px;min-height:80vh;padding:20px;text-align:center;opacity:0;transition:opacity 0.25s ease;pointer-events:none;}
+.screen{display:none;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;max-width:420px;min-height:100vh;padding:10px 20px;text-align:center;opacity:0;transition:opacity 0.25s ease;pointer-events:none;padding-bottom:20px;}
 .screen.active{display:flex;opacity:1;pointer-events:auto;}
 /* Achieve toast */
 .achieve-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;background:linear-gradient(135deg,#a0f,#4af);color:#fff;font-weight:bold;padding:12px 28px;border-radius:30px;font-size:18px;animation:toastIn 0.3s ease,toastOut 0.3s ease 2.2s forwards;box-shadow:0 4px 20px rgba(160,0,255,0.4);white-space:nowrap;pointer-events:none;}
@@ -272,8 +272,8 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
         <div class="info-box"><div class="label">等级</div><div class="value" id="tLevel">1</div></div>
         <div class="info-box"><div class="label">时间</div><div class="value small" id="tTime">00:00</div></div>
         <div class="info-box"><div class="label">行数</div><div class="value" id="tLines">0</div></div>
-        <div class="info-box" style="padding:4px;"><div class="label" style="font-size:10px;">HOLD</div><canvas id="tHold" width="80" height="80"></canvas></div>
-	        <div class="info-box" style="padding:4px;"><div class="label" style="font-size:10px;">NEXT</div><canvas id="tNext" width="80" height="80"></canvas></div>
+        <div class="info-box" style="padding:4px;"><div class="label" style="font-size:10px;">HOLD</div><canvas id="tHold" width="60" height="60"></canvas></div>
+	        <div class="info-box" style="padding:4px;"><div class="label" style="font-size:10px;">NEXT</div><canvas id="tNext" width="60" height="60"></canvas></div>
       </div>
     </div>
     <div class="status-msg" id="tStatus">&nbsp;</div>
@@ -534,7 +534,7 @@ function _playResume(){_playTone(250,0.08,0.1);setTimeout(function(){_playTone(3
 function _setupHiDPI(canvas,ctx,w,h){
   var dpr=window.devicePixelRatio||1;
   canvas.width=w*dpr;canvas.height=h*dpr;
-  canvas.style.width=w+"px";canvas.style.height=h+"px";
+  canvas.style.maxWidth=w+"px";
   ctx.scale(dpr,dpr);
 }
 function uhs(){["easy","normal","hard"].forEach(function(k){["ths","tdhs","shs","sdhs"].forEach(function(p){var e=document.getElementById(p+k[0].toUpperCase()+k.slice(1));if(e){var v=(p==="ths"||p==="tdhs")?ghs("tetris",k):ghs("snake",k);e.textContent=v;}});});}
@@ -547,7 +547,7 @@ var tc="normal",tb=[],tcu=null,tn=null,tsc=0,tln=0,tlv=1,tg=0,tp=0,tu=3,tgt=0,td
 function dm(d){return d==="hard"?2:d==="normal"?1.5:1;}
 var ttx=0,tty=0,ttt=0;var thold=null,_tholdUsed=0;
 var T_CELL=20;
-var tca=document.getElementById("tBoard"),tcx=tca.getContext("2d");_setupHiDPI(tca,tcx,200,400);var tnc=document.getElementById("tNext"),tncx=tnc.getContext("2d");_setupHiDPI(tnc,tncx,80,80);var thc=document.getElementById("tHold"),thcx=thc.getContext("2d");_setupHiDPI(thc,thcx,80,80);
+var tca=document.getElementById("tBoard"),tcx=tca.getContext("2d");_setupHiDPI(tca,tcx,200,400);var tnc=document.getElementById("tNext"),tncx=tnc.getContext("2d");_setupHiDPI(tnc,tncx,60,60);var thc=document.getElementById("tHold"),thcx=thc.getContext("2d");_setupHiDPI(thc,thcx,60,60);
 var tse=document.getElementById("tScore"),tle=document.getElementById("tLevel"),tlie=document.getElementById("tLines"),tste=document.getElementById("tStatus"),tte=document.getElementById("tTime");
 function tib(){var _flashRows=[];for(var fy=0;fy<tb.length;fy++){var full=1;for(var fx=0;fx<10;fx++){if(!tb[fy][fx]){full=0;break;}}if(full)_flashRows.push(fy);}if(_flashRows.length>0){tcx.fillStyle="rgba(255,255,255,0.7)";for(var fi=0;fi<_flashRows.length;fi++)tcx.fillRect(0,_flashRows[fi]*T_CELL,10*T_CELL,T_CELL);}tb=[];for(var r=0;r<20;r++)tb.push(new Array(10).fill(0));}
 var _tBag=[];function trp(){if(_tBag.length===0){_tBag=[0,1,2,3,4,5,6];for(var i=_tBag.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=_tBag[i];_tBag[i]=_tBag[j];_tBag[j]=tmp;}}var t=_tBag.pop();var S=[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[0,1,1],[1,1,0]],[[1,1,0],[0,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]]];return{shape:S[t].map(function(r){return r.slice();}),type:t};}
@@ -568,7 +568,7 @@ function ttp(){if(tg)return;tp=!tp;if(tp)_playPause();else _playResume();documen
 function tcb(){if(tg||tp)return;showConfirm("\u786e\u5b9a\u8981\u6d88\u9664\u6700\u4e0b\u9762\u7684\u4e00\u884c\u5417\uff1f\u5269\u4f59"+tu+"\u6b21",function(){if(tu<=0){tste.textContent="\u274c \u6d88\u9664\u6b21\u6570\u5df2\u7528\u5b8c\uff01";return;}var br=-1;for(var r=19;r>=0;r--){if(tb[r].some(function(v){return v!==0;})){br=r;break;}}if(br===-1)return;tb.splice(br,1);tb.unshift(new Array(10).fill(0));tu--;var tm=dm(tc);tsc+=Math.floor(100*tm);tln+=1;tlv=Math.floor(tln/10)+1;document.getElementById("tClearCount").textContent=tu+"/3";tui();tda();tste.textContent="🗑 \u5df2\u6d88\u9664\uff01\u5269\u4f59 "+tu+" \u6b21";});}
 function tui(){tse.textContent=tsc;tle.textContent=tlv;tlie.textContent=tln;}
 function tdb(){tcx.clearRect(0,0,200,400);tcx.strokeStyle="#1a1a2e";for(var r=0;r<=20;r++){tcx.beginPath();tcx.moveTo(0,r*20);tcx.lineTo(200,r*20);tcx.stroke();}for(var c=0;c<=10;c++){tcx.beginPath();tcx.moveTo(c*20,0);tcx.lineTo(c*20,400);tcx.stroke();}for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(tb[r][c]===8){tcx.fillStyle="#333";tcx.fillRect(c*20+1,r*20+1,18,18);}else if(tb[r][c]){var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];tcx.fillStyle=CL[tb[r][c]-1];tcx.fillRect(c*20+1,r*20+1,18,18);}}if(tcu&&!tg){var gy=tcu.y;while(tcp(tcu.shape,tcu.x,gy+1))gy++;for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by=gy+r;if(by<0)continue;tcx.fillStyle="rgba(255,255,255,0.07)";tcx.fillRect((tcu.x+c)*20+1,by*20+1,18,18);tcx.strokeStyle="rgba(255,255,255,0.15)";tcx.strokeRect((tcu.x+c)*20+1,by*20+1,18,18);}}if(tcu&&!tg){var CL2=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by2=tcu.y+r;if(by2<0)continue;tcx.fillStyle=CL2[tcu.type];tcx.fillRect((tcu.x+c)*20+1,by2*20+1,18,18);}}}
-function tdp(){tncx.clearRect(0,0,80,80);if(tn){var s=tn.shape,rs=s.length,cs=s[0].length,ox=(80-cs*16)/2,oy=(80-rs*16)/2;var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<rs;r++)for(var c=0;c<cs;c++){if(!s[r][c])continue;tncx.fillStyle=CL[tn.type];tncx.fillRect(ox+c*16+1,oy+r*16+1,14,14);}}}
+function tdp(){tncx.clearRect(0,0,60,60);if(tn){var s=tn.shape,rs=s.length,cs=s[0].length,ox=(60-cs*16)/2,oy=(60-rs*16)/2;var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<rs;r++)for(var c=0;c<cs;c++){if(!s[r][c])continue;tncx.fillStyle=CL[tn.type];tncx.fillRect(ox+c*16+1,oy+r*16+1,14,14);}}}
 function tda(){tdb();tdp();tholdDraw();}
 function tholdPiece(){
   if(!tcu||tg||tp||tag)return;
@@ -585,9 +585,9 @@ function tholdPiece(){
   tda();tholdDraw();
 }
 function tholdDraw(){
-  thcx.clearRect(0,0,80,80);
+  thcx.clearRect(0,0,60,60);
   if(thold){
-    var s=thold.shape,rs=s.length,cs=s[0].length,ox=(80-cs*16)/2,oy=(80-rs*16)/2;
+    var s=thold.shape,rs=s.length,cs=s[0].length,ox=(60-cs*16)/2,oy=(60-rs*16)/2;
     var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];
     for(var r=0;r<rs;r++)for(var c=0;c<cs;c++){
       if(!s[r][c])continue;
@@ -1074,13 +1074,6 @@ document.getElementById("btnBackG2048").onclick=function(){
   };
 });
 
-function ab(id,fn){
-  var el=document.getElementById(id);
-  if(el){
-    el.onclick=fn;
-    el.addEventListener("touchend",function(e){e.preventDefault();fn();});
-  }
-}
 ab("gUp",function(){gMove(0);});
 ab("gDown",function(){gMove(2);});
 ab("gLeft",function(){gMove(3);});
@@ -1272,7 +1265,6 @@ function mInit(){
   var g=MG[mc];mRows=g.r;mCols=g.c;mMines=g.mines;mCell=g.cell;mHints=mc==="easy"?1:mc==="normal"?2:3;mHintEl.textContent=mHints;
   var sz=mRows*mCell;
   mCanvas.width=sz;mCanvas.height=sz;
-  var _dpr=window.devicePixelRatio||1;mCanvas.width=sz*_dpr;mCanvas.height=sz*_dpr;mCtx.setTransform(_dpr,0,0,_dpr,0,0);
   var maxW=Math.min(window.innerWidth-16,500);
   mCanvas.style.maxWidth="100%";mCanvas.style.width=Math.min(sz,maxW)+"px";mCanvas.style.height="auto";
   mBoard=[];for(var r=0;r<mRows;r++){mBoard[r]=[];for(var c=0;c<mCols;c++)mBoard[r][c]={mine:0,rev:0,flag:0,adj:0,hint:0};}
@@ -1422,7 +1414,7 @@ document.getElementById("mRestart").onclick=mRestartConfirm;
 document.getElementById("mPause").onclick=mTogglePause;
 document.getElementById("mFlagToggle").onclick=mToggleFlagMode;
 document.getElementById("btnSoundMine").onclick=_toggleSound;
-function ab(id,fn){var el=document.getElementById(id);if(el){el.onclick=fn;el.addEventListener("touchend",function(e){e.preventDefault();fn();});}}
+
 ab("mHintBtn",mUseHint);
 
 // Difficulty buttons
