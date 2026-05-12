@@ -6,7 +6,7 @@
 <title>哥布林小游戏</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a1a; color: #fff; font-family: -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: center; touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  body { background: #0a0a1a; color: #fff; font-family: -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow-y: auto; overflow-x: hidden; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
     
   .menu-title { font-size: 32px; font-weight: bold; margin-bottom: 6px; background: linear-gradient(135deg, #4af, #a0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
   .menu-sub { font-size: 14px; color: #666; margin-bottom: 40px; }
@@ -103,7 +103,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 .board-wrap{background:var(--bboard);border-color:var(--bdrb);box-shadow:0 0 30px var(--bshadow);}
 .theme-toggle{position:fixed;top:10px;right:16px;z-index:150;background:var(--surface);border:1px solid var(--bdr);border-radius:20px;color:var(--txt);font-size:18px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 /* Screen fade */
-.screen{display:none;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;max-width:420px;min-height:100vh;padding:10px 20px;text-align:center;opacity:0;transition:opacity 0.25s ease;pointer-events:none;padding-bottom:20px;}
+.screen{display:none;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;max-width:420px;min-height:100vh;padding:10px 16px 80px 16px;text-align:center;opacity:0;transition:opacity 0.25s ease;pointer-events:none;}
 .screen.active{display:flex;opacity:1;pointer-events:auto;}
 /* Achieve toast */
 .achieve-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;background:linear-gradient(135deg,#a0f,#4af);color:#fff;font-weight:bold;padding:12px 28px;border-radius:30px;font-size:18px;animation:toastIn 0.3s ease,toastOut 0.3s ease 2.2s forwards;box-shadow:0 4px 20px rgba(160,0,255,0.4);white-space:nowrap;pointer-events:none;}
@@ -534,7 +534,7 @@ function _playResume(){_playTone(250,0.08,0.1);setTimeout(function(){_playTone(3
 function _setupHiDPI(canvas,ctx,w,h){
   var dpr=window.devicePixelRatio||1;
   canvas.width=w*dpr;canvas.height=h*dpr;
-  canvas.style.maxWidth=w+"px";
+  canvas.style.width=w+"px";canvas.style.height=h+"px";
   ctx.scale(dpr,dpr);
 }
 function uhs(){["easy","normal","hard"].forEach(function(k){["ths","tdhs","shs","sdhs"].forEach(function(p){var e=document.getElementById(p+k[0].toUpperCase()+k.slice(1));if(e){var v=(p==="ths"||p==="tdhs")?ghs("tetris",k):ghs("snake",k);e.textContent=v;}});});}
@@ -681,7 +681,7 @@ tca.addEventListener("touchend",function(e){e.preventDefault();if(!tts||tg)retur
 sca.addEventListener("touchstart",function(e){e.preventDefault();if(!sts||sgov)return;stx=e.changedTouches[0].clientX;sty=e.changedTouches[0].clientY;stt=Date.now();},{passive:false});
 sca.addEventListener("touchmove",function(e){e.preventDefault();},{passive:false});
 sca.addEventListener("touchend",function(e){e.preventDefault();if(!sts||sgov)return;var dx=e.changedTouches[0].clientX-stx,dy=e.changedTouches[0].clientY-sty,el=Date.now()-stt,adx=Math.abs(dx),ady=Math.abs(dy);if(el<150&&adx<10&&ady<10)return;if(adx>ady&&adx>20){schd(dx>0?1:3);}else if(ady>adx&&ady>20){schd(dy>0?2:0);}},{passive:false});
-function ab(id,fn){var el=document.getElementById(id);if(!el)return;el.addEventListener("click",function(e){e.preventDefault();fn();});}
+function ab(id,fn){var el=document.getElementById(id);if(!el)return;el.addEventListener("pointerdown",function(e){e.preventDefault();fn();});}
 ab("tHoldBtn",tholdPiece);
 ab("tLeft",tml);ab("tRight",tmr);ab("tRotate",trt);ab("tDown",tmd);ab("tDrop",thd);
 ab("tRestart",function(){if(tts)showConfirm("\u786e\u5b9a\u8981\u91cd\u65b0\u5f00\u59cb\u5417\uff1f\u5f53\u524d\u8fdb\u5ea6\u5c06\u4e22\u5931",function(){tstpc();clearInterval(tdi);_tBag=[];tib();tsc=0;tln=0;tlv=1;tg=0;tp=0;tu=3;tgt=0;_tBag=[];tn=null;tste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";tte.textContent="00:00";document.getElementById("tClearCount").textContent="3/3";document.getElementById("tPauseOverlay").classList.remove("active");document.getElementById("tPause").textContent="\u23f8 \u6682\u505c";tui();tsp();trd();tstc();});});
