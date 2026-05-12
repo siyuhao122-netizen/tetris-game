@@ -6,7 +6,7 @@
 <title>哥布林小游戏</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a1a; color: #fff; font-family: -apple-system, 'Segoe UI', sans-serif; min-height: 100vh; display: flex; justify-content: center; align-items: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow-y: auto; overflow-x: hidden; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  body { background: #0a0a1a; color: #fff; font-family: -apple-system, 'Segoe UI', sans-serif; height: 100dvh; display: flex; justify-content: center; align-items: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: hidden; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
     
   .menu-title { font-size: 32px; font-weight: bold; margin-bottom: 6px; background: linear-gradient(135deg, #4af, #a0f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
   .menu-sub { font-size: 14px; color: #666; margin-bottom: 40px; }
@@ -63,17 +63,18 @@
   .dpad .empty { visibility: hidden; }
   @media (max-width: 480px) {
     .menu-title { font-size: 26px; } .menu-goblin { font-size: 56px; }
-    .game-wrapper { gap: 4px; padding: 4px; } .game-container { gap: 6px; }
-    .side-panel { min-width: 64px; gap: 4px; }
-    .info-box { padding: 4px; } .info-box .value { font-size: 14px; } .info-box .value.small { font-size: 11px; }
-    .info-box .label { font-size: 9px; }
-    .ctrl-btn { font-size: 16px; padding: 8px 10px; min-width: 40px; }
-    .ctrl-btn.wide { min-width: 56px; }
-    .ctrl-btn.sdir { width: 48px; padding: 10px 0; font-size: 18px; }
-    .dpad { grid-template-columns: 48px 48px 48px; gap: 3px; }
-    .board-wrap canvas { max-width: 100% !important; max-height: 55vh !important; }
-    #tBoard, #gBoard { max-width: 240px; }
-    #sBoard { max-width: 260px; }
+    .game-wrapper { gap: 2px; padding: 2px; } .game-container { gap: 4px; }
+    .side-panel { min-width: 52px; gap: 2px; }
+    .info-box { padding: 2px 3px; } .info-box .value { font-size: 12px; } .info-box .value.small { font-size: 10px; }
+    .info-box .label { font-size: 8px; margin-bottom: 1px; }
+    .ctrl-btn { font-size: 15px; padding: 6px 8px; min-width: 38px; }
+    .ctrl-btn.wide { min-width: 52px; }
+    .ctrl-btn.sdir { width: 44px; padding: 8px 0; font-size: 16px; }
+    .dpad { grid-template-columns: 44px 44px 44px; gap: 2px; }
+    .board-wrap canvas { max-width: 100% !important; max-height: 60vh !important; }
+    #tBoard, #gBoard { max-width: 260px; }
+    #sBoard { max-width: 280px; }
+    .status-msg { font-size: 11px; min-height: 16px; }
   }
 
   /* 2048 Tile Colors */
@@ -107,7 +108,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 .board-wrap{background:var(--bboard);border-color:var(--bdrb);box-shadow:0 0 30px var(--bshadow);}
 .theme-toggle{position:fixed;top:10px;right:16px;z-index:150;background:var(--surface);border:1px solid var(--bdr);border-radius:20px;color:var(--txt);font-size:18px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 /* Screen fade */
-.screen{display:none;flex-direction:column;align-items:center;justify-content:flex-start;width:100%;max-width:420px;min-height:100vh;padding:10px 16px 80px 16px;text-align:center;opacity:0;transition:opacity 0.25s ease;pointer-events:none;}
+.screen{display:none;flex-direction:column;align-items:center;justify-content:space-between;width:100%;max-width:420px;height:100dvh;padding:6px 12px;text-align:center;opacity:0;transition:opacity 0.25s ease;pointer-events:none;overflow:hidden;}
 .screen.active{display:flex;opacity:1;pointer-events:auto;}
 /* Achieve toast */
 .achieve-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:200;background:linear-gradient(135deg,#a0f,#4af);color:#fff;font-weight:bold;padding:12px 28px;border-radius:30px;font-size:18px;animation:toastIn 0.3s ease,toastOut 0.3s ease 2.2s forwards;box-shadow:0 4px 20px rgba(160,0,255,0.4);white-space:nowrap;pointer-events:none;}
