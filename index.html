@@ -1556,7 +1556,7 @@ document.getElementById("bBoard").addEventListener("click",function(e){
 ["easy","normal","hard"].forEach(function(d){
   document.getElementById("bDiff"+d[0].toUpperCase()+d.slice(1)).onclick=function(){
     bc=d;window._gog=null;window._mog=null;
-    bBadgeEl.textContent=BD[d].e+" "+BD[d].l;
+    document.getElementById("bDiffBadge").textContent=BD[d].e+" "+BD[d].l;
     ss("screenBreakout");bInit();
     bBestEl.textContent=ghs("breakout",bc);
   };
