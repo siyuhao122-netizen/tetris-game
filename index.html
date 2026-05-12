@@ -582,7 +582,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button>
-    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="daily">📅 每日</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;display:none;" data-diff="daily" id="lbDailyTab">📅 每日</button>
   </div>
   <table class="stats-table" id="lbTable">
     <thead><tr><th>排名</th><th>玩家</th><th id="lbScoreHeader">分数</th><th>时间</th></tr></thead>
@@ -907,7 +907,7 @@ var SZ=17,G=20;
 function sinit(){sbody=[{x:9,y:10},{x:8,y:10},{x:7,y:10}];sdir=1;snxt=2;sfood=null;ssc=0;sgt=0;spau=0;sgov=0;_sGoldApple=null;_sGoldActive=0;_sFoodCount=0;if(sc==="easy")SD.easy.s=300;else if(sc==="normal")SD.normal.s=250;else SD.hard.s=200;_sObstacles=[];if(_snakeObsOn){var oc=8+Math.floor(Math.random()*5);for(var oi=0;oi<500&&_sObstacles.length<oc;oi++){var ox=Math.floor(Math.random()*G),oy=Math.floor(Math.random()*G);var ok2=1;for(var ob=0;ob<sbody.length;ob++){if(sbody[ob].x===ox&&sbody[ob].y===oy){ok2=0;break;}}if(ok2){var hd=sbody[0];if(Math.abs(ox-hd.x)<=5&&Math.abs(oy-hd.y)<=5)ok2=0;}for(var oj=0;oj<_sObstacles.length;oj++){if(_sObstacles[oj].x===ox&&_sObstacles[oj].y===oy){ok2=0;break;}}if(ok2)_sObstacles.push({x:ox,y:oy});}}sspawn();sda();sdir=snxt;sstep();var dirs=["↑","→","↓","←"];var el=document.getElementById("sDirInd");if(el)el.textContent=dirs[sdir];}
 function sspawn(){if(sfood)return;var cells=[];for(var x=0;x<G;x++)for(var y=0;y<G;y++){var ok=1;for(var i=0;i<sbody.length;i++){if(sbody[i].x===x&&sbody[i].y===y){ok=0;break;}}if(ok){for(var oi=0;oi<_sObstacles.length;oi++){if(_sObstacles[oi].x===x&&_sObstacles[oi].y===y){ok=0;break;}}}if(ok)cells.push({x:x,y:y});}if(cells.length===0){sgov=1;return;}sfood=cells[Math.floor(Math.random()*cells.length)];}
 function sstep(){if(sgov||spau)return;var h=sbody[0];var nh={x:h.x,y:h.y};switch(sdir){case 0:nh.y--;break;case 1:nh.x++;break;case 2:nh.y++;break;case 3:nh.x--;break;}if(nh.x<0||nh.x>=G||nh.y<0||nh.y>=G){sgov=1;return;}for(var i=0;i<_sObstacles.length;i++){if(_sObstacles[i].x===nh.x&&_sObstacles[i].y===nh.y){sgov=1;return;}}for(var i=0;i<sbody.length;i++){if(sbody[i].x===nh.x&&sbody[i].y===nh.y){sgov=1;return;}}// Golden apple active timer (5s)
-if(_sGoldActive&&Date.now()-_sGoldStart>5000){_sGoldActive=0;}
+if(_sGoldActive&&Date.now()-_sGoldStart>10000){_sGoldActive=0;}
 sbody.unshift(nh);
 // Golden apple eat check
 var _ateGold=0;
@@ -924,7 +924,7 @@ if(!_sGoldApple&&!_sGoldActive&&!sgov&&_sFoodCount>=3){_sFoodCount=0;
   if(_gcells.length>0){_sGoldApple=_gcells[Math.floor(Math.random()*_gcells.length)];_sGoldTimer=8;}
 }
 }else{sbody.pop();}sle.textContent=sbody.length;sse.textContent=ssc;
-if(_sGoldActive){var _rem=Math.ceil((5000-(Date.now()-_sGoldStart))/1000);if(!sste.textContent.match(/🍎/))sste.textContent="🍎 3x "+_rem+"s";}
+if(_sGoldActive){var _rem=Math.ceil((10000-(Date.now()-_sGoldStart))/1000);if(!sste.textContent.match(/🍎/))sste.textContent="🍎 3x "+_rem+"s";}
 if(!sgov)sda();}
 function schd(d){if(sgov||spau)return;if(Math.abs(d-sdir)===2)return;snxt=d;var dirs=["↑","→","↓","←"];var el=document.getElementById("sDirInd");if(el)el.textContent=dirs[d];}
 function sRd(){if(sdi)clearInterval(sdi);if(!sgov&&!spau&&sts){var spd=SD[sc].s;var len=sbody.length;if(sc==="easy"){if(len>=20)spd=250;}else if(sc==="normal"){if(len>=15)spd=200;}else if(sc==="hard"){if(len>=10)spd=175;if(len>=20)spd=140;}sdi=setInterval(function(){sdir=snxt;sstep();var dirs=["↑","→","↓","←"];var el=document.getElementById("sDirInd");if(el)el.textContent=dirs[sdir];},spd);}}
@@ -1726,6 +1726,12 @@ function _initLBTabs() {
       this.classList.add("active");
       _lbGame = this.getAttribute("data-game");
       document.getElementById("lbScoreHeader").textContent = _lbGame === 'minesweeper' ? '用时' : '分数';
+      var dt=document.getElementById("lbDailyTab");
+      if(dt)dt.style.display=_lbGame==="minesweeper"?"":"none";
+      if(_lbGame!=="minesweeper"&&_lbDiff==="daily"){_lbDiff="easy";
+        document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
+        var ft=document.querySelector("#lbDiffTabs .stat-tab[data-diff='easy']");if(ft)ft.classList.add("active");
+      }
       _loadLB();
     };
   });
