@@ -785,7 +785,6 @@ document.getElementById("btnBackSS").onclick=function(){if(sdi)clearInterval(sdi
 });
 document.getElementById("goRestart").onclick=function(){document.getElementById("gameOverOverlay").classList.remove("active");if(window._gog==="tetris"){tib();tsc=0;tln=0;tlv=1;tg=0;tp=0;tu=3;tgt=0;_tBag=[];tn=null;tste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";tte.textContent="00:00";document.getElementById("tClearCount").textContent="3/3";document.getElementById("tPauseOverlay").classList.remove("active");document.getElementById("tPause").textContent="\u23f8 \u6682\u505c";tui();tsp();trd();tstc();tts=1;}else if(window._gog==="snake"){sinit();ssc=0;sgt=0;spau=0;sgov=0;ste2.textContent="00:00";sle.textContent=3;sse.textContent=0;document.getElementById("sPauseOverlay").classList.remove("active");document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="🎮 \u6e38\u620f\u5f00\u59cb\uff01";sda();sRd();sStc();sts=1;}};
 document.getElementById("goBack").onclick=function(){document.getElementById("gameOverOverlay").classList.remove("active");if(window._gog==="tetris"){if(tdi)clearInterval(tdi);tstpc();tts=0;ss("screenTetrisDiff");}else if(window._gog==="snake"){if(sdi)clearInterval(sdi);sStpc();sts=0;ss("screenSnakeDiff");}};
-document.getElementById("goContinue").onclick=function(){_gContinue();this.style.display="none";};
 document.onkeydown=function(e){
   if(e.key==="p"||e.key==="P"){var s1=document.getElementById("screenTetris");var s2=document.getElementById("screenSnake");if(s1.classList.contains("active")&&tts){e.preventDefault();ttp();}if(s2.classList.contains("active")&&sts){e.preventDefault();sTp();}return;}
   if(document.getElementById("screenSnake").classList.contains("active")&&sts&&!sgov&&!spau){
@@ -1253,28 +1252,24 @@ uhs=function(){
   });
 };
 
-// Extend goRestart/goBack for minesweeper + stats recording
+// Extend goRestart/goBack for minesweeper
 var _gor3=document.getElementById("goRestart").onclick;
 document.getElementById("goRestart").onclick=function(){
-  var ov=document.getElementById("gameOverOverlay");
-  // Record stats for tetris/snake on restart click
-  if(ov.classList.contains("active")){
-    
-    
-  }
-  ov.classList.remove("active");
-  var t=document.querySelector("#gameOverOverlay .o-title");if(t)t.textContent="💀 游戏结束";
-  if(window._mog==="minesweeper"){document.getElementById("mPauseOverlay").classList.remove("active");document.getElementById("mPause").textContent="⏸ 暂停";mInit();}
-  
+  if(window._mog==="minesweeper"){
+    document.getElementById("gameOverOverlay").classList.remove("active");
+    document.getElementById("mPauseOverlay").classList.remove("active");
+    document.getElementById("mPause").textContent="⏸ 暂停";
+    mInit();
+  } else if(_gor3) { _gor3(); }
 };
 
 var _gob3=document.getElementById("goBack").onclick;
 document.getElementById("goBack").onclick=function(){
-  document.getElementById("gameOverOverlay").classList.remove("active");
-  var t=document.querySelector("#gameOverOverlay .o-title");if(t)t.textContent="💀 游戏结束";
-  if(window._mog==="minesweeper"){if(mTimerId){clearInterval(mTimerId);mTimerId=null;}mStarted=0;ss("screenMinesweeperDiff");}
-  
-  else if(_gob3){_gob3();}
+  if(window._mog==="minesweeper"){
+    document.getElementById("gameOverOverlay").classList.remove("active");
+    if(mTimerId){clearInterval(mTimerId);mTimerId=null;}
+    mStarted=0;ss("screenMinesweeperDiff");
+  } else if(_gob3) { _gob3(); }
 };
 
 // Extend confirm/pause for minesweeper
