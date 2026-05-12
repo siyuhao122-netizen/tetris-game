@@ -1772,12 +1772,13 @@ function _b2Draw(){
 function _bLose(){
   _b1GameOver=1;
   document.getElementById("battleStatus").textContent="💀 你输了！";
-  if(_sbChannel){_sbChannel.send({type:'broadcast',event:'lose',payload:{}});_sbChannel.unsubscribe();_sbChannel=null;}
+  if(_sbChannel){_sbChannel.send({type:'broadcast',event:'lose',payload:{}});}
+  _bCleanupRoom();
   setTimeout(function(){_showBattleResult();},2000);
 }
 function _bWin(){
   document.getElementById("battleStatus").textContent="🎉 你赢了！";
-  if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}
+  _bCleanupRoom();
   setTimeout(function(){_showBattleResult();},2000);
 }
 
@@ -1838,8 +1839,12 @@ function _bStartGame(){
 }
 
 document.getElementById("btnBackBattle").onclick=function(){ss("screenSelect");};
-document.getElementById("btnBackWait").onclick=function(){if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenBattleLobby");};
-document.getElementById("btnBackBG").onclick=function(){if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}ss("screenBattleLobby");};
+function _bCleanupRoom(){
+  if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}
+  if(_bRoom&&_bRoom.id){_sbReq('DELETE','/rest/v1/rooms?id=eq.'+_bRoom.id);_bRoom=null;}
+}
+document.getElementById("btnBackWait").onclick=function(){_bCleanupRoom();ss("screenBattleLobby");};
+document.getElementById("btnBackBG").onclick=function(){if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}_bCleanupRoom();ss("screenBattleLobby");};
 document.getElementById("cardBattle").onclick=function(){_initAudio();ss("screenBattleLobby");};
 
 // Battle button wiring
