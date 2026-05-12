@@ -570,13 +570,16 @@ var _tcbEnvId = 'gobulin-d8gmgyc2m7dbaaa44';
 var _tcbApp = null;
 var _tcbDb = null;
 var _tcbReady = false;
+var _tcbAuthPromise = null;
 try {
   _tcbApp = cloudbase.init({ env: _tcbEnvId });
-  _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
+  _tcbAuthPromise = _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
     _tcbDb = _tcbApp.database();
     _tcbReady = true;
+    console.log('CloudBase ready');
   }).catch(function(e) {
     console.log('CloudBase auth failed:', e);
+    _tcbAuthPromise = null;
   });
 } catch(e) { console.log('CloudBase init failed:', e); }
 
@@ -1255,31 +1258,39 @@ function recordGame(g,d,score,timeSec,won){
 var _lbGame = "tetris", _lbDiff = "easy";
 
 function _submitLB(game, difficulty, score, timeSec, callback) {
-  if (!_tcbReady || !_username) { if (callback) callback(false); return; }
-  try {
-    var coll = _tcbDb.collection('leaderboard');
-    coll.where({ username: _username, game: game, difficulty: difficulty }).get().then(function(res) {
-      if (res.data && res.data.length > 0) {
-        var existing = res.data[0];
-        var better = game === 'minesweeper'
-          ? (existing.time === 0 || timeSec < existing.time)
-          : (score > existing.score);
-        if (better) {
-          coll.doc(existing._id).update({ score: score, time: timeSec, updatedAt: new Date() }).then(function() {
+  if (!_username) { if (callback) callback(false); return; }
+  function _doSubmit() {
+    try {
+      var coll = _tcbDb.collection('leaderboard');
+      coll.where({ username: _username, game: game, difficulty: difficulty }).get().then(function(res) {
+        if (res.data && res.data.length > 0) {
+          var existing = res.data[0];
+          var better = game === 'minesweeper'
+            ? (existing.time === 0 || timeSec < existing.time)
+            : (score > existing.score);
+          if (better) {
+            coll.doc(existing._id).update({ score: score, time: timeSec, updatedAt: new Date() }).then(function() {
+              _achieveBadge('已同步排行榜','📡');
+              if (callback) callback(true);
+            }).catch(function() { _achieveBadge('同步失败，请重试','⚠️'); if (callback) callback(false); });
+          } else { if (callback) callback(true); }
+        } else {
+          coll.add({
+            username: _username, game: game, difficulty: difficulty,
+            score: score, time: timeSec,
+            createdAt: new Date(), updatedAt: new Date()
+          }).then(function() {
+            _achieveBadge('已同步排行榜','📡');
             if (callback) callback(true);
-          }).catch(function() { if (callback) callback(false); });
-        } else { if (callback) callback(true); }
-      } else {
-        coll.add({
-          username: _username, game: game, difficulty: difficulty,
-          score: score, time: timeSec,
-          createdAt: new Date(), updatedAt: new Date()
-        }).then(function() {
-          if (callback) callback(true);
-        }).catch(function() { if (callback) callback(false); });
-      }
-    }).catch(function() { if (callback) callback(false); });
-  } catch(e) { if (callback) callback(false); }
+          }).catch(function() { _achieveBadge('同步失败，请重试','⚠️'); if (callback) callback(false); });
+        }
+      }).catch(function() { if (callback) callback(false); });
+    } catch(e) { if (callback) callback(false); }
+  }
+  if (_tcbReady) { _doSubmit(); }
+  else if (_tcbAuthPromise) {
+    _tcbAuthPromise.then(function() { if (_tcbReady) _doSubmit(); });
+  }
 }
 
 function _loadLB(callback) {
