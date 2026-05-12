@@ -267,7 +267,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <span class="o-detail" id="battleInfo" style="font-size:13px;color:#888;margin:0;"></span>
   </div>
   <div class="game-wrapper">
-    <div style="display:flex;gap:4px;align-items:flex-start;justify-content:center;flex-wrap:wrap;">
+    <div style="display:flex;gap:4px;align-items:flex-start;justify-content:center;flex-wrap:nowrap;overflow-x:auto;">
       <div style="text-align:center;">
         <div style="font-size:12px;color:#4af;margin-bottom:2px;">你</div>
         <div class="board-wrap" style="position:relative;">
@@ -1688,23 +1688,22 @@ document.getElementById("goBack").onclick=function(){
 };
 
 // ====== BATTLE TETRIS ======
-var _bRoom=null,_bPlayer=0,_bOppName="",_bGarbage=0,_bSentLines=0;
-var _b1Board=[],_b1Cur=null,_b1Next=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
-var _b2Board=[],_b2Data=[]; // opponent board rendered from remote data
-var _b1Canvas,_b1Ctx,_b2Canvas,_b2Ctx,_b1Loop=null,_b1Speed=600;
+var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0;
+var _b1Board=[],_b1Cur=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
+var _b2Board=[]; // opponent board
+var _b1Canvas,_b1Ctx,_b2Canvas,_b2Ctx,_b1Loop=null;
 
 function _b1Init(){
   _b1Canvas=document.getElementById("b1Board");_b1Ctx=_b1Canvas.getContext("2d");_setupHiDPI(_b1Canvas,_b1Ctx,150,300);
   _b2Canvas=document.getElementById("b2Board");_b2Ctx=_b2Canvas.getContext("2d");_setupHiDPI(_b2Canvas,_b2Ctx,150,300);
   _b1Board=[];for(var r=0;r<20;r++)_b1Board.push(new Array(10).fill(0));
   _b2Board=[];for(var r=0;r<20;r++)_b2Board.push(new Array(10).fill(0));
-  _b1Score=0;_b1GameOver=0;_bGarbage=0;_bSentLines=0;
-  _b1Bag=[];_b1Cur=null;_b1Next=null;
+  _b1Score=0;_b1GameOver=0;_bGarbage=0;_bStarted=0;
+  _b1Bag=[];_b1Cur=null;
   document.getElementById("battleStatus").textContent="";
   _b1Spawn();_b1Draw();_b2Draw();
-  _b1Speed=600;
   if(_b1Loop)clearInterval(_b1Loop);
-  _b1Loop=setInterval(function(){if(!_b1GameOver)_b1Tick();},_b1Speed);
+  _b1Loop=setInterval(function(){if(!_b1GameOver&&_bStarted)_b1Tick();},500);
 }
 
 function _b1Spawn(){
@@ -1716,7 +1715,7 @@ function _b1Spawn(){
 function _b1CanPlace(sh,px,py){for(var r=0;r<sh.length;r++)for(var c=0;c<sh[r].length;c++){if(!sh[r][c])continue;var bx=px+c,by=py+r;if(bx<0||bx>=10||by>=20)return 0;if(by<0)continue;if(_b1Board[by][bx])return 0;}return 1;}
 
 function _b1Tick(){
-  if(_b1GameOver||!_b1Cur)return;
+  if(_b1GameOver||!_b1Cur||!_bStarted)return;
   if(_b1CanPlace(_b1Cur.shape,_b1Cur.x,_b1Cur.y+1)){_b1Cur.y++;}
   else{_b1Lock();}
   _b1Draw();
@@ -1730,15 +1729,20 @@ function _b1Lock(){
   for(var r=19;r>=0;r--){if(_b1Board[r].every(function(v){return v!==0;})){_b1Board.splice(r,1);_b1Board.unshift(new Array(10).fill(0));cleared++;r++;}}
   if(cleared>0){
     _b1Score+=cleared;
-    // Send garbage to opponent
     var gc=cleared===4?4:cleared-1;
-    if(gc>0&&_sbChannel){_sbChannel.send({type:'broadcast',event:'garbage',payload:{count:gc}});}
+    if(gc>0&&_sbChannel){
+      _sbChannel.send({type:'broadcast',event:'garbage',payload:{count:gc}});
+      // Show sent garbage on opponent board
+      for(var i=0;i<gc;i++){var gr2=new Array(10).fill(8);var hole2=Math.floor(Math.random()*10);gr2[hole2]=0;_b2Board.push(gr2);_b2Board.shift();}
+      _b2Draw();
+    }
     document.getElementById("battleStatus").textContent="消行 +"+cleared+"！发送垃圾 "+gc;
   }
-  // Apply pending garbage
+  // Apply received garbage
   if(_bGarbage>0){
     var g=Math.min(_bGarbage,8);_bGarbage-=g;
     for(var i=0;i<g;i++){_b1Board.shift();var gr=new Array(10).fill(8);var hole=Math.floor(Math.random()*10);gr[hole]=0;_b1Board.push(gr);}
+    document.getElementById("battleStatus").textContent+=" | 收到 "+g+" 行垃圾！";
   }
   _b1Spawn();_b1Draw();
 }
@@ -1770,16 +1774,15 @@ function _b2Draw(){
   for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(_b2Board[r][c]){_b2Ctx.fillStyle=colors[_b2Board[r][c]-1]||"#888";_b2Ctx.fillRect(c*15+1,r*15+1,13,13);}}
 }
 function _bLose(){
-  _b1GameOver=1;
+  _b1GameOver=1;_bStarted=0;
   document.getElementById("battleStatus").textContent="💀 你输了！";
   if(_sbChannel){_sbChannel.send({type:'broadcast',event:'lose',payload:{}});}
-  _bCleanupRoom();
-  setTimeout(function(){_showBattleResult();},2000);
+  setTimeout(function(){_bCleanupRoom();_showBattleResult();},3000);
 }
 function _bWin(){
+  _bStarted=0;
   document.getElementById("battleStatus").textContent="🎉 你赢了！";
-  _bCleanupRoom();
-  setTimeout(function(){_showBattleResult();},2000);
+  setTimeout(function(){_bCleanupRoom();_showBattleResult();},3000);
 }
 
 function _showBattleResult(){
@@ -1800,9 +1803,11 @@ document.getElementById("btnCreateRoom").onclick=function(){
     document.getElementById("waitCode").textContent=room.code;
     document.getElementById("waitStatus").textContent="等待对手加入...";
     ss("screenBattleWait");
-    // Listen for opponent join
     _sbChannel=_sbClient.channel('room-'+room.id);
-    _sbChannel.on('broadcast',{event:'join'},function(){_bStartGame();});
+    _sbChannel.on('broadcast',{event:'join'},function(){
+      _bStartGame();_bStarted=1;
+      _sbChannel.send({type:'broadcast',event:'start',payload:{}});
+    });
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
     _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
     _sbChannel.subscribe();
@@ -1819,15 +1824,14 @@ document.getElementById("btnJoinRoom").onclick=function(){
     var room=data[0];
     if(room.status!=='waiting'){document.getElementById("lobbyMsg").textContent="房间已满";document.getElementById("lobbyMsg").style.display="block";return;}
     _bRoom=room;_bPlayer=2;
-    // Update room
     return _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:_userId?parseInt(_userId):null});
   }).then(function(r){return r?r.json():null;}).then(function(){
     if(!_bRoom)return;
-    // Start game immediately, setup channel in background
     _bStartGame();
     _sbChannel=_sbClient.channel('room-'+_bRoom.id);
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
     _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
+    _sbChannel.on('broadcast',{event:'start'},function(){_bStarted=1;});
     _sbChannel.subscribe(function(status){
       if(status==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}
     });
@@ -1837,6 +1841,7 @@ document.getElementById("btnJoinRoom").onclick=function(){
 function _bStartGame(){
   ss("screenBattle");_b1Init();
   document.getElementById("battleInfo").textContent="房间: "+_bRoom.code;
+  if(_bPlayer===2)_bStarted=1; // Joiner starts immediately
 }
 
 document.getElementById("btnBackBattle").onclick=function(){ss("screenSelect");};
