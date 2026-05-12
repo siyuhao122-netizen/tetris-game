@@ -571,17 +571,21 @@ var _tcbApp = null;
 var _tcbDb = null;
 var _tcbReady = false;
 var _tcbAuthPromise = null;
-try {
-  _tcbApp = cloudbase.init({ env: _tcbEnvId });
-  _tcbAuthPromise = _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
-    _tcbDb = _tcbApp.database();
-    _tcbReady = true;
-    console.log('CloudBase ready');
-  }).catch(function(e) {
-    console.log('CloudBase auth failed:', e);
-    _tcbAuthPromise = null;
-  });
-} catch(e) { console.log('CloudBase init failed:', e); }
+if (typeof cloudbase === 'undefined') {
+  _achieveBadge('SDK未加载，请检查网络','❌');
+} else {
+  try {
+    _tcbApp = cloudbase.init({ env: _tcbEnvId });
+    _tcbAuthPromise = _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
+      _tcbDb = _tcbApp.database();
+      _tcbReady = true;
+      _achieveBadge('云端连接成功','✅');
+    }).catch(function(e) {
+      _achieveBadge('云端认证失败: '+e.message,'❌');
+      _tcbAuthPromise = null;
+    });
+  } catch(e) { _achieveBadge('云端初始化失败','❌'); }
+}
 
 var _theme=localStorage.getItem("goblin_theme")||"dark";
 document.body.classList.add("theme-"+_theme);
