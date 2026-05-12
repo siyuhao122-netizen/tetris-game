@@ -596,7 +596,8 @@ document.getElementById("btnTheme").textContent=_theme==="dark"?"🌙":"☀️";
 var gs={};function ghs(g,d){return parseInt(localStorage.getItem(g+"_hs_"+d)||"0",10);}
 function shs(g,d,v){var o=ghs(g,d);if(v>o){localStorage.setItem(g+"_hs_"+d,""+v);return 1;}return 0;}var _confirmCb=null;var _confirmState=0;
 // Username system
-var _username = localStorage.getItem("goblin_username") || "";
+var _username = "";
+try { _username = localStorage.getItem("goblin_username") || ""; } catch(e) {}
 function _showUsernameModal(callback) {
   document.getElementById("usernameOverlay").style.display = "flex";
   document.getElementById("usernameInput").value = _username;
@@ -609,7 +610,7 @@ function _showUsernameModal(callback) {
       return;
     }
     _username = v;
-    localStorage.setItem("goblin_username", _username);
+    try { localStorage.setItem("goblin_username", _username); } catch(e) {}
     document.getElementById("usernameOverlay").style.display = "none";
     _updateUsernameDisplay();
     if (callback) callback();
@@ -1263,6 +1264,13 @@ var _lbGame = "tetris", _lbDiff = "easy";
 
 function _submitLB(game, difficulty, score, timeSec, callback) {
   if (!_username) { if (callback) callback(false); return; }
+  function _showSync(msg) {
+    _achieveBadge(msg, '📡');
+    var el = document.getElementById("goDetail");
+    if (el && document.getElementById("gameOverOverlay").classList.contains("active")) {
+      el.textContent += ' | ' + msg;
+    }
+  }
   function _doSubmit() {
     try {
       var coll = _tcbDb.collection('leaderboard');
@@ -1274,26 +1282,28 @@ function _submitLB(game, difficulty, score, timeSec, callback) {
             : (score > existing.score);
           if (better) {
             coll.doc(existing._id).update({ score: score, time: timeSec, updatedAt: new Date() }).then(function() {
-              _achieveBadge('已同步排行榜','📡');
+              _showSync('已同步排行榜');
               if (callback) callback(true);
-            }).catch(function() { _achieveBadge('同步失败，请重试','⚠️'); if (callback) callback(false); });
-          } else { if (callback) callback(true); }
+            }).catch(function() { _showSync('同步失败'); if (callback) callback(false); });
+          } else { _showSync('未破纪录，跳过同步'); if (callback) callback(true); }
         } else {
           coll.add({
             username: _username, game: game, difficulty: difficulty,
             score: score, time: timeSec,
             createdAt: new Date(), updatedAt: new Date()
           }).then(function() {
-            _achieveBadge('已同步排行榜','📡');
+            _showSync('已同步排行榜');
             if (callback) callback(true);
-          }).catch(function() { _achieveBadge('同步失败，请重试','⚠️'); if (callback) callback(false); });
+          }).catch(function() { _showSync('同步失败'); if (callback) callback(false); });
         }
-      }).catch(function() { if (callback) callback(false); });
-    } catch(e) { if (callback) callback(false); }
+      }).catch(function() { _showSync('查询失败'); if (callback) callback(false); });
+    } catch(e) { _showSync('异常: '+e.message); if (callback) callback(false); }
   }
   if (_tcbReady) { _doSubmit(); }
   else if (_tcbAuthPromise) {
     _tcbAuthPromise.then(function() { if (_tcbReady) _doSubmit(); });
+  } else {
+    _showSync('云端未就绪');
   }
 }
 
