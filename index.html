@@ -563,29 +563,11 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
-<script src="https://static.cloudbase.net/cloudbase-js-sdk/1.7.0/cloudbase.full.js"></script>
 <script>
-// ===== CLOUDBASE INIT =====
-var _tcbEnvId = 'gobulin-d8gmgyc2m7dbaaa44';
-var _tcbApp = null;
-var _tcbDb = null;
-var _tcbReady = false;
-var _tcbAuthPromise = null;
-if (typeof cloudbase === 'undefined') {
-  _achieveBadge('SDK未加载，请检查网络','❌');
-} else {
-  try {
-    _tcbApp = cloudbase.init({ env: _tcbEnvId });
-    _tcbAuthPromise = _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
-      _tcbDb = _tcbApp.database();
-      _tcbReady = true;
-      _achieveBadge('云端连接成功','✅');
-    }).catch(function(e) {
-      _achieveBadge('云端认证失败: '+e.message,'❌');
-      _tcbAuthPromise = null;
-    });
-  } catch(e) { _achieveBadge('初始化失败: '+(e.message||e),'❌'); }
-}
+// ===== SUPABASE =====
+var _sbUrl = 'https://apazkbetrmqvrtnmhmih.supabase.co';
+var _sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwYXprYmV0cm1xdnJ0bm1obWloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NjE4MDAsImV4cCI6MjA5NDEzNzgwMH0.PLF1qUPVkhGbAJT77OBS-tqw-3iv9E9GPfqNJOA5C9E';
+var _sbReady = true; // Supabase REST API works directly, no auth needed
 
 var _theme=localStorage.getItem("goblin_theme")||"dark";
 document.body.classList.add("theme-"+_theme);
@@ -1259,8 +1241,17 @@ function recordGame(g,d,score,timeSec,won){
   saveStats(g,d,s);
 }
 
-// ===== LEADERBOARD =====
+// ===== LEADERBOARD (Supabase) =====
 var _lbGame = "tetris", _lbDiff = "easy";
+
+function _sbReq(method, path, body) {
+  var headers = {
+    'apikey': _sbKey,
+    'Authorization': 'Bearer ' + _sbKey,
+    'Content-Type': 'application/json'
+  };
+  return fetch(_sbUrl + path, { method: method, headers: headers, body: body ? JSON.stringify(body) : undefined });
+}
 
 function _submitLB(game, difficulty, score, timeSec, callback) {
   if (!_username) { if (callback) callback(false); return; }
@@ -1271,58 +1262,44 @@ function _submitLB(game, difficulty, score, timeSec, callback) {
       el.textContent += ' | ' + msg;
     }
   }
-  function _doSubmit() {
-    try {
-      var coll = _tcbDb.collection('leaderboard');
-      coll.where({ username: _username, game: game, difficulty: difficulty }).get().then(function(res) {
-        if (res.data && res.data.length > 0) {
-          var existing = res.data[0];
-          var better = game === 'minesweeper'
-            ? (existing.time === 0 || timeSec < existing.time)
-            : (score > existing.score);
-          if (better) {
-            coll.doc(existing._id).update({ score: score, time: timeSec, updatedAt: new Date() }).then(function() {
-              _showSync('已同步排行榜');
-              if (callback) callback(true);
-            }).catch(function(e) { _showSync('更新失败: '+(e.message||e)); if (callback) callback(false); });
-          } else { _showSync('未破纪录'); if (callback) callback(true); }
-        } else {
-          coll.add({
-            username: _username, game: game, difficulty: difficulty,
-            score: score, time: timeSec,
-            createdAt: new Date(), updatedAt: new Date()
-          }).then(function() {
-            _showSync('已同步排行榜');
-            if (callback) callback(true);
-          }).catch(function(e) { _showSync('添加失败: '+(e.message||e)); if (callback) callback(false); });
-        }
-      }).catch(function(e) { _showSync('查询失败: '+(e.message||e)); if (callback) callback(false); });
-    } catch(e) { _showSync('异常: '+e.message); if (callback) callback(false); }
-  }
-  if (_tcbReady) { _doSubmit(); }
-  else if (_tcbAuthPromise) {
-    _tcbAuthPromise.then(function() { if (_tcbReady) _doSubmit(); });
-  } else {
-    _showSync('云端未就绪');
-  }
+  // Query existing entry
+  var q = '/rest/v1/leaderboard?username=eq.' + encodeURIComponent(_username)
+    + '&game=eq.' + game + '&difficulty=eq.' + difficulty + '&select=id,score,time&limit=1';
+  _sbReq('GET', q).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data && data.length > 0) {
+      var existing = data[0];
+      var better = game === 'minesweeper'
+        ? (existing.time === 0 || timeSec < existing.time)
+        : (score > existing.score);
+      if (better) {
+        return _sbReq('PATCH', '/rest/v1/leaderboard?id=eq.' + existing.id, {
+          score: score, time: timeSec
+        }).then(function() { _showSync('已同步排行榜'); if (callback) callback(true); });
+      } else { _showSync('未破纪录'); if (callback) callback(true); }
+    } else {
+      return _sbReq('POST', '/rest/v1/leaderboard', {
+        username: _username, game: game, difficulty: difficulty,
+        score: score, time: timeSec
+      }).then(function() { _showSync('已同步排行榜'); if (callback) callback(true); });
+    }
+  }).catch(function(e) { _showSync('请求失败'); if (callback) callback(false); });
 }
 
 function _loadLB(callback) {
-  if (!_tcbReady) { _showLBEmpty(); return; }
-  var coll = _tcbDb.collection('leaderboard');
-  var cond = { game: _lbGame, difficulty: _lbDiff };
-  if (_lbGame === 'minesweeper') cond.time = _tcbDb.command.gt(0);
-  var query = coll.where(cond);
-  query = _lbGame === 'minesweeper'
-    ? query.orderBy('time', 'asc')
-    : query.orderBy('score', 'desc');
-  query.limit(50).get().then(function(res) {
+  var orderCol = _lbGame === 'minesweeper' ? 'time' : 'score';
+  var orderDir = _lbGame === 'minesweeper' ? 'asc' : 'desc';
+  var q = '/rest/v1/leaderboard?game=eq.' + _lbGame + '&difficulty=eq.' + _lbDiff
+    + '&order=' + orderCol + '.' + orderDir + '&limit=50';
+  if (_lbGame === 'minesweeper') q += '&time=gt.0';
+  _sbReq('GET', q).then(function(r) { return r.json(); })
+  .then(function(data) {
     var rows = [];
-    (res.data || []).forEach(function(r, i) {
+    (data || []).forEach(function(r, i) {
       var isMe = r.username === _username;
       var cls = isMe ? ' class="me"' : '';
       var val = _lbGame === 'minesweeper' ? r.time + 's' : r.score;
-      var dt = r.createdAt ? (new Date(r.createdAt)).toLocaleDateString('zh-CN') : '--';
+      var dt = r.created_at ? (new Date(r.created_at)).toLocaleDateString('zh-CN') : '--';
       rows.push('<tr' + cls + '><td>' + (i + 1) + '</td><td>' + _esc(r.username) + '</td><td>' + val + '</td><td>' + dt + '</td></tr>');
     });
     document.getElementById("lbBody").innerHTML = rows.join("");
