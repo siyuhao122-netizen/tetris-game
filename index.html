@@ -563,7 +563,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
-<script src="https://static.cloudbase.net/cloudbase-js-sdk/2.8.34/cloudbase.full.js"></script>
+<script src="https://static.cloudbase.net/cloudbase-js-sdk/1.7.0/cloudbase.full.js"></script>
 <script>
 // ===== CLOUDBASE INIT =====
 var _tcbEnvId = 'gobulin-d8gmgyc2m7dbaaa44';
@@ -575,8 +575,8 @@ if (typeof cloudbase === 'undefined') {
   _achieveBadge('SDK未加载，请检查网络','❌');
 } else {
   try {
-    _tcbApp = cloudbase.init({ env: _tcbEnvId, region: 'ap-shanghai' });
-    _tcbAuthPromise = _tcbApp.auth().signInAnonymously().then(function() {
+    _tcbApp = cloudbase.init({ env: _tcbEnvId });
+    _tcbAuthPromise = _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
       _tcbDb = _tcbApp.database();
       _tcbReady = true;
       _achieveBadge('云端连接成功','✅');
