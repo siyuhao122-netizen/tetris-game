@@ -214,8 +214,8 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <!-- SNAKE DIFFICULTY -->
 <div class="screen" id="screenSnakeDiff">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackSDiff">← 返回</button></div>
-  <div class="obs-toggle" id="sObsToggle" style="display:none;" onclick="var s=this.querySelector('.obs-switch');s.classList.toggle('on');_snakeObsOn=!_snakeObsOn;localStorage.setItem('goblin_snake_obs',_snakeObsOn?'1':'0');this.querySelector('.obs-label').textContent=_snakeObsOn?'🧱 障碍物: 开':'🧱 障碍物: 关';var st=document.getElementById('sShuffleToggle');if(_snakeObsOn){st.classList.remove('disabled');}else{st.classList.add('disabled');_snakeObsShuffle=false;var ss=st.querySelector('.obs-switch');if(ss)ss.classList.remove('on');st.querySelector('.obs-label').textContent='🔀 障碍物变换: 关';localStorage.setItem('goblin_snake_shuffle','0');}}"><span class="obs-label" id="sObsLabel">🧱 障碍物: 关</span><div class="obs-switch" id="sObsSwitch"></div></div>
-  <div class="obs-toggle disabled" id="sShuffleToggle" style="display:none;" onclick="if(this.classList.contains('disabled'))return;var s=this.querySelector('.obs-switch');s.classList.toggle('on');_snakeObsShuffle=!_snakeObsShuffle;localStorage.setItem('goblin_snake_shuffle',_snakeObsShuffle?'1':'0');this.querySelector('.obs-label').textContent=_snakeObsShuffle?'🔀 障碍物变换: 开':'🔀 障碍物变换: 关';"><span class="obs-label" id="sShuffleLabel">🔀 障碍物变换: 关</span><div class="obs-switch" id="sShuffleSwitch"></div></div>
+  <div class="obs-toggle" id="sObsToggle" style="display:none;"><span class="obs-label" id="sObsLabel">🧱 障碍物: 关</span><div class="obs-switch" id="sObsSwitch"></div></div>
+	  <div class="obs-toggle disabled" id="sShuffleToggle" style="display:none;" ><span class="obs-label" id="sShuffleLabel">🔀 障碍物变换: 关</span><div class="obs-switch" id="sShuffleSwitch"></div></div>
   <div class="diff-title">🎚 贪吃蛇 · 难度</div>
   <div class="diff-card" id="sDiffEasy">
     <div class="dname">🟢 简单</div><div class="ddesc">400ms/步，慢慢来</div>
@@ -534,7 +534,7 @@ function tui(){tse.textContent=tsc;tle.textContent=tlv;tlie.textContent=tln;}
 function tdb(){tcx.clearRect(0,0,200,400);tcx.strokeStyle="#1a1a2e";for(var r=0;r<=20;r++){tcx.beginPath();tcx.moveTo(0,r*20);tcx.lineTo(200,r*20);tcx.stroke();}for(var c=0;c<=10;c++){tcx.beginPath();tcx.moveTo(c*20,0);tcx.lineTo(c*20,400);tcx.stroke();}for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(tb[r][c]===8){tcx.fillStyle="#333";tcx.fillRect(c*20+1,r*20+1,18,18);}else if(tb[r][c]){var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];tcx.fillStyle=CL[tb[r][c]-1];tcx.fillRect(c*20+1,r*20+1,18,18);}}if(tcu&&!tg){var gy=tcu.y;while(tcp(tcu.shape,tcu.x,gy+1))gy++;for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by=gy+r;if(by<0)continue;tcx.fillStyle="rgba(255,255,255,0.07)";tcx.fillRect((tcu.x+c)*20+1,by*20+1,18,18);tcx.strokeStyle="rgba(255,255,255,0.15)";tcx.strokeRect((tcu.x+c)*20+1,by*20+1,18,18);}}if(tcu&&!tg){var CL2=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by2=tcu.y+r;if(by2<0)continue;tcx.fillStyle=CL2[tcu.type];tcx.fillRect((tcu.x+c)*20+1,by2*20+1,18,18);}}}
 function tdp(){tncx.clearRect(0,0,80,80);if(tn){var s=tn.shape,rs=s.length,cs=s[0].length,ox=(80-cs*16)/2,oy=(80-rs*16)/2;var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<rs;r++)for(var c=0;c<cs;c++){if(!s[r][c])continue;tncx.fillStyle=CL[tn.type];tncx.fillRect(ox+c*16+1,oy+r*16+1,14,14);}}}
 function tda(){tdb();tdp();}
-function tgo(){_playGameOver();var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();}
+function tgo(){_playGameOver();recordGame("tetris",tc,tsc,tgt,0);var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();}
 var SD={easy:{l:"\u7b80\u5355",s:400,e:"🟢"},normal:{l:"\u666e\u901a",s:250,e:"🟡"},hard:{l:"\u56f0\u96be",s:150,e:"🔴"}};
 var _snakeObsOn=parseInt(localStorage.getItem("goblin_snake_obs")||"1",10);var _snakeObsShuffle=parseInt(localStorage.getItem("goblin_snake_shuffle")||"0",10);
 var sc="normal",sbody=[],sdir=1,snxt=2,sfood=null,ssc=0,sgt=0,spau=0,sgov=0,sdi=null,sti=null,sts=0,_sObstacles=[];
@@ -556,11 +556,31 @@ function _syncSnakeToggles(){
     else{sw2.classList.remove("on");st.querySelector(".obs-label").textContent="🔀 障碍物变换: 关";}
   }
 }
+function _toggleSnakeObs(){
+  var to=document.getElementById("sObsToggle");
+  _snakeObsOn=!_snakeObsOn;
+  localStorage.setItem("goblin_snake_obs",_snakeObsOn?"1":"0");
+  var sw=to.querySelector(".obs-switch");
+  if(_snakeObsOn){sw.classList.add("on");to.querySelector(".obs-label").textContent="🧱 障碍物: 开";}
+  else{sw.classList.remove("on");to.querySelector(".obs-label").textContent="🧱 障碍物: 关";}
+  var st=document.getElementById("sShuffleToggle");
+  if(_snakeObsOn){st.classList.remove("disabled");}
+  else{st.classList.add("disabled");_snakeObsShuffle=false;var sw2=st.querySelector(".obs-switch");if(sw2)sw2.classList.remove("on");st.querySelector(".obs-label").textContent="🔀 障碍物变换: 关";localStorage.setItem("goblin_snake_shuffle","0");}
+}
+function _toggleSnakeShuffle(){
+  var st=document.getElementById("sShuffleToggle");
+  if(st.classList.contains("disabled"))return;
+  _snakeObsShuffle=!_snakeObsShuffle;
+  localStorage.setItem("goblin_snake_shuffle",_snakeObsShuffle?"1":"0");
+  var sw=st.querySelector(".obs-switch");
+  if(_snakeObsShuffle){sw.classList.add("on");st.querySelector(".obs-label").textContent="🔀 障碍物变换: 开";}
+  else{sw.classList.remove("on");st.querySelector(".obs-label").textContent="🔀 障碍物变换: 关";}
+}
 var sca=document.getElementById("sBoard"),scx=sca.getContext("2d");
 var sse=document.getElementById("sScore"),sle=document.getElementById("sLen"),sste=document.getElementById("sStatus"),ste2=document.getElementById("sTime"),sbe=document.getElementById("sBest");
 var stx=0,sty=0,stt=0;
 var SZ=17,G=20;
-function sinit(){sbody=[{x:9,y:10},{x:8,y:10},{x:7,y:10}];sdir=1;snxt=2;sfood=null;ssc=0;sgt=0;spau=0;sgov=0;_sObstacles=[];if(_snakeObsOn){var oc=8+Math.floor(Math.random()*5);for(var oi=0;oi<500&&_sObstacles.length<oc;oi++){var ox=Math.floor(Math.random()*G),oy=Math.floor(Math.random()*G);var ok2=1;for(var ob=0;ob<sbody.length;ob++){if(sbody[ob].x===ox&&sbody[ob].y===oy){ok2=0;break;}}for(var oj=0;oj<_sObstacles.length;oj++){if(_sObstacles[oj].x===ox&&_sObstacles[oj].y===oy){ok2=0;break;}}if(ok2)_sObstacles.push({x:ox,y:oy});}}sspawn();sda();sdir=snxt;sstep();}
+function sinit(){sbody=[{x:9,y:10},{x:8,y:10},{x:7,y:10}];sdir=1;snxt=2;sfood=null;ssc=0;sgt=0;spau=0;sgov=0;_sObstacles=[];if(_snakeObsOn){var oc=8+Math.floor(Math.random()*5);for(var oi=0;oi<500&&_sObstacles.length<oc;oi++){var ox=Math.floor(Math.random()*G),oy=Math.floor(Math.random()*G);var ok2=1;for(var ob=0;ob<sbody.length;ob++){if(sbody[ob].x===ox&&sbody[ob].y===oy){ok2=0;break;}}if(ok2){var hd=sbody[0];if(Math.abs(ox-hd.x)<=5&&Math.abs(oy-hd.y)<=5)ok2=0;}for(var oj=0;oj<_sObstacles.length;oj++){if(_sObstacles[oj].x===ox&&_sObstacles[oj].y===oy){ok2=0;break;}}if(ok2)_sObstacles.push({x:ox,y:oy});}}sspawn();sda();sdir=snxt;sstep();}
 function sspawn(){if(sfood)return;var cells=[];for(var x=0;x<G;x++)for(var y=0;y<G;y++){var ok=1;for(var i=0;i<sbody.length;i++){if(sbody[i].x===x&&sbody[i].y===y){ok=0;break;}}if(ok){for(var oi=0;oi<_sObstacles.length;oi++){if(_sObstacles[oi].x===x&&_sObstacles[oi].y===y){ok=0;break;}}}if(ok)cells.push({x:x,y:y});}if(cells.length===0){sgov=1;return;}sfood=cells[Math.floor(Math.random()*cells.length)];}
 function sstep(){if(sgov||spau)return;var h=sbody[0];var nh={x:h.x,y:h.y};switch(sdir){case 0:nh.y--;break;case 1:nh.x++;break;case 2:nh.y++;break;case 3:nh.x--;break;}if(nh.x<0||nh.x>=G||nh.y<0||nh.y>=G){sgov=1;return;}for(var i=0;i<_sObstacles.length;i++){if(_sObstacles[i].x===nh.x&&_sObstacles[i].y===nh.y){sgov=1;return;}}for(var i=0;i<sbody.length;i++){if(sbody[i].x===nh.x&&sbody[i].y===nh.y){sgov=1;return;}}sbody.unshift(nh);if(nh.x===sfood.x&&nh.y===sfood.y){_playEat();var sm=(sc==="hard"?2:sc==="normal"?1.5:1)*(_snakeObsOn?2:1)*(_snakeObsShuffle?2:1);ssc+=Math.floor(10*sm);sfood=null;if(_snakeObsShuffle){var _oc=_sObstacles.length;_sObstacles=[];var _hd=sbody[0];for(var _oi=0;_oi<500&&_sObstacles.length<_oc;_oi++){var ox=Math.floor(Math.random()*G),oy=Math.floor(Math.random()*G);if(Math.abs(ox-_hd.x)<=2&&Math.abs(oy-_hd.y)<=2)continue;var _ok2=1;for(var _oj=0;_oj<_sObstacles.length;_oj++)if(_sObstacles[_oj].x===ox&&_sObstacles[_oj].y===oy){_ok2=0;break;}if(_ok2)_sObstacles.push({x:ox,y:oy});}}sspawn();;}else{sbody.pop();}sle.textContent=sbody.length;sse.textContent=ssc;if(!sgov)sda();}
 function schd(d){if(sgov||spau)return;if(Math.abs(d-sdir)===2)return;snxt=d;}
@@ -569,9 +589,10 @@ function sStc(){if(sti)clearInterval(sti);sti=setInterval(function(){if(!spau&&!
 function sStpc(){if(sti){clearInterval(sti);sti=null;}}
 function sTp(){if(sgov){return;}spau=!spau;if(spau)_playPause();else _playResume();document.getElementById("sPauseOverlay").classList.toggle("active",spau);if(spau){clearInterval(sdi);sdi=null;sStpc();document.getElementById("sPause").textContent="\u25b6 \u7ee7\u7eed";sste.textContent="\u23f8 \u5df2\u6682\u505c";}else{sStc();sRd();document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="";}}
 function sda(){scx.clearRect(0,0,340,340);scx.strokeStyle="#1a2";scx.lineWidth=0.5;for(var r=0;r<=G;r++){scx.beginPath();scx.moveTo(0,r*SZ);scx.lineTo(340,r*SZ);scx.stroke();}for(var c=0;c<=G;c++){scx.beginPath();scx.moveTo(c*SZ,0);scx.lineTo(c*SZ,340);scx.stroke();}if(sfood){scx.fillStyle="#f44";scx.beginPath();scx.arc(sfood.x*SZ+SZ/2,sfood.y*SZ+SZ/2,6,0,Math.PI*2);scx.fill();}for(var oi2=0;oi2<_sObstacles.length;oi2++){var ob2=_sObstacles[oi2];scx.fillStyle="#822";scx.fillRect(ob2.x*SZ+1,ob2.y*SZ+1,SZ-2,SZ-2);scx.fillStyle="#622";scx.fillRect(ob2.x*SZ+SZ/2-3,ob2.y*SZ+SZ/2-3,6,6);}for(var i=0;i<sbody.length;i++){var b=sbody[i];var gr=Math.max(0,1-i/20);scx.fillStyle="rgb("+Math.floor(50+80*gr)+","+Math.floor(180+40*gr)+","+Math.floor(50+80*gr)+")";scx.fillRect(b.x*SZ+1,b.y*SZ+1,SZ-2,SZ-2);if(i===0){scx.fillStyle="#fff";scx.fillRect(b.x*SZ+4,b.y*SZ+4,2,2);scx.fillRect(b.x*SZ+10,b.y*SZ+4,2,2);}}}
-function sgo(){_playGameOver();var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);}
+function sgo(){_playGameOver();recordGame("snake",sc,ssc,sgt,0);var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);}
 document.getElementById("cardTetris").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenTetrisDiff");};
 document.getElementById("cardSnake").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenSnakeDiff");_syncSnakeToggles();};
+ab("sObsToggle",_toggleSnakeObs);ab("sShuffleToggle",_toggleSnakeShuffle);
 document.getElementById("btnBackTTDiff").onclick=function(){ss("screenSelect");};
 document.getElementById("btnBackSDiff").onclick=function(){ss("screenSelect");};
 document.getElementById("btnBackTT").onclick=function(){if(tdi)clearInterval(tdi);tstpc();tts=0;ss("screenTetrisDiff");};
@@ -848,7 +869,7 @@ function gShowBoard(){
 
 var gWonAlready=false;
 
-function gWin(){document.getElementById("goContinue").style.display=gc==="endless"?"none":"inline-block";
+function gWin(){recordGame("2048",gc,gScore,gTimer,1);document.getElementById("goContinue").style.display=gc==="endless"?"none":"inline-block";
   gWonAlready=true;
   _playClear();
   var cfg=GD[gc];
@@ -870,7 +891,7 @@ function gWin(){document.getElementById("goContinue").style.display=gc==="endles
 }
 
 function gLose(){
-  _playGameOver();
+  _playGameOver();recordGame("2048",gc,gScore,gTimer,0);
   var cfg=GD[gc];
   var nw=shs("2048",gc,gScore);
   document.getElementById("goScore").textContent=gScore;
@@ -1380,8 +1401,8 @@ document.getElementById("goRestart").onclick=function(){
   var ov=document.getElementById("gameOverOverlay");
   // Record stats for tetris/snake on restart click
   if(ov.classList.contains("active")){
-    if(window._mog==="tetris")recordGame("tetris",window.tc||"normal",window.tsc||0,Math.floor(((window.tts?Date.now()-window.tts:0))/1000),0);
-    if(window._mog==="snake")recordGame("snake",window.sc||"normal",window.ssc||0,Math.floor(((window.sst?Date.now()-window.sst:0))/1000),0);
+    
+    
   }
   ov.classList.remove("active");
   var t=document.querySelector("#gameOverOverlay .o-title");if(t)t.textContent="💀 游戏结束";
