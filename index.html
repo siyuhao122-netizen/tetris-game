@@ -1284,8 +1284,8 @@ function _submitLB(game, difficulty, score, timeSec, callback) {
             coll.doc(existing._id).update({ score: score, time: timeSec, updatedAt: new Date() }).then(function() {
               _showSync('已同步排行榜');
               if (callback) callback(true);
-            }).catch(function() { _showSync('同步失败'); if (callback) callback(false); });
-          } else { _showSync('未破纪录，跳过同步'); if (callback) callback(true); }
+            }).catch(function(e) { _showSync('更新失败: '+(e.message||e)); if (callback) callback(false); });
+          } else { _showSync('未破纪录'); if (callback) callback(true); }
         } else {
           coll.add({
             username: _username, game: game, difficulty: difficulty,
@@ -1294,9 +1294,9 @@ function _submitLB(game, difficulty, score, timeSec, callback) {
           }).then(function() {
             _showSync('已同步排行榜');
             if (callback) callback(true);
-          }).catch(function() { _showSync('同步失败'); if (callback) callback(false); });
+          }).catch(function(e) { _showSync('添加失败: '+(e.message||e)); if (callback) callback(false); });
         }
-      }).catch(function() { _showSync('查询失败'); if (callback) callback(false); });
+      }).catch(function(e) { _showSync('查询失败: '+(e.message||e)); if (callback) callback(false); });
     } catch(e) { _showSync('异常: '+e.message); if (callback) callback(false); }
   }
   if (_tcbReady) { _doSubmit(); }
