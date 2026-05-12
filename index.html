@@ -345,17 +345,17 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="controls">
       <div class="dpad">
         <div class="empty"></div>
-        <button class="ctrl-btn sdir" id="gUp">▲</button>
+        <button class="ctrl-btn sdir" id="gUp" onclick="gMove(0)">▲</button>
         <div class="empty"></div>
-        <button class="ctrl-btn sdir" id="gLeft">◀</button>
-        <button class="ctrl-btn sdir" id="gDown">▼</button>
-        <button class="ctrl-btn sdir" id="gRight">▶</button>
+        <button class="ctrl-btn sdir" id="gLeft" onclick="gMove(3)">◀</button>
+        <button class="ctrl-btn sdir" id="gDown" onclick="gMove(2)">▼</button>
+        <button class="ctrl-btn sdir" id="gRight" onclick="gMove(1)">▶</button>
       </div>
       <div style="width:100%;margin-top:4px;">
-        <button class="ctrl-btn wide" id="gRestart" style="background:#1a2a1e;border-color:#484;width:100%;">🔄 重新开始</button></div>
+        <button class="ctrl-btn wide" id="gRestart" style="background:#1a2a1e;border-color:#484;width:100%;" onclick="gRestartConfirm()">🔄 重新开始</button></div>
       <div style="width:100%;margin-top:2px;display:flex;gap:8px;justify-content:center;">
-        <button class="ctrl-btn wide" id="gPause" style="background:#1a1a3e;border-color:#55f;flex:1;">⏸ 暂停</button>
-        <button class="ctrl-btn" id="btnSound2048" style="font-size:18px;width:44px;padding:8px 10px;background:#333;border-color:#666;">🔊</button>
+        <button class="ctrl-btn wide" id="gPause" style="background:#1a1a3e;border-color:#55f;flex:1;" onclick="gTogglePause()">⏸ 暂停</button>
+        <button class="ctrl-btn" id="btnSound2048" style="font-size:18px;width:44px;padding:8px 10px;background:#333;border-color:#666;" onclick="_toggleSound()">🔊</button>
       </div>
     </div>
   </div>
