@@ -575,7 +575,7 @@ if (typeof cloudbase === 'undefined') {
   _achieveBadge('SDK未加载，请检查网络','❌');
 } else {
   try {
-    _tcbApp = cloudbase.init({ env: _tcbEnvId });
+    _tcbApp = cloudbase.init({ env: _tcbEnvId, region: 'ap-shanghai' });
     _tcbAuthPromise = _tcbApp.auth().signInAnonymously().then(function() {
       _tcbDb = _tcbApp.database();
       _tcbReady = true;
