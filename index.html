@@ -1096,13 +1096,7 @@ document.getElementById("btnBackG2048").onclick=function(){
   };
 });
 
-ab("gUp",function(){gMove(0);});
-ab("gDown",function(){gMove(2);});
-ab("gLeft",function(){gMove(3);});
-ab("gRight",function(){gMove(1);});
-ab("gRestart",gRestartConfirm);
-ab("gPause",gTogglePause);
-ab("btnSound2048",_toggleSound);
+// 2048 buttons use inline onclick in HTML
 
 // Keyboard handling for 2048 - extend existing handler
 var _origKeydown=document.onkeydown;
