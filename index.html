@@ -661,7 +661,7 @@ var _displayName = "";
 try { _userId = localStorage.getItem("goblin_uid")||null; _username = localStorage.getItem("goblin_user")||""; _displayName = localStorage.getItem("goblin_dname")||""; } catch(e) {}
 
 function _sbReq(method, path, body) {
-  var headers = { 'apikey': _sbKey, 'Authorization': 'Bearer ' + _sbKey, 'Content-Type': 'application/json' };
+  var headers = { 'apikey': _sbKey, 'Authorization': 'Bearer ' + _sbKey, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
   return fetch(_sbUrl + path, { method: method, headers: headers, body: body ? JSON.stringify(body) : undefined });
 }
 
