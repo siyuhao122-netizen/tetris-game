@@ -1737,7 +1737,7 @@ function _b1Lock(){
   for(var r=19;r>=0;r--){if(_b1Board[r].every(function(v){return v!==0;})){_b1Board.splice(r,1);_b1Board.unshift(new Array(10).fill(0));cleared++;r++;}}
   if(cleared>0){
     _b1Score+=cleared;
-    var gc=cleared>=3?1:0;
+    var gc=Math.floor(cleared/3);
     if(gc>0&&_sbChannel){
       _sbChannel.send({type:'broadcast',event:'garbage',payload:{count:gc}});
       for(var i=0;i<gc;i++){var gr2=new Array(10).fill(8);var hole2=Math.floor(Math.random()*10);gr2[hole2]=0;_b2Board.push(gr2);_b2Board.shift();}
@@ -1798,7 +1798,6 @@ function _bLose(){
   document.getElementById("battleResultTitle").textContent="💀 你输了！";
   document.getElementById("battleResultDetail").textContent="房间: "+(_bRoom?_bRoom.code:"");
   document.getElementById("battleResultOverlay").style.display="flex";
-  setTimeout(function(){_bCleanupRoom();},1000);
 }
 function _bWin(){
   _bStarted=0;
@@ -1806,7 +1805,6 @@ function _bWin(){
   document.getElementById("battleResultTitle").textContent="🎉 你赢了！";
   document.getElementById("battleResultDetail").textContent="房间: "+(_bRoom?_bRoom.code:"");
   document.getElementById("battleResultOverlay").style.display="flex";
-  setTimeout(function(){_bCleanupRoom();},1000);
 }
 document.getElementById("battleResultBtn").onclick=function(){
   document.getElementById("battleResultOverlay").style.display="none";
