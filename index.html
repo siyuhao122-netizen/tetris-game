@@ -154,6 +154,10 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 }
 /* Snake direction indicator */
 .snake-dir{display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;font-size:16px;border-radius:50%;background:#1a1a2e;border:1px solid #333;margin-left:4px;}
+#usernameInput:focus{outline:none;border-color:var(--accent);}
+#lbBody .me{background:rgba(80,120,255,0.15);}
+#lbBody .me td{color:var(--accent);font-weight:bold;}
+#lbRefresh:active{background:#2a2a4e;}
 </style>
 </head>
 <body>
@@ -165,6 +169,8 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="menu-goblin">👺</div>
   <div class="menu-title">哥布林小游戏</div>
   <div class="menu-sub">Goblin's Game Land</div>
+  <div id="menuUsername" style="font-size:14px;color:var(--accent);margin-bottom:10px;cursor:pointer;" onclick="_showUsernameModal()">点击设置昵称</div>
+  <button class="menu-btn" id="btnLeaderboard" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;margin-bottom:14px;">🏆 排行榜</button>
   <button class="menu-btn" id="btnStats" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#ff0;font-size:16px;padding:10px 40px;margin-bottom:14px;">📊 数据统计</button>
   <button class="menu-btn" id="btnStartMenu">🎮 开始游戏</button>
 </div>
@@ -347,11 +353,11 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="controls">
       <div class="dpad">
         <div class="empty"></div>
-        <button class="ctrl-btn sdir" id="gUp" onclick="gMove(0)">▲</button>
+        <button class="ctrl-btn sdir" id="gUp">▲</button>
         <div class="empty"></div>
-        <button class="ctrl-btn sdir" id="gLeft" onclick="gMove(3)">◀</button>
-        <button class="ctrl-btn sdir" id="gDown" onclick="gMove(2)">▼</button>
-        <button class="ctrl-btn sdir" id="gRight" onclick="gMove(1)">▶</button>
+        <button class="ctrl-btn sdir" id="gLeft">◀</button>
+        <button class="ctrl-btn sdir" id="gDown">▼</button>
+        <button class="ctrl-btn sdir" id="gRight">▶</button>
       </div>
       <div style="width:100%;margin-top:4px;">
         <button class="ctrl-btn wide" id="gRestart" style="background:#1a2a1e;border-color:#484;width:100%;" onclick="gRestartConfirm()">🔄 重新开始</button></div>
@@ -497,8 +503,27 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="stats-empty" id="statsEmpty">暂无数据，快去玩两局吧 👺</div>
 </div>
 
-
-
+<!-- LEADERBOARD SCREEN -->
+<div class="screen" id="screenLeaderboard">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackLB">← 返回</button></div>
+  <div class="select-title">🏆 排行榜</div>
+  <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;" id="lbGameTabs">
+    <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-game="tetris">🧱 方块</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="snake">🐍 蛇</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="minesweeper">💣 扫雷</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbDiffTabs">
+    <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button>
+  </div>
+  <table class="stats-table" id="lbTable">
+    <thead><tr><th>排名</th><th>玩家</th><th id="lbScoreHeader">分数</th><th>时间</th></tr></thead>
+    <tbody id="lbBody"></tbody>
+  </table>
+  <div class="stats-empty" id="lbEmpty">暂无排行数据</div>
+  <button class="ctrl-btn" id="lbRefresh" style="margin-top:12px;font-size:14px;padding:8px 24px;">🔄 刷新</button>
+</div>
 
 <!-- GAME OVER OVERLAY -->
 <div class="overlay" id="gameOverOverlay">
@@ -527,8 +552,34 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
+<!-- USERNAME MODAL -->
+<div class="overlay" id="usernameOverlay" style="display:none;z-index:200;">
+  <div class="overlay-box" style="max-width:300px;">
+    <div class="o-title" style="font-size:22px;margin-bottom:12px;">👋 欢迎！</div>
+    <div class="o-detail" style="margin-bottom:16px;font-size:14px;color:#aaa;">请输入昵称参与排行榜</div>
+    <input id="usernameInput" type="text" maxlength="8" placeholder="2-8个中英文字符" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #555;background:#111;color:#fff;font-size:16px;text-align:center;margin-bottom:16px;box-sizing:border-box;" autocomplete="off">
+    <button class="o-btn" id="usernameConfirm" style="min-width:90px;">✔ 确定</button>
+    <div class="o-detail" id="usernameError" style="margin-top:8px;font-size:12px;color:#f44;display:none;">昵称需为2-8个字符</div>
+  </div>
+</div>
 
+<script src="https://web.sdk.cloudbase.net/cloudbase@latest/dist/cloudbase.full.js"></script>
 <script>
+// ===== CLOUDBASE INIT =====
+var _tcbEnvId = 'gobulin-d8gmgyc2m7dbaaa44';
+var _tcbApp = null;
+var _tcbDb = null;
+var _tcbReady = false;
+try {
+  _tcbApp = cloudbase.init({ env: _tcbEnvId });
+  _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
+    _tcbDb = _tcbApp.database();
+    _tcbReady = true;
+  }).catch(function(e) {
+    console.log('CloudBase auth failed:', e);
+  });
+} catch(e) { console.log('CloudBase init failed:', e); }
+
 var _theme=localStorage.getItem("goblin_theme")||"dark";
 document.body.classList.add("theme-"+_theme);
 function _toggleTheme(){_theme=_theme==="dark"?"light":"dark";document.body.classList.remove("theme-dark","theme-light");document.body.classList.add("theme-"+_theme);localStorage.setItem("goblin_theme",_theme);var tb=document.getElementById("btnTheme");if(tb)tb.textContent=_theme==="dark"?"🌙":"☀️";}
@@ -537,6 +588,30 @@ document.getElementById("btnTheme").textContent=_theme==="dark"?"🌙":"☀️";
 
 var gs={};function ghs(g,d){return parseInt(localStorage.getItem(g+"_hs_"+d)||"0",10);}
 function shs(g,d,v){var o=ghs(g,d);if(v>o){localStorage.setItem(g+"_hs_"+d,""+v);return 1;}return 0;}var _confirmCb=null;var _confirmState=0;
+// Username system
+var _username = localStorage.getItem("goblin_username") || "";
+function _showUsernameModal(callback) {
+  document.getElementById("usernameOverlay").style.display = "flex";
+  document.getElementById("usernameInput").value = _username;
+  document.getElementById("usernameError").style.display = "none";
+  document.getElementById("usernameInput").focus();
+  document.getElementById("usernameConfirm").onclick = function() {
+    var v = document.getElementById("usernameInput").value.trim();
+    if (v.length < 2 || v.length > 8) {
+      document.getElementById("usernameError").style.display = "block";
+      return;
+    }
+    _username = v;
+    localStorage.setItem("goblin_username", _username);
+    document.getElementById("usernameOverlay").style.display = "none";
+    _updateUsernameDisplay();
+    if (callback) callback();
+  };
+}
+function _updateUsernameDisplay() {
+  var el = document.getElementById("menuUsername");
+  if (el) el.textContent = _username || "点击设置昵称";
+}
 function _resumeGame(){if(_confirmState===1){if(tp)ttp();}else if(_confirmState===2){if(spau)sTp();}_confirmState=0;}
 function showConfirm(msg,a,b){var cb,desc;if(typeof b==="function"){desc=a;cb=b;}else{cb=a;desc=null;}document.getElementById("confirmMsg").textContent=desc?msg+"\n"+desc:msg;document.getElementById("confirmOverlay").style.display="flex";_confirmCb=cb;if(window.tts&&!tp&&!tg){ttp();_confirmState=1;}if(window.sts&&!spau&&!sgov){sTp();_confirmState=2;}}
 document.getElementById("confirmYes").onclick=function(){document.getElementById("confirmOverlay").style.display="none";if(_confirmCb)_confirmCb();_resumeGame();};
@@ -594,7 +669,7 @@ function tui(){tse.textContent=tsc;tle.textContent=tlv;tlie.textContent=tln;}
 function tdb(){tcx.clearRect(0,0,200,400);tcx.strokeStyle="#1a1a2e";for(var r=0;r<=20;r++){tcx.beginPath();tcx.moveTo(0,r*20);tcx.lineTo(200,r*20);tcx.stroke();}for(var c=0;c<=10;c++){tcx.beginPath();tcx.moveTo(c*20,0);tcx.lineTo(c*20,400);tcx.stroke();}for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(tb[r][c]===8){tcx.fillStyle="#333";tcx.fillRect(c*20+1,r*20+1,18,18);}else if(tb[r][c]){var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];tcx.fillStyle=CL[tb[r][c]-1];tcx.fillRect(c*20+1,r*20+1,18,18);}}if(tcu&&!tg){var gy=tcu.y;while(tcp(tcu.shape,tcu.x,gy+1))gy++;for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by=gy+r;if(by<0)continue;tcx.fillStyle="rgba(255,255,255,0.07)";tcx.fillRect((tcu.x+c)*20+1,by*20+1,18,18);tcx.strokeStyle="rgba(255,255,255,0.15)";tcx.strokeRect((tcu.x+c)*20+1,by*20+1,18,18);}}if(tcu&&!tg){var CL2=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by2=tcu.y+r;if(by2<0)continue;tcx.fillStyle=CL2[tcu.type];tcx.fillRect((tcu.x+c)*20+1,by2*20+1,18,18);}}}
 function tdp(){tncx.clearRect(0,0,60,60);if(tn){var s=tn.shape,rs=s.length,cs=s[0].length,ox=(60-cs*16)/2,oy=(60-rs*16)/2;var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<rs;r++)for(var c=0;c<cs;c++){if(!s[r][c])continue;tncx.fillStyle=CL[tn.type];tncx.fillRect(ox+c*16+1,oy+r*16+1,14,14);}}}
 function tda(){tdb();tdp();}
-function tgo(){_playGameOver();recordGame("tetris",tc,tsc,tgt,0);var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();}
+function tgo(){_playGameOver();recordGame("tetris",tc,tsc,tgt,0);var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();if(nw&&_username)_submitLB("tetris",tc,tsc,0);}
 var SD={easy:{l:"\u7b80\u5355",s:400,e:"🟢"},normal:{l:"\u666e\u901a",s:250,e:"🟡"},hard:{l:"\u56f0\u96be",s:150,e:"🔴"}};
 var _snakeObsOn=parseInt(localStorage.getItem("goblin_snake_obs")||"1",10);var _snakeObsShuffle=parseInt(localStorage.getItem("goblin_snake_shuffle")||"0",10);
 var sc="normal",sbody=[],sdir=1,snxt=2,sfood=null,ssc=0,sgt=0,spau=0,sgov=0,sdi=null,sti=null,sts=0,_sObstacles=[];
@@ -649,7 +724,7 @@ function sStc(){if(sti)clearInterval(sti);sti=setInterval(function(){if(!spau&&!
 function sStpc(){if(sti){clearInterval(sti);sti=null;}}
 function sTp(){if(sgov){return;}spau=!spau;if(spau)_playPause();else _playResume();document.getElementById("sPauseOverlay").classList.toggle("active",spau);if(spau){clearInterval(sdi);sdi=null;sStpc();document.getElementById("sPause").textContent="\u25b6 \u7ee7\u7eed";sste.textContent="\u23f8 \u5df2\u6682\u505c";}else{sStc();sRd();document.getElementById("sPause").textContent="\u23f8 \u6682\u505c";sste.textContent="";}}
 function sda(){scx.clearRect(0,0,340,340);scx.strokeStyle="#1a2";scx.lineWidth=0.5;for(var r=0;r<=G;r++){scx.beginPath();scx.moveTo(0,r*SZ);scx.lineTo(340,r*SZ);scx.stroke();}for(var c=0;c<=G;c++){scx.beginPath();scx.moveTo(c*SZ,0);scx.lineTo(c*SZ,340);scx.stroke();}if(sfood){scx.fillStyle="#f44";scx.beginPath();scx.arc(sfood.x*SZ+SZ/2,sfood.y*SZ+SZ/2,6,0,Math.PI*2);scx.fill();}for(var oi2=0;oi2<_sObstacles.length;oi2++){var ob2=_sObstacles[oi2];scx.fillStyle="#822";scx.fillRect(ob2.x*SZ+1,ob2.y*SZ+1,SZ-2,SZ-2);scx.fillStyle="#622";scx.fillRect(ob2.x*SZ+SZ/2-3,ob2.y*SZ+SZ/2-3,6,6);}for(var i=0;i<sbody.length;i++){var b=sbody[i];var gr=Math.max(0,1-i/20);scx.fillStyle="rgb("+Math.floor(50+80*gr)+","+Math.floor(180+40*gr)+","+Math.floor(50+80*gr)+")";scx.fillRect(b.x*SZ+1,b.y*SZ+1,SZ-2,SZ-2);if(i===0){scx.fillStyle="#fff";scx.fillRect(b.x*SZ+4,b.y*SZ+4,2,2);scx.fillRect(b.x*SZ+10,b.y*SZ+4,2,2);}}}
-function sgo(){_playGameOver();recordGame("snake",sc,ssc,sgt,0);var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);}
+function sgo(){_playGameOver();recordGame("snake",sc,ssc,sgt,0);var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);if(nw&&_username)_submitLB("snake",sc,ssc,0);}
 document.getElementById("cardTetris").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenTetrisDiff");};
 document.getElementById("cardSnake").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenSnakeDiff");_syncSnakeToggles();};
 ab("sObsToggle",_toggleSnakeObs);ab("sShuffleToggle",_toggleSnakeShuffle);
@@ -695,6 +770,12 @@ var s_check_iv = setInterval(function(){
   }
 }, 200);
 _initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();
+
+// Check username on first load
+if (!_username) {
+  setTimeout(function() { _showUsernameModal(); }, 500);
+}
+_updateUsernameDisplay();
 
 // ====== 2048 GAME ======
 var GD={easy:{l:"简单",t:1024,e:"🟢",f2:true},normal:{l:"普通",t:2048,e:"🟡",f2:false},hard:{l:"困难",t:4096,e:"🔴",f2:false},endless:{l:"无尽",t:Infinity,e:"♾️",f2:false}};
@@ -1043,6 +1124,15 @@ gCanvas.addEventListener("touchend",function(e){
   }
 },{passive:false});
 
+// Wire 2048 direction buttons (once, at script load time)
+(function(){
+  var _gUp=document.getElementById("gUp"),_gDn=document.getElementById("gDown"),_gLt=document.getElementById("gLeft"),_gRt=document.getElementById("gRight");
+  if(_gUp){_gUp.addEventListener("click",function(e){e.preventDefault();gMove(0);});_gUp.addEventListener("touchend",function(e){e.preventDefault();gMove(0);});}
+  if(_gDn){_gDn.addEventListener("click",function(e){e.preventDefault();gMove(2);});_gDn.addEventListener("touchend",function(e){e.preventDefault();gMove(2);});}
+  if(_gLt){_gLt.addEventListener("click",function(e){e.preventDefault();gMove(3);});_gLt.addEventListener("touchend",function(e){e.preventDefault();gMove(3);});}
+  if(_gRt){_gRt.addEventListener("click",function(e){e.preventDefault();gMove(1);});_gRt.addEventListener("touchend",function(e){e.preventDefault();gMove(1);});}
+})();
+
 // Event wiring
 document.getElementById("card2048").onclick=function(){
   _initAudio();
@@ -1068,16 +1158,10 @@ document.getElementById("btnBackG2048").onclick=function(){
     
     gInit();
     gBestEl.textContent=ghs("2048",gc);
-    // Bind direction buttons
-    var _gUp=document.getElementById("gUp"),_gDn=document.getElementById("gDown"),_gLt=document.getElementById("gLeft"),_gRt=document.getElementById("gRight");
-    if(_gUp){_gUp.onclick=function(){gMove(0);};_gUp.ontouchend=function(e){e.preventDefault();gMove(0);};}
-    if(_gDn){_gDn.onclick=function(){gMove(2);};_gDn.ontouchend=function(e){e.preventDefault();gMove(2);};}
-    if(_gLt){_gLt.onclick=function(){gMove(3);};_gLt.ontouchend=function(e){e.preventDefault();gMove(3);};}
-    if(_gRt){_gRt.onclick=function(){gMove(1);};_gRt.ontouchend=function(e){e.preventDefault();gMove(1);};}
   };
 });
 
-// 2048 buttons use inline onclick in HTML
+// 2048 buttons wired via addEventListener at script load time
 
 // Keyboard handling for 2048 - extend existing handler
 var _origKeydown=document.onkeydown;
@@ -1166,6 +1250,104 @@ function recordGame(g,d,score,timeSec,won){
   if(won&&(s.bestTime===0||timeSec<s.bestTime))s.bestTime=timeSec;
   saveStats(g,d,s);
 }
+
+// ===== LEADERBOARD =====
+var _lbGame = "tetris", _lbDiff = "easy";
+
+function _submitLB(game, difficulty, score, timeSec, callback) {
+  if (!_tcbReady || !_username) { if (callback) callback(false); return; }
+  try {
+    var coll = _tcbDb.collection('leaderboard');
+    coll.where({ username: _username, game: game, difficulty: difficulty }).get().then(function(res) {
+      if (res.data && res.data.length > 0) {
+        var existing = res.data[0];
+        var better = game === 'minesweeper'
+          ? (existing.time === 0 || timeSec < existing.time)
+          : (score > existing.score);
+        if (better) {
+          coll.doc(existing._id).update({ score: score, time: timeSec, updatedAt: new Date() }).then(function() {
+            if (callback) callback(true);
+          }).catch(function() { if (callback) callback(false); });
+        } else { if (callback) callback(true); }
+      } else {
+        coll.add({
+          username: _username, game: game, difficulty: difficulty,
+          score: score, time: timeSec,
+          createdAt: new Date(), updatedAt: new Date()
+        }).then(function() {
+          if (callback) callback(true);
+        }).catch(function() { if (callback) callback(false); });
+      }
+    }).catch(function() { if (callback) callback(false); });
+  } catch(e) { if (callback) callback(false); }
+}
+
+function _loadLB(callback) {
+  if (!_tcbReady) { _showLBEmpty(); return; }
+  var coll = _tcbDb.collection('leaderboard');
+  var cond = { game: _lbGame, difficulty: _lbDiff };
+  if (_lbGame === 'minesweeper') cond.time = _tcbDb.command.gt(0);
+  var query = coll.where(cond);
+  query = _lbGame === 'minesweeper'
+    ? query.orderBy('time', 'asc')
+    : query.orderBy('score', 'desc');
+  query.limit(50).get().then(function(res) {
+    var rows = [];
+    (res.data || []).forEach(function(r, i) {
+      var isMe = r.username === _username;
+      var cls = isMe ? ' class="me"' : '';
+      var val = _lbGame === 'minesweeper' ? r.time + 's' : r.score;
+      var dt = r.createdAt ? (new Date(r.createdAt)).toLocaleDateString('zh-CN') : '--';
+      rows.push('<tr' + cls + '><td>' + (i + 1) + '</td><td>' + _esc(r.username) + '</td><td>' + val + '</td><td>' + dt + '</td></tr>');
+    });
+    document.getElementById("lbBody").innerHTML = rows.join("");
+    document.getElementById("lbEmpty").style.display = rows.length ? "none" : "block";
+    document.getElementById("lbScoreHeader").textContent = _lbGame === 'minesweeper' ? '用时' : '分数';
+    if (callback) callback();
+  }).catch(function() { _showLBEmpty(); });
+}
+
+function _esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+function _showLBEmpty() {
+  document.getElementById("lbBody").innerHTML = "";
+  document.getElementById("lbEmpty").style.display = "block";
+}
+
+function _initLBTabs() {
+  document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(t) {
+    t.onclick = function() {
+      document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(x) { x.classList.remove("active"); });
+      this.classList.add("active");
+      _lbGame = this.getAttribute("data-game");
+      document.getElementById("lbScoreHeader").textContent = _lbGame === 'minesweeper' ? '用时' : '分数';
+      _loadLB();
+    };
+  });
+  document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(t) {
+    t.onclick = function() {
+      document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(x) { x.classList.remove("active"); });
+      this.classList.add("active");
+      _lbDiff = this.getAttribute("data-diff");
+      _loadLB();
+    };
+  });
+}
+_initLBTabs();
+
+document.getElementById("btnBackLB").onclick = function() { ss("screenMenu"); };
+document.getElementById("lbRefresh").onclick = function() { _loadLB(); };
+
+function _showLB() {
+  if (!_username) {
+    _showUsernameModal(function() { _showLB(); });
+    return;
+  }
+  ss("screenLeaderboard");
+  _loadLB();
+}
+
+document.getElementById("btnLeaderboard").onclick = function() { _showLB(); };
 
 document.getElementById("btnStats").onclick=function(){
   _initAudio();
@@ -1398,6 +1580,7 @@ function mGO(won){
   document.getElementById("goRecord").textContent="☼ 最佳: "+(best>0?best+"s":"--");
   document.getElementById("goDetail").innerHTML="🚩 "+mFlags+"/"+mMines;
   window._mog="minesweeper";document.getElementById("gameOverOverlay").classList.add("active");
+  if(won&&_username)_submitLB("minesweeper",mc,0,mTimer);
 }
 function mRestartConfirm(){
   if(!mStarted)return;
