@@ -720,14 +720,7 @@ function _showAuthModal(mode) {
         if (!data || !data.length) return;
         // Show success then switch to login
         var titleEl = document.getElementById("authTitle");
-        titleEl.textContent = '✅ 注册成功！';
-        titleEl.style.color = '#4f4';
-        document.getElementById("authConfirm").style.display = 'none';
-        document.getElementById("authError").style.display = 'none';
-        setTimeout(function() {
-          _showAuthModal('login');
-          titleEl.style.color = '';
-        }, 1500);
+        _showAuthModal('login');
         _achieveBadge('注册成功，请登录','👋');
       }).catch(function() { errEl.textContent = '注册失败，请重试'; errEl.style.display = 'block'; });
     } else {
