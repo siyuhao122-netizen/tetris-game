@@ -576,7 +576,7 @@ if (typeof cloudbase === 'undefined') {
 } else {
   try {
     _tcbApp = cloudbase.init({ env: _tcbEnvId });
-    _tcbAuthPromise = _tcbApp.auth().anonymousAuthProvider().signIn().then(function() {
+    _tcbAuthPromise = _tcbApp.auth().signInAnonymously().then(function() {
       _tcbDb = _tcbApp.database();
       _tcbReady = true;
       _achieveBadge('云端连接成功','✅');
