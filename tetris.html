@@ -18,6 +18,18 @@
   .game-card:active { border-color: #4af; }
   .game-card .name { font-size: 18px; font-weight: bold; }
   .game-card .desc { font-size: 12px; color: #888; margin-top: 4px; }
+  .game-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;}
+  .gcard{background:var(--card-bg);border:1px solid var(--bdr);border-radius:14px;padding:16px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform 0.1s,border-color 0.15s,box-shadow 0.15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .gcard:active{transform:scale(0.96);border-color:var(--accent);box-shadow:0 0 20px rgba(80,120,255,0.2);}
+  .gcard .gicon{font-size:36px;margin-bottom:2px;}
+  .gcard .gname{font-size:15px;font-weight:bold;color:var(--txt);}
+  .gcard .gdesc{font-size:10px;color:var(--sub);line-height:1.3;}
+  .gcard.tetris{border-top:3px solid #4af;}
+  .gcard.snake{border-top:3px solid #4f8;}
+  .gcard.g2048{border-top:3px solid #f90;}
+  .gcard.mine{border-top:3px solid #f55;}
+  .gcard.gomoku{border-top:3px solid #a0f;}
+  .gcard.breakout{border-top:3px solid #ff0;}
   .high-score-row { font-size: 11px; color: #888; margin-top: 6px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .diff-title { font-size: 22px; font-weight: bold; margin-bottom: 24px; color: #4af; }
   .diff-card { background: #111; border: 1px solid #333; border-radius: 14px; padding: 16px 24px; width: 100%; max-width: 280px; margin-bottom: 10px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: border-color 0.1s; }
@@ -192,54 +204,17 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <div class="screen" id="screenSelect">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackMenu">← 返回</button></div>
   <div class="select-title">🎯 选择游戏</div>
-  <div class="game-card" id="cardTetris">
-    <div class="name">🧱 俄罗斯方块</div>
-    <div class="desc">经典下落消除，手机触屏优化版</div>
-    <div class="high-score-row" id="tHsRow">
-      <span>简单: <span id="thsEasy">0</span></span>
-      <span>普通: <span id="thsNormal">0</span></span>
-      <span>困难: <span id="thsHard">0</span></span>
-    </div>
-  </div>
-  <div class="game-card" id="cardSnake">
-    <div class="name">🐍 贪吃蛇</div>
-    <div class="desc">经典贪吃蛇，吃食物变长，触屏优化版</div>
-    <div class="high-score-row" id="sHsRow">
-      <span>简单: <span id="shsEasy">0</span></span>
-      <span>普通: <span id="shsNormal">0</span></span>
-      <span>困难: <span id="shsHard">0</span></span>
-    </div>
-  </div>
-  <div class="game-card" id="card2048">
-    <div class="name">🧩 2048</div>
-    <div class="desc">合并数字，挑战2048！滑动触屏版</div>
-    <div class="high-score-row" id="gHsRow">
-      <span>最高: <span id="ghsBest">0</span></span>
-    </div>
-  </div>
-
-  <div class="game-card" id="cardMinesweeper">
-    <div class="name">💣 扫雷</div>
-    <div class="desc">经典扫雷游戏，触屏标记版</div>
-    <div class="high-score-row" id="mHsRow">
-      <span>简单: <span id="mhsEasy">0</span>s</span>
-      <span>普通: <span id="mhsNormal">0</span>s</span>
-      <span>困难: <span id="mhsHard">0</span>s</span>
-    </div>
-  </div>
-
-  <div class="game-card" id="cardGomoku">
-    <div class="name">⚫ 五子棋</div>
-    <div class="desc">15路棋盘，好友对战/人机/匹配</div>
-  </div>
-  <div class="game-card" id="cardBreakout">
-    <div class="name">🧱 打砖块</div>
-    <div class="desc">滑动挡板，消灭砖块！</div>
-    <div class="high-score-row" id="bHsRow">
-      <span>最高: <span id="bhsBest">0</span></span>
-    </div>
+  <div class="game-grid">
+    <div class="gcard tetris" id="cardTetris"><div class="gicon">🧱</div><div class="gname">俄罗斯方块</div><div class="gdesc">经典下落消除</div></div>
+    <div class="gcard snake" id="cardSnake"><div class="gicon">🐍</div><div class="gname">贪吃蛇</div><div class="gdesc">吃食物变长</div></div>
+    <div class="gcard g2048" id="card2048"><div class="gicon">🧩</div><div class="gname">2048</div><div class="gdesc">合并数字挑战</div></div>
+    <div class="gcard mine" id="cardMinesweeper"><div class="gicon">💣</div><div class="gname">扫雷</div><div class="gdesc">触屏标记版</div></div>
+    <div class="gcard gomoku" id="cardGomoku"><div class="gicon">⚫</div><div class="gname">五子棋</div><div class="gdesc">好友/人机/匹配</div></div>
+    <div class="gcard breakout" id="cardBreakout"><div class="gicon">🧱</div><div class="gname">打砖块</div><div class="gdesc">滑动消灭砖块</div></div>
   </div>
 </div>
+
+
 
 
   
