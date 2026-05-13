@@ -252,7 +252,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <button class="back-btn" id="btnBackFriends">← 返回</button>
   </div>
   <div class="select-title">👥 我的好友</div>
-  <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
+  <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;" id="friendsActions">
     <button class="ctrl-btn" id="btnAddFriend" style="font-size:13px;padding:6px 16px;background:#2a2a1e;border-color:#f90;">➕ 添加好友</button>
     <button class="ctrl-btn" id="btnRequests" style="font-size:13px;padding:6px 16px;background:#2a2a1e;border-color:#4af;position:relative;">📩 好友申请<span id="reqBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#f44;color:#fff;font-size:10px;width:18px;height:18px;border-radius:9px;line-height:18px;text-align:center;">0</span></button>
   </div>
@@ -1915,16 +1915,22 @@ function _showOnlineLobby(){
 function _showMainLobby(){
   var html='<div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackBattle2">← 返回</button></div>';
   html+='<div class="select-title">🆚 方块对战</div>';
-  html+='<button class="menu-btn" id="btnFriendBattle2" style="margin-bottom:16px;" onclick="_loadFriends()">👥 好友对战</button>';
+  html+='<button class="menu-btn" id="btnFriendBattle2" style="margin-bottom:16px;" onclick="_loadFriends(\'battle\')">👥 好友对战</button>';
   html+='<button class="menu-btn" id="btnOnlineBattle2" style="margin-bottom:16px;">🌐 在线匹配</button>';
   document.getElementById("screenBattleLobby").innerHTML=html;
   document.getElementById("btnBackBattle2").onclick=function(){ss("screenTetrisDiff");};
   document.getElementById("btnOnlineBattle2").onclick=_showOnlineLobby;
 }
 
-// Friends list
-function _loadFriends(){
+// Friends list - mode: 'chat' (menu) or 'battle' (direct challenge)
+var _friendsMode='chat';
+function _loadFriends(mode){
   if(!_userId){_showAuthModal('login');return;}
+  _friendsMode=mode||'chat';
+  var fa=document.getElementById("friendsActions");
+  if(fa)fa.style.display=_friendsMode==='chat'?'':'none';
+  if(_friendsMode==='battle'){document.getElementById("friendsEmpty").textContent='暂无好友，去菜单-好友添加';}
+  else{document.getElementById("friendsEmpty").textContent='暂无好友';}
   _sbReq('GET','/rest/v1/friends?user_id=eq.'+_userId+'&select=id,friend_id&limit=50').then(function(r){return r.json();})
   .then(function(data){
     var html='';
@@ -1938,16 +1944,19 @@ function _loadFriends(){
           var st=u?u.status||'offline':'offline';
           var ls=u&&u.last_seen?now-new Date(u.last_seen).getTime():999999;
           if(ls>30000&&st!=='playing')st='offline';
-          var sc='';if(st==='online')sc='🟢 在线';else if(st==='playing')sc='🎮 游戏中';else sc='⚫ 离线';
-          html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;" onclick="_openChat('+f.friend_id+',\''+dname+'\')">';
-          html+='<div><div class="name" style="font-size:16px;">'+_esc(dname)+' <span class="friend-unread" data-fid="'+f.friend_id+'" style="display:none;background:#f44;color:#fff;font-size:10px;width:16px;height:16px;border-radius:8px;line-height:16px;text-align:center;margin-left:4px;">0</span></div>';
-          html+='<div style="font-size:10px;color:#888;">@'+_esc(uname)+' · '+sc+'</div></div>';
-          html+='<button class="ctrl-btn" style="font-size:11px;padding:3px 8px;background:#2a1a1a;border-color:#844;" onclick="event.stopPropagation();_delFriend('+f.friend_id+',\''+dname+'\')">🗑</button>';
+          var sc='';if(st==='online')sc='🟢';else if(st==='playing')sc='🎮';else sc='⚫';
+          var click=_friendsMode==='battle'?'onclick="_challengeFriend('+f.friend_id+',\''+dname+'\')"':'onclick="_openChat('+f.friend_id+',\''+dname+'\')"';
+          html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;" '+click+'>';
+          html+='<div><div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:10px;color:#888;">'+sc+'</span>';
+          if(_friendsMode==='chat')html+='<span class="friend-unread" data-fid="'+f.friend_id+'" style="display:none;background:#f44;color:#fff;font-size:10px;padding:1px 5px;border-radius:8px;margin-left:4px;">0</span>';
+          html+='</div><div style="font-size:10px;color:#888;">@'+_esc(uname)+'</div></div>';
+          if(_friendsMode==='chat')html+='<button class="ctrl-btn" style="font-size:11px;padding:3px 8px;background:#2a1a1a;border-color:#844;" onclick="event.stopPropagation();_delFriend('+f.friend_id+',\''+dname+'\')">🗑</button>';
           html+='</div>';
         });
         document.getElementById("friendsList").innerHTML=html;
         document.getElementById("friendsEmpty").style.display='none';
         ss("screenFriends");
+        _updateBadges();
       });
     } else {
       document.getElementById("friendsList").innerHTML='';
@@ -1955,6 +1964,7 @@ function _loadFriends(){
       ss("screenFriends");
     }
   });
+}
 }
 
 document.getElementById("btnBackFriends").onclick=function(){ss("screenMenu");};
@@ -2199,8 +2209,13 @@ function _updateUnread(){
 function _markFriendRead(fid){try{localStorage.setItem('goblin_read_'+fid,new Date().toISOString());}catch(e){}_updateUnread();}
 // Heartbeat - update online status every 15s
 if(_userId){
-  _chatPoll=setInterval(_updateUnread,5000);
+  _chatPoll=setInterval(_updateUnread,500);
   _updateUnread();
+  (function _hb(){
+    if(!_userId)return;
+    var st='online';if(typeof _bStarted!=='undefined'&&_bStarted)st='playing';
+    _sbReq('PATCH','/rest/v1/users?id=eq.'+_userId,{last_seen:new Date().toISOString(),status:st});
+  })();
   setInterval(function(){
     if(!_userId)return;
     var st='online';if(typeof _bStarted!=='undefined'&&_bStarted)st='playing';
