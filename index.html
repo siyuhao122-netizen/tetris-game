@@ -324,11 +324,11 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="status-msg" id="battleStatus" style="min-height:20px;">&nbsp;</div>
     <div class="controls" style="margin-top:2px;">
       <div class="ctrl-row" style="gap:14px;">
-        <button class="ctrl-btn" id="b1Left" style="min-width:62px;font-size:26px;">◀</button>
-        <button class="ctrl-btn" id="b1Rotate">↻</button>
-        <button class="ctrl-btn" id="b1Right" style="min-width:62px;font-size:26px;">▶</button>
+        <button class="ctrl-btn" id="b1Left" style="min-width:93px;font-size:39px;">◀</button>
+        <button class="ctrl-btn" id="b1Rotate" style="min-width:70px;font-size:39px;">↻</button>
+        <button class="ctrl-btn" id="b1Right" style="min-width:93px;font-size:39px;">▶</button>
       </div>
-      <div class="ctrl-row" style="margin-top:4px;">
+      <div class="ctrl-row" style="margin-top:8px;">
         <button class="ctrl-btn wide" id="b1Down">▼ 下落</button>
         <button class="ctrl-btn wide special" id="b1Drop">⬇ 硬降</button>
       </div>
@@ -2133,11 +2133,11 @@ document.getElementById("tDiffBattle").onclick=function(){_initAudio();ss("scree
 // Battle button wiring
 (function(){
   var b1l=document.getElementById("b1Left"),b1r=document.getElementById("b1Right"),b1rt=document.getElementById("b1Rotate"),b1d=document.getElementById("b1Down"),b1dr=document.getElementById("b1Drop");
-  if(b1l){b1l.addEventListener("click",function(e){e.preventDefault();_b1Move(-1);});b1l.addEventListener("touchstart",function(e){e.preventDefault();_b1Move(-1);});}
-  if(b1r){b1r.addEventListener("click",function(e){e.preventDefault();_b1Move(1);});b1r.addEventListener("touchstart",function(e){e.preventDefault();_b1Move(1);});}
-  if(b1rt){b1rt.addEventListener("click",function(e){e.preventDefault();_b1Rotate();});b1rt.addEventListener("touchstart",function(e){e.preventDefault();_b1Rotate();});}
-  if(b1d){b1d.addEventListener("click",function(e){e.preventDefault();_b1Down();});b1d.addEventListener("touchstart",function(e){e.preventDefault();_b1Down();});}
-  if(b1dr){b1dr.addEventListener("click",function(e){e.preventDefault();_b1Drop();});b1dr.addEventListener("touchstart",function(e){e.preventDefault();_b1Drop();});}
+  if(b1l){b1l.addEventListener("click",function(e){e.preventDefault();_b1Move(-1);});}
+  if(b1r){b1r.addEventListener("click",function(e){e.preventDefault();_b1Move(1);});}
+  if(b1rt){b1rt.addEventListener("click",function(e){e.preventDefault();_b1Rotate();});}
+  if(b1d){b1d.addEventListener("click",function(e){e.preventDefault();_b1Down();});}
+  if(b1dr){b1dr.addEventListener("click",function(e){e.preventDefault();_b1Drop();});}
 })();
 
 // Keyboard for battle
