@@ -715,6 +715,15 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="diff-card" id="gmAIHard"><div class="dname">🔴 困难</div><div class="ddesc">极大极小搜索</div></div>
 </div>
 
+<!-- GOMOKU RESULT OVERLAY -->
+<div class="overlay" id="gmResultOverlay" style="display:none;z-index:200;">
+  <div class="overlay-box">
+    <div class="o-title" id="gmResultTitle" style="font-size:28px;"></div>
+    <div class="o-detail" id="gmResultDetail" style="font-size:14px;color:#aaa;"></div>
+    <button class="o-btn" id="gmResultBtn" style="margin-top:12px;">返回</button>
+  </div>
+</div>
+
 <!-- GOMOKU MATCHING -->
 <div class="screen" id="screenGomokuWait">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackGomokuWait">← 取消</button></div>
@@ -2657,14 +2666,15 @@ function _gmPlace(r,c){
   var w=_gmCheckWin(r,c);
   if(w){
     _gmOver=1;_gmDraw();
-    var msg=(_gmMode==='pve')?(w===_gmMyColor?'你赢了！':'AI赢了'):(w===_gmMyColor?'你赢了！':'对手赢了');
-    document.getElementById("gmStatus").textContent=msg;
-    _gmRecordGame(w===_gmMyColor?1:0);
-    setTimeout(function(){ss("screenGomokuMode");},3000);
+    var won=w===_gmMyColor;
+    document.getElementById("gmResultTitle").textContent=won?'🎉 你赢了！':'💀 你输了';
+    document.getElementById("gmResultDetail").textContent=_gmMode==='pve'?(won?'击败AI！':'AI获胜'):'';
+    document.getElementById("gmResultOverlay").style.display='flex';
+    _gmRecordGame(won?1:0);
     return;
   }
   var draw=(_gmMoves.length>=225);
-  if(draw){_gmOver=1;_gmDraw();document.getElementById("gmStatus").textContent='平局！';setTimeout(function(){ss("screenGomokuMode");},3000);return;}
+  if(draw){_gmOver=1;_gmDraw();document.getElementById("gmResultTitle").textContent='🤝 平局！';document.getElementById("gmResultDetail").textContent='';document.getElementById("gmResultOverlay").style.display='flex';return;}
   _gmTurn=_gmTurn===1?2:1;_gmDraw();
   document.getElementById("gmStatus").textContent=(_gmTurn===_gmMyColor)?'你的回合':((_gmMode==='pve')?'AI思考中...':'等待对手...');
   // AI move
@@ -2735,6 +2745,7 @@ document.getElementById("btnGomokuFriend").onclick=function(){_loadFriends('batt
 document.getElementById("btnGomokuMatch").onclick=function(){_gmQuickMatch();};
 document.getElementById("btnGomokuAI").onclick=function(){ss("screenGomokuAI");};
 document.getElementById("btnBackGomokuAI").onclick=function(){ss("screenGomokuMode");};
+document.getElementById("gmResultBtn").onclick=function(){document.getElementById("gmResultOverlay").style.display='none';ss("screenGomokuMode");};
 document.getElementById("btnBackGM").onclick=function(){
   if((_gmMode==='pvp_friend'||_gmMode==='pvp_match')&&!_gmOver&&_sbChannel){
     _sbChannel.send({type:'broadcast',event:'gm_forfeit',payload:{}});
@@ -2775,38 +2786,41 @@ document.getElementById("btnGomokuFriend").onclick=function(){
 function _gmQuickMatch(){
   if(!_sbClient)return;
   ss("screenGomokuWait");
-  _sbReq('GET','/rest/v1/rooms?game=eq.gomoku&status=eq.matching&select=*&limit=1').then(function(r){return r.json();}).then(function(d){
-    if(d&&d.length>0){
-      // Join existing match
-      var room=d[0];
-      _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:parseInt(_userId)}).then(function(){
-        _gmRoom=room;_gmMode='pvp_match';_gmMyColor=2;_gmPlayer=2;
-        _gmInit('pvp_match','');_gmTurn=1;
-        _sbChannel=_sbClient.channel('room-gm-'+room.id);
-        _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+  // Try multiple times in case of race condition
+  function _tryMatch(attempt){
+    if(attempt>10){document.getElementById("btnBackGomokuWait").click();return;}
+    _sbReq('GET','/rest/v1/rooms?game=eq.gomoku&status=eq.matching&player1_id=neq.'+_userId+'&select=*&limit=1').then(function(r){return r.json();}).then(function(d){
+      if(d&&d.length>0){
+        var room=d[0];
+        _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:parseInt(_userId)}).then(function(){
+          _gmRoom=room;_gmMode='pvp_match';_gmMyColor=2;_gmPlayer=2;
+          _gmInit('pvp_match','');_gmTurn=1;
+          _sbChannel=_sbClient.channel('room-gm-'+room.id);
+          _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
 _sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1;document.getElementById("gmStatus").textContent='对手退出，你赢了！';_gmRecordGame(1);setTimeout(function(){ss("screenGomokuMode");},3000);}});
-        _sbChannel.subscribe();
-      });
-    }else{
-      // Create new match room
-      _sbReq('POST','/rest/v1/rooms',{code:_bGenCode(),status:'matching',game:'gomoku',player1_id:parseInt(_userId)}).then(function(r){return r.json();}).then(function(rd){
-        if(!rd||!rd.length)return;
-        var room=rd[0];_gmRoom=room;_gmMode='pvp_match';_gmMyColor=1;_gmPlayer=1;
-        // Wait for opponent
-        var poll=setInterval(function(){
-          _sbReq('GET','/rest/v1/rooms?id=eq.'+room.id+'&select=status,player2_id&limit=1').then(function(r){return r.json();}).then(function(pd){
-            if(pd&&pd.length&&pd[0].status==='playing'){clearInterval(poll);
-              _gmInit('pvp_match','');_gmTurn=1;
-              _sbChannel=_sbClient.channel('room-gm-'+room.id);
-              _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+          _sbChannel.subscribe();
+        });
+      }else{
+        // Create room, then poll for opponent
+        _sbReq('POST','/rest/v1/rooms',{code:_bGenCode(),status:'matching',game:'gomoku',player1_id:parseInt(_userId)}).then(function(r){return r.json();}).then(function(rd){
+          if(!rd||!rd.length){setTimeout(function(){_tryMatch(attempt+1);},500);return;}
+          var room=rd[0];_gmRoom=room;_gmMode='pvp_match';_gmMyColor=1;_gmPlayer=1;
+          var poll=setInterval(function(){
+            _sbReq('GET','/rest/v1/rooms?id=eq.'+room.id+'&select=status,player2_id&limit=1').then(function(r){return r.json();}).then(function(pd){
+              if(pd&&pd.length&&pd[0].status==='playing'){clearInterval(poll);
+                _gmInit('pvp_match','');_gmTurn=1;
+                _sbChannel=_sbClient.channel('room-gm-'+room.id);
+                _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
 _sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1;document.getElementById("gmStatus").textContent='对手退出，你赢了！';_gmRecordGame(1);setTimeout(function(){ss("screenGomokuMode");},3000);}});
-              _sbChannel.subscribe();
-            }
-          });
-        },1000);
-      });
-    }
-  });
+                _sbChannel.subscribe();
+              }
+            });
+          },800);
+        });
+      }
+    });
+  }
+  _tryMatch(1);
 }
 
 // ===== ACHIEVEMENTS =====
@@ -2887,7 +2901,7 @@ function _renderGomokuLB(){
   var dt=document.getElementById("glbDiffTabs");
   var sd=document.getElementById("glbSubDiff");
   dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:13px;padding:6px 12px;" data-gdiff="pve">🤖 人机</button><button class="ctrl-btn stat-tab" style="font-size:13px;padding:6px 12px;" data-gdiff="match">🌐 匹配</button><button class="ctrl-btn stat-tab" style="font-size:13px;padding:6px 12px;" data-gdiff="friend">👥 好友</button>';
-  sd.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:4px 8px;" data-gsub="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:4px 8px;" data-gsub="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:4px 8px;" data-gsub="hard">🔴 困难</button>';
+  sd.innerHTML='<div style="display:flex;gap:6px;justify-content:center;flex-wrap:nowrap;"><button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;white-space:nowrap;" data-gsub="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;white-space:nowrap;" data-gsub="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;white-space:nowrap;" data-gsub="hard">🔴 困难</button></div>';
   document.querySelectorAll("#glbDiffTabs .stat-tab").forEach(function(t){
     t.onclick=function(){
       document.querySelectorAll("#glbDiffTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
