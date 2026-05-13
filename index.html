@@ -514,7 +514,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="controls">
       <div class="dpad">
         <div class="empty"></div>
-        <button class="ctrl-btn sdir" id="gUp" onclick="gStatusEl.textContent='UP';gMove(0)">▲</button>
+        <button class="ctrl-btn sdir" id="gUp" onclick="var r=gSwipeUp();gStatusEl.textContent='m='+r.moved;s='+r.score">▲</button>
         <div class="empty"></div>
         <button class="ctrl-btn sdir" id="gLeft" onclick="gMove(3)">◀</button>
         <button class="ctrl-btn sdir" id="gDown" onclick="gMove(2)">▼</button>
