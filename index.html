@@ -2407,9 +2407,12 @@ function _showVipScreen(){
   // Update subscribe button states
   var bp=document.getElementById("btnVipPlus");
   var bpr=document.getElementById("btnVipPro");
-  if(active&&(_vipTier==='plus'||_vipTier==='pro')){
-    if(_vipTier==='plus'){bp.textContent='✅ 已订阅';bp.style.opacity='0.5';bp.disabled=true;}
-    if(_vipTier==='pro'){bpr.textContent='✅ 已订阅';bpr.style.opacity='0.5';bpr.disabled=true;}
+  if(active&&_vipTier==='pro'){
+    bp.textContent='✅ 已订阅';bp.style.opacity='0.5';bp.disabled=true;
+    bpr.textContent='✅ 已订阅';bpr.style.opacity='0.5';bpr.disabled=true;
+  }else if(active&&_vipTier==='plus'){
+    bp.textContent='✅ 已订阅';bp.style.opacity='0.5';bp.disabled=true;
+    bpr.textContent='👑 ￥2 升级';bpr.style.opacity='1';bpr.disabled=false;
   }else{
     bp.textContent='💎 ￥1 订阅';bp.style.opacity='1';bp.disabled=false;
     bpr.textContent='👑 ￥2 订阅';bpr.style.opacity='1';bpr.disabled=false;
