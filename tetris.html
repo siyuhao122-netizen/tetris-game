@@ -2367,6 +2367,86 @@ document.getElementById('tdfPauseOverlay').addEventListener('click',function(){
   if(tdfPause)_playPause();else _playResume();
 });
 
+// ====== TOWER DEFENSE MULTIPLAYER SYNC ======
+function tdfSetupChannel(){
+  if(!tdfRoom||!_sbClient)return;
+  if(tdfChannel){tdfChannel.unsubscribe();}
+  tdfChannel=_sbClient.channel('room:'+tdfRoom.code);
+  tdfChannel.on('broadcast',{event:'tdf_place'},function(p){tdfPlaceTower(p.payload.x,p.payload.y,p.payload.type,1,false);tdfDraw();});
+  tdfChannel.on('broadcast',{event:'tdf_upgrade'},function(p){tdfUpgradeTower(p.payload.x,p.payload.y,false);tdfDraw();});
+  tdfChannel.on('broadcast',{event:'tdf_sell'},function(p){tdfSellTower(p.payload.x,p.payload.y,false);tdfDraw();});
+  tdfChannel.on('broadcast',{event:'tdf_ready'},function(p){tdfReady|=p.payload.player;});
+  tdfChannel.on('broadcast',{event:'tdf_chat'},function(p){
+    var div=document.createElement('div');div.textContent=p.payload.msg;
+    div.style.cssText='position:absolute;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:4px 12px;border-radius:12px;font-size:12px;z-index:20;pointer-events:none;';
+    var wrap=document.querySelector('#screenTowerDefense .board-wrap');
+    if(wrap)wrap.appendChild(div);
+    setTimeout(function(){if(div.parentNode)div.parentNode.removeChild(div);},2000);
+  });
+  tdfChannel.subscribe(function(status){
+    if(status==='SUBSCRIBED'){
+      tdfChannel.send({type:'broadcast',event:'tdf_sync',payload:{
+        towers:tdfTowers.map(function(t){return{x:t.x,y:t.y,type:t.type,level:t.level};}),
+        hp:tdfHP,gold:tdfGold,wave:tdfWave,state:tdfPrepPhase?'prep':'combat'
+      }});
+    }
+  });
+  tdfChannel.on('broadcast',{event:'tdf_sync'},function(p){
+    var s=p.payload;
+    tdfHP=s.hp;tdfGold=s.gold;tdfWave=s.wave;
+    tdfTowers=[];tdfGrid=[];for(var r=0;r<TDF_ROWS;r++){tdfGrid[r]=[];for(var c=0;c<TDF_COLS;c++)tdfGrid[r][c]=null;}
+    s.towers.forEach(function(t){tdfPlaceTower(t.x,t.y,t.type,t.level,false);});
+    document.getElementById('tdfHP').textContent=tdfHP;
+    document.getElementById('tdfGold').textContent=tdfGold;
+    document.getElementById('tdfWave').textContent=tdfWave;
+  });
+}
+// Quick chat buttons
+document.querySelectorAll('#tdfChatRow .tdf-chat-btn').forEach(function(btn,i){
+  var msgs=['建这里！','存钱升级！','准备好了！','需要帮助！'];
+  btn.addEventListener('click',function(){
+    if(tdfChannel)tdfChannel.send({type:'broadcast',event:'tdf_chat',payload:{msg:msgs[i]}});
+  });
+});
+
+function tdfCreateRoom(mode){
+  var code=_bGenCode();
+  var status=mode==='friend'?'waiting':'matching';
+  _sbReq('POST','/rest/v1/rooms',{code:code,status:status,game:'towerdefense',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();}).then(function(d){
+    tdfRoom=d&&d.length?d[0]:null;tdfPlayer=1;
+    document.getElementById('tdfRoomCode').textContent='房间: '+code;
+    tdfSetupChannel();
+    ss('screenTowerDefense');tdfInit();tdfStartLoop();
+    if(mode==='matching')tdfPollMatch();
+  });
+}
+function tdfJoinRoom(code){
+  _sbReq('GET','/rest/v1/rooms?code=eq.'+code+'&select=*&limit=1').then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.length){_achieveBadge('房间不存在','❌');return;}
+    var room=d[0];
+    if(room.status!=='waiting'){_achieveBadge('房间已满','❌');return;}
+    _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:_userId?parseInt(_userId):null}).then(function(){
+      tdfRoom=room;tdfPlayer=2;
+      document.getElementById('tdfRoomCode').textContent='房间: '+code;
+      tdfSetupChannel();
+      ss('screenTowerDefense');tdfInit();tdfStartLoop();
+    });
+  });
+}
+function tdfPollMatch(){
+  var poll=setInterval(function(){
+    _sbReq('GET','/rest/v1/rooms?game=eq.towerdefense&status=eq.matching&player1_id=neq.'+_userId+'&select=*&limit=1').then(function(r){return r.json();}).then(function(d){
+      if(d&&d.length>0){
+        _sbReq('PATCH','/rest/v1/rooms?id=eq.'+d[0].id,{status:'playing',player2_id:parseInt(_userId)}).then(function(){
+          tdfRoom=d[0];tdfPlayer=2;clearInterval(poll);
+          document.getElementById('tdfRoomCode').textContent='房间: '+d[0].code;
+          tdfSetupChannel();tdfInit();tdfStartLoop();
+        });
+      }
+    });
+  },2000);
+}
+
 // ====== BATTLE TETRIS ======
 var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0,_bTotalCleared=0;
 var _b1Board=[],_b1Cur=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
