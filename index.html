@@ -1940,8 +1940,8 @@ function _loadFriends(){
           if(ls>30000&&st!=='playing')st='offline';
           var sc='';if(st==='online')sc='🟢 在线';else if(st==='playing')sc='🎮 游戏中';else sc='⚫ 离线';
           html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;" onclick="_openChat('+f.friend_id+',\''+dname+'\')">';
-          html+='<div><div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:10px;color:#888;">@'+_esc(uname)+'</span></div>';
-          html+='<div style="font-size:10px;color:#888;">'+sc+'</div></div>';
+          html+='<div><div class="name" style="font-size:16px;">'+_esc(dname)+' <span class="friend-unread" data-fid="'+f.friend_id+'" style="display:none;background:#f44;color:#fff;font-size:10px;width:16px;height:16px;border-radius:8px;line-height:16px;text-align:center;margin-left:4px;">0</span></div>';
+          html+='<div style="font-size:10px;color:#888;">@'+_esc(uname)+' · '+sc+'</div></div>';
           html+='<button class="ctrl-btn" style="font-size:11px;padding:3px 8px;background:#2a1a1a;border-color:#844;" onclick="event.stopPropagation();_delFriend('+f.friend_id+',\''+dname+'\')">🗑</button>';
           html+='</div>';
         });
@@ -2047,7 +2047,7 @@ function _delFriend(fid,fname){
 // Chat
 var _chatFriendId=null,_chatLoop=null;
 function _openChat(fid,fname){
-  _markChatRead();
+  _markFriendRead(fid);
   _chatFriendId=fid;
   document.getElementById("chatFriendName").textContent='💬 '+fname;
   document.getElementById("chatInput").value='';
@@ -2160,33 +2160,43 @@ function _startInvitePoll(){
 }
 _startInvitePoll();
 
-// Notification badges
-var _chatPoll=null;
+// Notification badges (per-friend)
+var _chatPoll=null,_unreadCounts={};
 function _updateBadges(){
   if(!_userId)return;
-  // Friend requests count
   _sbReq('GET','/rest/v1/friend_requests?to_id=eq.'+_userId+'&status=eq.pending&select=id').then(function(r){return r.json();}).then(function(d){
-    var cnt=d?d.length:0;
+    var reqCnt=d?d.length:0;
     var rb=document.getElementById("reqBadge");
-    if(rb){rb.textContent=cnt;rb.style.display=cnt>0?'':'none';}
+    if(rb){rb.textContent=reqCnt;rb.style.display=reqCnt>0?'':'none';}
+    // Per-friend badges in friends list
+    document.querySelectorAll(".friend-unread").forEach(function(el){
+      var fid=el.getAttribute("data-fid");
+      el.style.display=_unreadCounts[fid]?'':'none';
+      el.textContent=_unreadCounts[fid]||0;
+    });
+    // Total on menu button
+    var totalMsg=0;for(var k in _unreadCounts)totalMsg+=_unreadCounts[k]||0;
     var fb=document.getElementById("friendsBadge");
     if(fb){
-      var total=cnt+(_unreadMsgs||0);
-      fb.textContent=total>9?'9+':total;
-      fb.style.display=total>0?'':'none';
+      var total=reqCnt+totalMsg;
+      fb.textContent=total>9?'9+':total;fb.style.display=total>0?'':'none';
     }
   });
 }
 function _updateUnread(){
   if(!_userId)return;
-  var since=localStorage.getItem("goblin_chat_read")||"2000-01-01";
-  _sbReq('GET','/rest/v1/messages?to_id=eq.'+_userId+'&created_at=gt.'+since+'&select=id&limit=99').then(function(r){return r.json();}).then(function(d){
-    _unreadMsgs=d?d.length:0;_updateBadges();
+  _sbReq('GET','/rest/v1/messages?to_id=eq.'+_userId+'&select=id,from_id,created_at&order=created_at.desc&limit=200').then(function(r){return r.json();})
+  .then(function(d){
+    _unreadCounts={};
+    if(d)d.forEach(function(m){
+      var fid=m.from_id;var readKey='goblin_read_'+fid;
+      var lastRead=localStorage.getItem(readKey)||'2000-01-01';
+      if(m.created_at>lastRead){_unreadCounts[fid]=(_unreadCounts[fid]||0)+1;}
+    });
+    _updateBadges();
   });
 }
-var _unreadMsgs=0;
-function _markChatRead(){try{localStorage.setItem("goblin_chat_read",new Date().toISOString());}catch(e){}_unreadMsgs=0;_updateBadges();}
-document.getElementById("btnFriendsMenu").addEventListener("click",function(){_markChatRead();});
+function _markFriendRead(fid){try{localStorage.setItem('goblin_read_'+fid,new Date().toISOString());}catch(e){}_updateUnread();}
 // Heartbeat - update online status every 15s
 if(_userId){
   _chatPoll=setInterval(_updateUnread,5000);
