@@ -2434,10 +2434,11 @@ function _showPayModal(tier){
 document.getElementById("payClose").onclick=function(){document.getElementById("payOverlay").style.display='none';};
 document.getElementById("payConfirm").onclick=function(){
   if(!_payTier)return;
-  var note=document.getElementById("payCodeInput").value.trim()||'无备注';
-  _sbReq('PATCH','/rest/v1/users?id=eq.'+_userId,{vip_tier:'pending_'+_payTier}).then(function(){
+  var expiry=new Date(Date.now()+30*86400000).toISOString();
+  _sbReq('PATCH','/rest/v1/users?id=eq.'+_userId,{vip_tier:_payTier,vip_expiry:expiry}).then(function(){
+    _vipTier=_payTier;_vipExpiry=expiry;_updateVipDisplay();_showVipScreen();
     document.getElementById("payOverlay").style.display='none';
-    _achieveBadge('申请已提交，等待审核','📩');
+    _achieveBadge((_payTier==='plus'?'VIP Plus':'VIP Pro')+' 已开通！请诚信付款','✅');
   });
 };
 
