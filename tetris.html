@@ -18,7 +18,7 @@
   .game-card:active { border-color: #4af; }
   .game-card .name { font-size: 18px; font-weight: bold; }
   .game-card .desc { font-size: 12px; color: #888; margin-top: 4px; }
-  .game-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;}
+  .game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;width:100%;max-width:420px;}
   .gcard{background:var(--card-bg);border:1px solid var(--bdr);border-radius:14px;padding:16px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform 0.1s,border-color 0.15s,box-shadow 0.15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
   .gcard:active{transform:scale(0.96);border-color:var(--accent);box-shadow:0 0 20px rgba(80,120,255,0.2);}
   .gcard .gicon{font-size:36px;margin-bottom:2px;}
@@ -30,6 +30,7 @@
   .gcard.mine{border-top:3px solid #f55;}
   .gcard.gomoku{border-top:3px solid #a0f;}
   .gcard.breakout{border-top:3px solid #ff0;}
+  .gcard.towerdefense{border-top:3px solid #f44;}
   .high-score-row { font-size: 11px; color: #888; margin-top: 6px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .diff-title { font-size: 22px; font-weight: bold; margin-bottom: 24px; color: #4af; }
   .diff-card { background: #111; border: 1px solid #333; border-radius: 14px; padding: 16px 24px; width: 100%; max-width: 280px; margin-bottom: 10px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: border-color 0.1s; }
@@ -178,6 +179,16 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 .dpad-lg .empty{visibility:hidden}
 @media (max-width:480px){.ctrl-btn.sdir.lg{width:72px;padding:15px 0;font-size:27px}.dpad-lg{grid-template-columns:72px 72px 72px;gap:4px}}
 @media (orientation:landscape){.ctrl-btn.sdir.lg{width:66px;padding:12px 0;font-size:27px}.dpad-lg{grid-template-columns:66px 66px 66px;gap:3px}}
+.tdf-palette{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px;}
+.tdf-tower-btn{background:var(--surface);border:2px solid var(--bdr);border-radius:10px;padding:8px 14px;cursor:pointer;font-size:13px;color:var(--txt);min-width:60px;text-align:center;transition:border-color 0.15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+.tdf-tower-btn:active{background:#2a2a4e;}
+.tdf-tower-btn.sel{border-color:var(--accent);box-shadow:0 0 12px rgba(80,120,255,0.4);}
+.tdf-tower-btn .cost{font-size:10px;color:var(--gold);}
+.tdf-status{display:flex;gap:12px;justify-content:center;align-items:center;font-size:14px;font-weight:bold;margin-bottom:2px;flex-wrap:wrap;}
+.tdf-status span{color:var(--accent);}
+.tdf-chat-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:4px;}
+.tdf-chat-btn{background:#1a1a2e;border:1px solid #444;border-radius:8px;color:#aaa;font-size:11px;padding:4px 10px;cursor:pointer;touch-action:manipulation;}
+.tdf-chat-btn:active{background:#2a2a4e;color:#fff;}
 </style>
 </head>
 <body>
@@ -210,6 +221,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="gcard mine" id="cardMinesweeper"><div class="gicon">💣</div><div class="gname">扫雷</div><div class="gdesc">触屏标记版</div></div>
     <div class="gcard gomoku" id="cardGomoku"><div class="gicon">⚫</div><div class="gname">五子棋</div><div class="gdesc">好友/人机/匹配</div></div>
     <div class="gcard breakout" id="cardBreakout"><div class="gicon">🧱</div><div class="gname">打砖块</div><div class="gdesc">滑动消灭砖块</div></div>
+    <div class="gcard towerdefense" id="cardTowerDefense"><div class="gicon">🏰</div><div class="gname">塔防守卫</div><div class="gdesc">双人合作塔防</div></div>
   </div>
 </div>
 
@@ -474,6 +486,55 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="dhigh">🏆 最高 <span id="bdhsHard">0</span></div>
   </div>
   <button class="menu-btn" id="btnBreakoutLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
+</div>
+
+<!-- TOWER DEFENSE DIFFICULTY -->
+<div class="screen" id="screenTowerDefenseDiff">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDDiff">← 返回</button></div>
+  <div class="select-title">🏰 塔防守卫 · 难度</div>
+  <div class="diff-card" id="tdfDiffEasy"><div class="dname">🟢 简单</div><div class="ddesc">20波 · 塔最高5级 · 25❤</div><div class="dhigh">🏆 最高 <span id="tdfhsEasy">0</span>波</div></div>
+  <div class="diff-card" id="tdfDiffNormal"><div class="dname">🟡 普通</div><div class="ddesc">30波 · 塔最高4级 · 20❤</div><div class="dhigh">🏆 最高 <span id="tdfhsNormal">0</span>波</div></div>
+  <div class="diff-card" id="tdfDiffHard"><div class="dname">🔴 困难</div><div class="ddesc">40波 · 塔最高3级 · 15❤</div><div class="dhigh">🏆 最高 <span id="tdfhsHard">0</span>波</div></div>
+  <div class="diff-card" id="tdfDiffEndless"><div class="dname">♾️ 无尽</div><div class="ddesc">无限波 · 无等级上限 · 20❤</div><div class="dhigh">🏆 最高 <span id="tdfhsEndless">0</span>波</div></div>
+  <button class="menu-btn" id="btnTowerDefenseLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
+</div>
+
+<!-- TOWER DEFENSE LOBBY -->
+<div class="screen" id="screenTDLobby">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDLobby">← 返回</button></div>
+  <div class="select-title">🏰 塔防守卫</div>
+  <button class="menu-btn" id="btnTDFriendBattle" style="margin-bottom:16px;">👥 好友合作</button>
+  <button class="menu-btn" id="btnTDOnlineBattle" style="margin-bottom:16px;">🌐 快速匹配</button>
+</div>
+
+<!-- TOWER DEFENSE GAME -->
+<div class="screen" id="screenTowerDefense">
+  <div style="width:100%;text-align:left;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+    <button class="back-btn" id="btnBackTD">← 退出</button>
+    <span class="o-detail" id="tdfRoomCode" style="font-size:12px;color:#888;"></span>
+  </div>
+  <div class="game-wrapper">
+    <div class="tdf-status" id="tdfStatusBar">❤<span id="tdfHP">20</span> 💰<span id="tdfGold">200</span> 🌊<span id="tdfWave">0</span>/<span id="tdfWaveMax">20</span></div>
+    <div class="board-wrap" style="position:relative;">
+      <canvas id="tdfBoard" class="gcanvas" width="392" height="224"></canvas>
+      <div id="tdfPauseOverlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:10;border-radius:4px;"><span style="font-size:32px;font-weight:bold;color:#fff;">⏸ 暂停</span></div>
+    </div>
+    <div class="tdf-palette" id="tdfPalette">
+      <button class="tdf-tower-btn" data-type="arrow">🏹<br><span class="cost">50g</span></button>
+      <button class="tdf-tower-btn" data-type="cannon">💣<br><span class="cost">100g</span></button>
+      <button class="tdf-tower-btn" data-type="ice">❄️<br><span class="cost">75g</span></button>
+      <button class="tdf-tower-btn" data-type="mine">💰<br><span class="cost">150g</span></button>
+    </div>
+    <div class="controls" style="margin-top:4px;">
+      <button class="ctrl-btn" id="tdfReadyBtn" style="font-size:16px;padding:8px 24px;">✅ 准备</button>
+    </div>
+    <div class="tdf-chat-row" id="tdfChatRow">
+      <button class="tdf-chat-btn">💬 建这里！</button>
+      <button class="tdf-chat-btn">💰 存钱升级</button>
+      <button class="tdf-chat-btn">✅ 准备好了</button>
+      <button class="tdf-chat-btn">🆘 需要帮助</button>
+    </div>
+  </div>
 </div>
 
 <!-- 2048 GAME SCREEN -->
