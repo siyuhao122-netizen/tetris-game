@@ -823,7 +823,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
   <div style="display:none;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;" id="lbSubDiff"></div>
   <table class="stats-table" id="lbTable">
-    <thead><tr><th>排名</th><th>玩家</th><th>场次</th><th>胜率</th><th id="lbScoreHeader">最高连胜</th><th>时间</th></tr></thead>
+    <thead><tr><th>排名</th><th>玩家</th><th id="lbScoreHeader">分数</th><th>时间</th></tr></thead>
     <tbody id="lbBody"></tbody>
   </table>
   <div class="stats-empty" id="lbEmpty">暂无排行数据</div>
@@ -2870,17 +2870,19 @@ function _updateLBDiffs(){
   var sd=document.getElementById("lbSubDiff");
   var sr=document.getElementById("lbSortRow");
   var th=document.getElementById("lbScoreHeader");
+  var lbth=document.querySelector("#lbTable thead tr");
   if(!dt)return;
   if(_lbGame==='gomoku'){
     dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="pve">🤖 人机</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="match">🌐 匹配</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="friend">👥 好友</button>';
     _lbDiff='pve';_lbSubDiff='easy';
     if(sd){sd.style.display='';sd.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;" data-sub="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sub="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sub="hard">🔴 困难</button>';}
-    if(sr)sr.style.display='';if(th)th.textContent='最高连胜';
+    if(sr)sr.style.display='';if(lbth)lbth.innerHTML='<th>排名</th><th>玩家</th><th>场次</th><th>胜率</th><th>最高连胜</th><th>时间</th>';
     _bindSubDiff();
   }else{
     _lbDiff='easy';_lbSubDiff='';
     if(sd)sd.style.display='none';if(sr)sr.style.display='none';
     if(th)th.textContent=_lbGame==='minesweeper'?'用时':'分数';
+    if(lbth)lbth.innerHTML='<th>排名</th><th>玩家</th><th id=\"lbScoreHeader\">'+(_lbGame==='minesweeper'?'用时':'分数')+'</th><th>时间</th>';
     if(_lbGame==='minesweeper'){
       dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;display:none;" data-diff="daily" id="lbDailyTab">📅 每日</button>';
     }else{
