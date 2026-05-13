@@ -1102,7 +1102,7 @@ function _setupHiDPI(canvas,ctx,w,h){
   canvas.width=w*dpr;canvas.height=h*dpr;
   ctx.scale(dpr,dpr);
 }
-function uhs(){["easy","normal","hard"].forEach(function(k){["ths","tdhs","shs","sdhs"].forEach(function(p){var e=document.getElementById(p+k[0].toUpperCase()+k.slice(1));if(e){var v=(p==="ths"||p==="tdhs")?ghs("tetris",k):ghs("snake",k);e.textContent=v;}});});}
+function uhs(){["easy","normal","hard"].forEach(function(k){["ths","tdhs","shs","sdhs"].forEach(function(p){var e=document.getElementById(p+k[0].toUpperCase()+k.slice(1));if(e){var v=(p==="ths"||p==="tdhs")?ghs("tetris",k):ghs("snake",k);e.textContent=v;}});});var tdfDiffs=['easy','normal','hard','endless'];tdfDiffs.forEach(function(d){var el=document.getElementById('tdfhs'+d.charAt(0).toUpperCase()+d.slice(1));if(el)el.textContent=ghs('towerdefense',d);});}
 function _initStatsTabs(){var tabs=document.querySelectorAll("#statsTabs .stat-tab");tabs.forEach(function(t){t.onclick=function(){tabs.forEach(function(x){x.classList.remove("active");});this.classList.add("active");var g=this.getAttribute("data-game");document.querySelectorAll("#statsBody .stat-row").forEach(function(r){if(g==="all"||r.getAttribute("data-game")===g)r.classList.remove("hidden");else r.classList.add("hidden");});};});}
 function ss(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});document.getElementById(id).classList.add("active");_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();}
 var _ssBase=ss;
@@ -1911,6 +1911,27 @@ document.getElementById("btnBackB").onclick=function(){
   bStarted=0;ss("screenBreakoutDiff");
 };
 document.getElementById("cardBreakout").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenBreakoutDiff");};
+document.getElementById('cardTowerDefense').onclick=function(){_initAudio();ss('screenTowerDefenseDiff');uhs();};
+document.getElementById('btnBackTDDiff').onclick=function(){ss('screenSelect');};
+document.getElementById('tdfDiffEasy').onclick=function(){tdfDifficulty='easy';ss('screenTDLobby');};
+document.getElementById('tdfDiffNormal').onclick=function(){tdfDifficulty='normal';ss('screenTDLobby');};
+document.getElementById('tdfDiffHard').onclick=function(){tdfDifficulty='hard';ss('screenTDLobby');};
+document.getElementById('tdfDiffEndless').onclick=function(){tdfDifficulty='endless';ss('screenTDLobby');};
+document.getElementById('btnBackTDLobby').onclick=function(){ss('screenTowerDefenseDiff');};
+document.getElementById('btnBackTD').onclick=function(){
+  if(tdfStarted&&!tdfGameOver){showConfirm('确定退出吗？',function(){if(tdfLoopId)clearInterval(tdfLoopId);tdfStarted=0;ss('screenMenu');},'取消');return;}
+  if(tdfLoopId)clearInterval(tdfLoopId);tdfStarted=0;ss('screenMenu');
+};
+document.getElementById('btnTDFriendBattle').onclick=function(){
+  if(!_userId){_showAuthModal('login');return;}
+  _battleGame='towerdefense';
+  _loadFriends('battle');
+  ss('screenFriends');
+};
+document.getElementById('btnTDOnlineBattle').onclick=function(){
+  if(!_userId){_showAuthModal('login');return;}
+  tdfCreateRoom('match');
+};
 
 // Extend uhs for Breakout
 var _uhsB=uhs;
@@ -1933,6 +1954,12 @@ document.getElementById("goRestart").onclick=function(){
   var tEl=document.querySelector("#gameOverOverlay .o-title");
   if(tEl)tEl.textContent="💀 游戏结束";
   if(window._gog==="breakout"){bInit();return;}
+  if(window._gog==='towerdefense'){
+    if(tdfLoopId){clearInterval(tdfLoopId);}
+    tdfInit();tdfStartLoop();
+    document.getElementById('gameOverOverlay').classList.remove('active');
+    return;
+  }
   _origGRb();
 };
 
@@ -1943,6 +1970,12 @@ document.getElementById("goBack").onclick=function(){
   var tEl=document.querySelector("#gameOverOverlay .o-title");
   if(tEl)tEl.textContent="💀 游戏结束";
   if(window._gog==="breakout"){if(bTimerId){clearInterval(bTimerId);}if(bLoopId){clearInterval(bLoopId);}bStarted=0;ss("screenBreakoutDiff");return;}
+  if(window._gog==='towerdefense'){
+    if(tdfLoopId){clearInterval(tdfLoopId);}
+    tdfStarted=0;ss('screenTowerDefenseDiff');
+    document.getElementById('gameOverOverlay').classList.remove('active');
+    return;
+  }
   _origGBb();
 };
 
@@ -2829,6 +2862,19 @@ _sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1
     });
     return;
   }
+  if(_battleGame==='towerdefense'){
+    var code=_bGenCode();
+    _sbReq('POST','/rest/v1/rooms',{code:code,status:'waiting',game:'towerdefense',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();}).then(function(d){
+      if(!d||!d.length)return;
+      tdfRoom=d[0];tdfPlayer=1;tdfDifficulty='normal';
+      document.getElementById('tdfRoomCode').textContent='房间: '+code;
+      _sbReq('POST','/rest/v1/battle_invites',{from_id:parseInt(_userId),to_id:fid,room_code:code,status:'pending'}).then(function(){
+        _achieveBadge('邀请已发送','📨');
+        ss('screenTowerDefense');tdfInit();tdfStartLoop();
+      });
+    });
+    return;
+  }
   var code=_bGenCode();
   _sbReq('POST','/rest/v1/rooms',{code:code,status:'waiting',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();})
   .then(function(data){
@@ -3644,8 +3690,8 @@ var _lbGame=null,_lbDiff=null,_lbBackScreen=null;
 function _showGameLB(game, backScreen){
   if(!_userId){_showAuthModal('login');return;}
   _lbGame=game;_lbBackScreen=backScreen;
-  var titles={tetris:'🧱 俄罗斯方块 排行榜',snake:'🐍 贪吃蛇 排行榜','2048':'🧩 2048 排行榜',minesweeper:'💣 扫雷 排行榜',breakout:'🧱 打砖块 排行榜'};
-  var diffs={tetris:['easy','normal','hard'],snake:['easy','normal','hard'],'2048':['easy','normal','hard','endless'],minesweeper:['easy','normal','hard'],breakout:['easy','normal','hard']};
+  var titles={tetris:'🧱 俄罗斯方块 排行榜',snake:'🐍 贪吃蛇 排行榜','2048':'🧩 2048 排行榜',minesweeper:'💣 扫雷 排行榜',breakout:'🧱 打砖块 排行榜',towerdefense:'🏰 塔防守卫 排行榜'};
+  var diffs={tetris:['easy','normal','hard'],snake:['easy','normal','hard'],'2048':['easy','normal','hard','endless'],minesweeper:['easy','normal','hard'],breakout:['easy','normal','hard'],towerdefense:['easy','normal','hard','endless']};
   var labels={easy:'🟢 简单',normal:'🟡 普通',hard:'🔴 困难',endless:'♾️ 无限'};
   document.getElementById('gameLbTitle').textContent=titles[game]||'排行榜';
   var tabsHtml=diffs[game].map(function(d,i){
@@ -3724,6 +3770,7 @@ document.getElementById('btnSnakeLB').onclick=function(){_showGameLB('snake','sc
 document.getElementById('btn2048LB').onclick=function(){_showGameLB('2048','screen2048Diff');};
 document.getElementById('btnMineLB').onclick=function(){_showGameLB('minesweeper','screenMinesweeperDiff');};
 document.getElementById('btnBreakoutLB').onclick=function(){_showGameLB('breakout','screenBreakoutDiff');};
+document.getElementById('btnTowerDefenseLB').onclick=function(){_showGameLB('towerdefense','screenTowerDefenseDiff');};
 
 document.getElementById("btnStats").onclick=function(){
   _initAudio();
