@@ -2396,13 +2396,24 @@ document.getElementById("btnBackVip").onclick=function(){ss("screenMenu");};
 
 function _showVipScreen(){
   var now=Date.now();
+  var active=(_vipTier&&_vipExpiry&&new Date(_vipExpiry).getTime()>now);
   var s='';
-  if(_vipTier&&_vipExpiry&&new Date(_vipExpiry).getTime()>now){
+  if(active){
     var tn='';if(_vipTier==='free')tn='免费会员';else if(_vipTier==='plus')tn='VIP Plus';else tn='VIP Pro';
     s='当前: <b>'+tn+'</b> · 到期: '+new Date(_vipExpiry).toLocaleString("zh-CN");
   }else{s='暂无会员';}
   document.getElementById("vipStatus").textContent=s;
   ss("screenVip");
+  // Update subscribe button states
+  var bp=document.getElementById("btnVipPlus");
+  var bpr=document.getElementById("btnVipPro");
+  if(active&&(_vipTier==='plus'||_vipTier==='pro')){
+    if(_vipTier==='plus'){bp.textContent='✅ 已订阅';bp.style.opacity='0.5';bp.disabled=true;}
+    if(_vipTier==='pro'){bpr.textContent='✅ 已订阅';bpr.style.opacity='0.5';bpr.disabled=true;}
+  }else{
+    bp.textContent='💎 ￥1 订阅';bp.style.opacity='1';bp.disabled=false;
+    bpr.textContent='👑 ￥2 订阅';bpr.style.opacity='1';bpr.disabled=false;
+  }
 }
 
 document.getElementById("btnVipFree").onclick=function(){
