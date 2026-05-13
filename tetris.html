@@ -2026,6 +2026,82 @@ function tdfInit(){
   tdfDraw();
 }
 
+function tdfUpgradeCost(tower){
+  return Math.floor(TD_TOWERS[tower.type].cost*Math.pow(2,tower.level));
+}
+function tdfTotalSpent(tower){
+  var sum=0;for(var i=0;i<tower.level;i++)sum+=Math.floor(TD_TOWERS[tower.type].cost*Math.pow(2,i));
+  return sum;
+}
+function tdfCanPlace(x,y){
+  if(x<0||x>=TDF_COLS||y<0||y>=TDF_ROWS)return false;
+  if(tdfPathSet[x+','+y])return false;
+  if(tdfGrid[y][x])return false;
+  return true;
+}
+function tdfPlaceTower(x,y,type,level,broadcast){
+  level=level||1;
+  if(!tdfCanPlace(x,y))return false;
+  var cost=Math.floor(TD_TOWERS[type].cost*Math.pow(2,level-1));
+  if(tdfGold<cost)return false;
+  tdfGold-=cost;
+  var tw={x:x,y:y,type:type,level:level,cooldown:0};
+  tdfGrid[y][x]=tw;tdfTowers.push(tw);
+  document.getElementById('tdfGold').textContent=tdfGold;
+  if(broadcast!==false&&tdfChannel)tdfChannel.send({type:'broadcast',event:'tdf_place',payload:{x:x,y:y,type:type}});
+  return true;
+}
+function tdfUpgradeTower(x,y,broadcast){
+  var tw=tdfGrid[y][x];if(!tw)return false;
+  if(tdfMaxLevel!==Infinity&&tw.level>=tdfMaxLevel)return false;
+  var cost=tdfUpgradeCost(tw);
+  if(tdfGold<cost)return false;
+  tdfGold-=cost;tw.level++;
+  document.getElementById('tdfGold').textContent=tdfGold;
+  if(broadcast!==false&&tdfChannel)tdfChannel.send({type:'broadcast',event:'tdf_upgrade',payload:{x:x,y:y}});
+  return true;
+}
+function tdfSellTower(x,y,broadcast){
+  var tw=tdfGrid[y][x];if(!tw)return false;
+  var refund=Math.floor(tdfTotalSpent(tw)*0.5);
+  tdfGold+=refund;
+  tdfGrid[y][x]=null;
+  var idx=tdfTowers.indexOf(tw);if(idx>=0)tdfTowers.splice(idx,1);
+  document.getElementById('tdfGold').textContent=tdfGold;
+  if(broadcast!==false&&tdfChannel)tdfChannel.send({type:'broadcast',event:'tdf_sell',payload:{x:x,y:y}});
+  return true;
+}
+function tdfTowerAttack(tw){
+  var cfg=TD_TOWERS[tw.type];
+  if(cfg.goldPerWave)return;
+  if(tw.cooldown>0){tw.cooldown-=200;return;}
+  var target=null,targetDist=Infinity;
+  for(var i=0;i<tdfEnemies.length;i++){
+    var e=tdfEnemies[i];
+    var dx=e.x-tw.x,dy=e.y-tw.y;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    var range=cfg.range+(tw.level-1)*0.05*cfg.range;
+    if(dist<=range&&dist<targetDist){target=e;targetDist=dist;}
+  }
+  if(!target)return;
+  var dmg=cfg.damage+(tw.level-1)*Math.floor(cfg.damage*0.3);
+  if(cfg.weakCannon&&tw.type==='cannon')dmg*=2;
+  target.hp-=dmg;tw.cooldown=cfg.cooldown*(1-(tw.level-1)*0.1);
+  if(cfg.splash){
+    var splashR=cfg.splash||1;
+    for(var j=0;j<tdfEnemies.length;j++){
+      var ej=tdfEnemies[j];if(ej===target)continue;
+      var dx2=ej.x-target.x,dy2=ej.y-target.y;
+      if(Math.sqrt(dx2*dx2+dy2*dy2)<=splashR)ej.hp-=Math.floor(dmg*0.5);
+    }
+  }
+  if(cfg.slow){
+    target.slow=cfg.slow+(tw.level-1)*0.05;
+    target.slowUntil=Date.now()+cfg.slowDur;
+  }
+  _playTone(tw.type==='cannon'?150:tw.type==='arrow'?600:300,0.05,0.08);
+}
+
 // ====== BATTLE TETRIS ======
 var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0,_bTotalCleared=0;
 var _b1Board=[],_b1Cur=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
