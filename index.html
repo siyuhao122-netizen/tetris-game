@@ -1853,7 +1853,8 @@ function _bStartPoll(){
 document.getElementById("battleResultBtn").onclick=function(){
   document.getElementById("battleResultOverlay").style.display="none";
   if(_bPollId){clearInterval(_bPollId);_bPollId=null;}
-  _bCleanupRoom();ss("screenBattleLobby");
+  if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}
+  ss("screenBattleLobby");_showMainLobby();
 };
 
 // Room management
@@ -2061,7 +2062,7 @@ function _bCleanupRoom(){
   if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}
   if(_bRoom&&_bRoom.id){_sbReq('DELETE','/rest/v1/rooms?id=eq.'+_bRoom.id);_bRoom=null;}
 }
-document.getElementById("btnBackBG").onclick=function(){if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}if(_bPollId){clearInterval(_bPollId);_bPollId=null;}_bCleanupRoom();ss("screenBattleLobby");_showMainLobby();};
+document.getElementById("btnBackBG").onclick=function(){_bLose();};
 document.getElementById("tDiffBattle").onclick=function(){_initAudio();ss("screenBattleLobby");_showMainLobby();};
 
 // Battle button wiring
