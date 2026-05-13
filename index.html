@@ -18,6 +18,18 @@
   .game-card:active { border-color: #4af; }
   .game-card .name { font-size: 18px; font-weight: bold; }
   .game-card .desc { font-size: 12px; color: #888; margin-top: 4px; }
+  .game-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;}
+  .gcard{background:var(--card-bg);border:1px solid var(--bdr);border-radius:14px;padding:16px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform 0.1s,border-color 0.15s,box-shadow 0.15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  .gcard:active{transform:scale(0.96);border-color:var(--accent);box-shadow:0 0 20px rgba(80,120,255,0.2);}
+  .gcard .gicon{font-size:36px;margin-bottom:2px;}
+  .gcard .gname{font-size:15px;font-weight:bold;color:var(--txt);}
+  .gcard .gdesc{font-size:10px;color:var(--sub);line-height:1.3;}
+  .gcard.tetris{border-top:3px solid #4af;}
+  .gcard.snake{border-top:3px solid #4f8;}
+  .gcard.g2048{border-top:3px solid #f90;}
+  .gcard.mine{border-top:3px solid #f55;}
+  .gcard.gomoku{border-top:3px solid #a0f;}
+  .gcard.breakout{border-top:3px solid #ff0;}
   .high-score-row { font-size: 11px; color: #888; margin-top: 6px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .diff-title { font-size: 22px; font-weight: bold; margin-bottom: 24px; color: #4af; }
   .diff-card { background: #111; border: 1px solid #333; border-radius: 14px; padding: 16px 24px; width: 100%; max-width: 280px; margin-bottom: 10px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: border-color 0.1s; }
@@ -182,7 +194,6 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="menu-title">哥布林小游戏</div>
   <div class="menu-sub">Goblin's Game Land</div>
   <div id="menuUsername" style="font-size:14px;color:var(--accent);margin-bottom:10px;cursor:pointer;" onclick="if(_userId){_showSettings();}else{_showAuthModal('login');}">点击登录</div>
-  <button class="menu-btn" id="btnLeaderboard" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;margin-bottom:14px;">🏆 排行榜</button>
   <button class="menu-btn" id="btnAchieve" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#a0f;font-size:16px;padding:10px 40px;margin-bottom:14px;">🏆 成就</button>
   <button class="menu-btn" id="btnStats" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#ff0;font-size:16px;padding:10px 40px;margin-bottom:14px;">📊 数据统计</button>
   <button class="menu-btn" id="btnStartMenu">🎮 开始游戏</button>
@@ -192,54 +203,17 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <div class="screen" id="screenSelect">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackMenu">← 返回</button></div>
   <div class="select-title">🎯 选择游戏</div>
-  <div class="game-card" id="cardTetris">
-    <div class="name">🧱 俄罗斯方块</div>
-    <div class="desc">经典下落消除，手机触屏优化版</div>
-    <div class="high-score-row" id="tHsRow">
-      <span>简单: <span id="thsEasy">0</span></span>
-      <span>普通: <span id="thsNormal">0</span></span>
-      <span>困难: <span id="thsHard">0</span></span>
-    </div>
-  </div>
-  <div class="game-card" id="cardSnake">
-    <div class="name">🐍 贪吃蛇</div>
-    <div class="desc">经典贪吃蛇，吃食物变长，触屏优化版</div>
-    <div class="high-score-row" id="sHsRow">
-      <span>简单: <span id="shsEasy">0</span></span>
-      <span>普通: <span id="shsNormal">0</span></span>
-      <span>困难: <span id="shsHard">0</span></span>
-    </div>
-  </div>
-  <div class="game-card" id="card2048">
-    <div class="name">🧩 2048</div>
-    <div class="desc">合并数字，挑战2048！滑动触屏版</div>
-    <div class="high-score-row" id="gHsRow">
-      <span>最高: <span id="ghsBest">0</span></span>
-    </div>
-  </div>
-
-  <div class="game-card" id="cardMinesweeper">
-    <div class="name">💣 扫雷</div>
-    <div class="desc">经典扫雷游戏，触屏标记版</div>
-    <div class="high-score-row" id="mHsRow">
-      <span>简单: <span id="mhsEasy">0</span>s</span>
-      <span>普通: <span id="mhsNormal">0</span>s</span>
-      <span>困难: <span id="mhsHard">0</span>s</span>
-    </div>
-  </div>
-
-  <div class="game-card" id="cardGomoku">
-    <div class="name">⚫ 五子棋</div>
-    <div class="desc">15路棋盘，好友对战/人机/匹配</div>
-  </div>
-  <div class="game-card" id="cardBreakout">
-    <div class="name">🧱 打砖块</div>
-    <div class="desc">滑动挡板，消灭砖块！</div>
-    <div class="high-score-row" id="bHsRow">
-      <span>最高: <span id="bhsBest">0</span></span>
-    </div>
+  <div class="game-grid">
+    <div class="gcard tetris" id="cardTetris"><div class="gicon">🧱</div><div class="gname">俄罗斯方块</div><div class="gdesc">经典下落消除</div></div>
+    <div class="gcard snake" id="cardSnake"><div class="gicon">🐍</div><div class="gname">贪吃蛇</div><div class="gdesc">吃食物变长</div></div>
+    <div class="gcard g2048" id="card2048"><div class="gicon">🧩</div><div class="gname">2048</div><div class="gdesc">合并数字挑战</div></div>
+    <div class="gcard mine" id="cardMinesweeper"><div class="gicon">💣</div><div class="gname">扫雷</div><div class="gdesc">触屏标记版</div></div>
+    <div class="gcard gomoku" id="cardGomoku"><div class="gicon">⚫</div><div class="gname">五子棋</div><div class="gdesc">好友/人机/匹配</div></div>
+    <div class="gcard breakout" id="cardBreakout"><div class="gicon">🧱</div><div class="gname">打砖块</div><div class="gdesc">滑动消灭砖块</div></div>
   </div>
 </div>
+
+
 
 
   
@@ -386,6 +360,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="diff-card" id="tDiffBattle" style="border-color:#f90;">
     <div class="dname">🆚 对战</div><div class="ddesc">实时对战，消行给对方加垃圾！</div>
   </div>
+  <button class="menu-btn" id="btnTetrisLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
 </div>
 
   
@@ -411,6 +386,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="dname">🔴 困难</div><div class="ddesc">150ms/步，极速挑战</div>
     <div class="dhigh">🏆 最高 <span id="sdhsHard">0</span></div>
   </div>
+  <button class="menu-btn" id="btnSnakeLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
 </div>
 
 <!-- TETRIS GAME SCREEN -->
@@ -477,6 +453,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="dname">♾️ 无尽</div><div class="ddesc">无上限，能走多远走多远</div>
     <div class="dhigh">🏆 最高 <span id="gdhsEndless">0</span></div>
   </div>
+  <button class="menu-btn" id="btn2048LB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
 </div>
 
 
@@ -496,6 +473,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="dname">🔴 困难</div><div class="ddesc">7行砖块，球速更快</div>
     <div class="dhigh">🏆 最高 <span id="bdhsHard">0</span></div>
   </div>
+  <button class="menu-btn" id="btnBreakoutLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
 </div>
 
 <!-- 2048 GAME SCREEN -->
@@ -600,6 +578,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="diff-card" id="mDiffCustom" style="border-color:#a0f;">
     <div class="dname">🎛️ 自定义</div><div class="ddesc">自由设定棋盘大小、雷数、提示</div>
   </div>
+  <button class="menu-btn" id="btnMineLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
 </div>
 
 <!-- CUSTOM MINESWEEPER MODAL -->
@@ -707,6 +686,19 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 </div>
 
 <!-- GOMOKU AI DIFFICULTY -->
+<!-- PER-GAME LEADERBOARD (reused for Tetris/Snake/2048/Minesweeper/Breakout) -->
+<div class="screen" id="screenGameLB">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackGameLB">← 返回</button></div>
+  <div class="select-title" id="gameLbTitle">🏆 排行榜</div>
+  <div style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;" id="gameLbDiffTabs"></div>
+  <table class="stats-table" id="gameLbTable">
+    <thead id="gameLbHead"></thead>
+    <tbody id="gameLbBody"></tbody>
+  </table>
+  <div class="stats-empty" id="gameLbEmpty">暂无排行数据</div>
+  <button class="ctrl-btn" id="gameLbRefresh" style="margin-top:12px;font-size:14px;padding:8px 24px;">🔄 刷新</button>
+</div>
+
 <div class="screen" id="screenGomokuAI">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackGomokuAI">← 返回</button></div>
   <div class="select-title">🤖 人机对战</div>
@@ -821,38 +813,6 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="stats-empty" id="statsEmpty">暂无数据，快去玩两局吧 👺</div>
 </div>
 
-<!-- LEADERBOARD SCREEN -->
-<div class="screen" id="screenLeaderboard">
-  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackLB">← 返回</button></div>
-  <div class="select-title">🏆 排行榜</div>
-  <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;" id="lbGameTabs">
-    <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-game="tetris">🧱 方块</button>
-    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="snake">🐍 蛇</button>
-    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="minesweeper">💣 扫雷</button>
-    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="breakout">🧱 打砖块</button>
-  </div>
-  <div style="display:none;align-items:center;justify-content:flex-end;width:100%;max-width:380px;margin-bottom:6px;" id="lbSortRow">
-    <span style="font-size:11px;color:#888;">排序:</span>
-    <select id="lbSortSel" style="margin-left:4px;padding:4px 8px;border-radius:6px;border:1px solid #555;background:#111;color:#fff;font-size:12px;">
-      <option value="winrate">胜率</option>
-      <option value="games">场次</option>
-      <option value="streak">最高连胜</option>
-    </select>
-  </div>
-  <div style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;" id="lbDiffTabs">
-    <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button>
-    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button>
-    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button>
-    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;display:none;" data-diff="daily" id="lbDailyTab">📅 每日</button>
-  </div>
-  <div style="display:none;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;" id="lbSubDiff"></div>
-  <table class="stats-table" id="lbTable">
-    <thead><tr><th>排名</th><th>玩家</th><th id="lbScoreHeader">分数</th><th>时间</th></tr></thead>
-    <tbody id="lbBody"></tbody>
-  </table>
-  <div class="stats-empty" id="lbEmpty">暂无排行数据</div>
-  <button class="ctrl-btn" id="lbRefresh" style="margin-top:12px;font-size:14px;padding:8px 24px;">🔄 刷新</button>
-</div>
 
 <!-- GAME OVER OVERLAY -->
 <div class="overlay" id="gameOverOverlay">
@@ -984,7 +944,7 @@ function _showAuthModal(mode) {
       _sbReq('GET', '/rest/v1/users?username=eq.' + encodeURIComponent(user) + '&select=id&limit=1').then(function(r) { return r.json(); })
       .then(function(d) {
         if (d && d.length > 0) { errEl.textContent = '账号已被注册'; errEl.style.display = 'block'; return; }
-        return _sbReq('POST', '/rest/v1/users', { username: user, password_hash: _hashPw(pass), display_name: dname });
+        return _sbReq('POST', '/rest/v1/users', { username: user, password_hash: _hashPw(pass), display_name: dname, status: 'online', last_seen: new Date().toISOString() });
       }).then(function(r) {
         if (!r || !r.ok) return;
         return r.json();
@@ -1495,6 +1455,7 @@ function gWin(){recordGame("2048",gc,gScore,gTimer,1);document.getElementById("g
   _initAudio();
   document.addEventListener("click",function(){_initAudio();},{once:true});
   uhs();
+  if(_userId)_submitLB("2048",gc,gScore,gTimer,null,gc==='endless'?{max_value:gMaxTile()}:undefined);
 }
 
 function gLose(){
@@ -1511,6 +1472,7 @@ function gLose(){
   _initAudio();
   document.addEventListener("click",function(){_initAudio();},{once:true});
   uhs();
+  if(_userId)_submitLB("2048",gc,gScore,gTimer,null,gc==='endless'?{max_value:gMaxTile()}:undefined);
 }
 
 function gMaxTile(){
@@ -2385,7 +2347,22 @@ function _presenceState(){
 function _pushPresence(uid){
   var activeUid=uid||_userId;
   if(!activeUid)return Promise.resolve();
-  return _sbReq('PATCH','/rest/v1/users?id=eq.'+activeUid,{last_seen:new Date().toISOString(),status:_presenceState()}).catch(function(){});
+  var body={last_seen:new Date().toISOString(),status:_presenceState()};
+  return _sbReq('PATCH','/rest/v1/users?id=eq.'+activeUid,body).catch(function(e){
+    console.error('_pushPresence failed, retrying in 2s:',e);
+    return new Promise(function(resolve){
+      setTimeout(function(){
+        fetch(_sbUrl+'/rest/v1/users?id=eq.'+activeUid,{
+          method:'PATCH',
+          headers:{'apikey':_sbKey,'Authorization':'Bearer '+_sbKey,'Content-Type':'application/json','Prefer':'return=minimal','Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache'},
+          cache:'no-store',body:JSON.stringify(body)
+        }).then(resolve).catch(function(e2){
+          console.error('_pushPresence retry failed:',e2);
+          resolve();
+        });
+      },2000);
+    });
+  });
 }
 function _stopSessionSync(uid){
   if(_chatPoll){clearInterval(_chatPoll);_chatPoll=null;}
@@ -3043,23 +3020,21 @@ function recordGame(g,d,score,timeSec,won){
 // ===== LEADERBOARD (Supabase) =====
 var _lbGame = "tetris", _lbDiff = "easy";
 
-function _submitLB(game, difficulty, score, timeSec, callback) {
+function _submitLB(game, difficulty, score, timeSec, callback, extra) {
   if (!_userId) { if (callback) callback(false); return; }
   function _showSync(msg) {
     _achieveBadge(msg, '📡');
-    var el = document.getElementById("goDetail");
-    if (el && document.getElementById("gameOverOverlay").classList.contains("active")) {
+    var el = document.getElementById('goDetail');
+    if (el && document.getElementById('gameOverOverlay').classList.contains('active')) {
       el.textContent += ' | ' + msg;
     }
   }
-  // Always insert new record (no update allowed by RLS)
-  _sbReq('POST', '/rest/v1/leaderboard', {
-    user_id: parseInt(_userId), game: game, difficulty: difficulty,
-    score: score, time: timeSec
-  }).then(function() { _showSync('已同步排行榜'); if (callback) callback(true); })
-  .catch(function(e) { _showSync('请求失败'); if (callback) callback(false); });
+  var body = { user_id: parseInt(_userId), game: game, difficulty: difficulty, score: score, time: timeSec };
+  if (extra) { for (var k in extra) body[k] = extra[k]; }
+  _sbReq('POST', '/rest/v1/leaderboard', body)
+    .then(function() { _showSync('已同步排行榜'); if (callback) callback(true); })
+    .catch(function(e) { _showSync('请求失败'); if (callback) callback(false); });
 }
-
 function _loadLB(callback) {
   var orderCol = _lbGame === 'minesweeper' ? 'time' : 'score';
   var orderDir = _lbGame === 'minesweeper' ? 'asc' : 'desc';
@@ -3102,51 +3077,91 @@ function _loadLB(callback) {
 
 function _esc(s) { var d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
 
-function _showLBEmpty() {
-  document.getElementById("lbBody").innerHTML = "";
-  document.getElementById("lbEmpty").style.display = "block";
+var _lbGame=null,_lbDiff=null,_lbBackScreen=null;
+
+function _showGameLB(game, backScreen){
+  if(!_userId){_showAuthModal('login');return;}
+  _lbGame=game;_lbBackScreen=backScreen;
+  var titles={tetris:'🧱 俄罗斯方块 排行榜',snake:'🐍 贪吃蛇 排行榜','2048':'🧩 2048 排行榜',minesweeper:'💣 扫雷 排行榜',breakout:'🧱 打砖块 排行榜'};
+  var diffs={tetris:['easy','normal','hard'],snake:['easy','normal','hard'],'2048':['easy','normal','hard','endless'],minesweeper:['easy','normal','hard'],breakout:['easy','normal','hard']};
+  var labels={easy:'🟢 简单',normal:'🟡 普通',hard:'🔴 困难',endless:'♾️ 无限'};
+  document.getElementById('gameLbTitle').textContent=titles[game]||'排行榜';
+  var tabsHtml=diffs[game].map(function(d,i){
+    return '<button class="ctrl-btn stat-tab'+(i===0?' active':'')+'" style="font-size:12px;padding:5px 10px;" data-diff="'+d+'">'+labels[d]+'</button>';
+  }).join('');
+  document.getElementById('gameLbDiffTabs').innerHTML=tabsHtml;
+  _lbDiff=diffs[game][0];
+  document.querySelectorAll('#gameLbDiffTabs .stat-tab').forEach(function(t){
+    t.onclick=function(){
+      document.querySelectorAll('#gameLbDiffTabs .stat-tab').forEach(function(x){x.classList.remove('active');});
+      this.classList.add('active');
+      _lbDiff=this.getAttribute('data-diff');
+      _loadGameLB();
+    };
+  });
+  ss('screenGameLB');
+  _loadGameLB();
 }
 
-function _initLBTabs() {
-  document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(t) {
-    t.onclick = function() {
-      document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(x) { x.classList.remove("active"); });
-      this.classList.add("active");
-      _lbGame = this.getAttribute("data-game");
-      document.getElementById("lbScoreHeader").textContent = _lbGame === 'minesweeper' ? '用时' : '分数';
-      var dt=document.getElementById("lbDailyTab");
-      if(dt)dt.style.display=_lbGame==="minesweeper"?"":"none";
-      if(_lbGame!=="minesweeper"&&_lbDiff==="daily"){_lbDiff="easy";
-        document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
-        var ft=document.querySelector("#lbDiffTabs .stat-tab[data-diff='easy']");if(ft)ft.classList.add("active");
+function _loadGameLB(){
+  var isMine=_lbGame==='minesweeper';
+  var is2048=_lbGame==='2048';
+  var isEndless=is2048&&_lbDiff==='endless';
+  var orderCol=isMine?'time':(isEndless?'max_value':'time');
+  var orderDir=isMine?'asc':(isEndless?'desc':'asc');
+  var selectCols='id,score,time,created_at,user_id,users(display_name)';
+  if(isEndless)selectCols='id,score,time,max_value,created_at,user_id,users(display_name)';
+  var q='/rest/v1/leaderboard?game=eq.'+_lbGame+'&difficulty=eq.'+_lbDiff+'&select='+selectCols+'&order='+orderCol+'.'+orderDir+'&limit=200';
+  if(isMine)q+='&time=gt.0';
+  _sbReq('GET',q).then(function(r){return r.json();}).then(function(data){
+    var best={};
+    (data||[]).forEach(function(r){
+      var uid=r.user_id;
+      if(!best[uid])best[uid]=r;
+      else {
+        if(isMine||(!isEndless&&is2048)){if(r.time<best[uid].time)best[uid]=r;}
+        else if(isEndless){if((r.max_value||0)>(best[uid].max_value||0)||((r.max_value||0)===(best[uid].max_value||0)&&r.score>best[uid].score))best[uid]=r;}
+        else{if(r.score>best[uid].score)best[uid]=r;}
       }
-      _loadLB();
-    };
-  });
-  document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(t) {
-    t.onclick = function() {
-      document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(x) { x.classList.remove("active"); });
-      this.classList.add("active");
-      _lbDiff = this.getAttribute("data-diff");
-      _loadLB();
-    };
-  });
+    });
+    var sorted=Object.values(best);
+    if(isMine||(!isEndless&&is2048))sorted.sort(function(a,b){return a.time-b.time;});
+    else if(isEndless)sorted.sort(function(a,b){return (b.max_value||0)-(a.max_value||0)||b.score-a.score;});
+    else sorted.sort(function(a,b){return b.score-a.score;});
+    var headCols=isEndless?['排名','玩家','分数','最大值','时间']:(isMine?['排名','玩家','用时','时间']:(is2048?['排名','玩家','分数','耗时','时间']:['排名','玩家','分数','时间']));
+    document.getElementById('gameLbHead').innerHTML='<tr>'+headCols.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>';
+    var rows=[];
+    sorted.slice(0,50).forEach(function(r,i){
+      var isMe=String(r.user_id)===String(_userId);
+      var cls=isMe?' class="me"':'';
+      var dname=r.users?r.users.display_name:'--';
+      var d=new Date(r.created_at);var dt=r.created_at?(d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')):'--';
+      var val;
+      if(isEndless)val='<td>'+(r.max_value||r.score)+'</td><td>'+dt+'</td>';
+      else if(isMine)val='<td>'+(r.time||0)+'s</td><td>'+dt+'</td>';
+      else if(is2048)val='<td>'+r.score+'</td><td>'+(r.time?(String(Math.floor(r.time/60)).padStart(2,'0')+':'+String(r.time%60).padStart(2,'0')):'--')+'</td><td>'+dt+'</td>';
+      else val='<td>'+r.score+'</td><td>'+dt+'</td>';
+      rows.push('<tr'+cls+'><td>'+(i+1)+'</td><td>'+_esc(dname)+'</td>'+val+'</tr>');
+    });
+    document.getElementById('gameLbBody').innerHTML=rows.join('');
+    document.getElementById('gameLbEmpty').style.display=rows.length?'none':'block';
+  }).catch(function(){_showLBEmpty();});
 }
-_initLBTabs();
 
-document.getElementById("btnBackLB").onclick = function() { ss("screenMenu"); };
-document.getElementById("lbRefresh").onclick = function() { _loadLB(); };
-
-function _showLB() {
-  if (!_userId) {
-    _showAuthModal('login');
-    return;
-  }
-  ss("screenLeaderboard");
-  _loadLB();
+function _showLBEmpty() {
+  document.getElementById("gameLbBody").innerHTML = "";
+  document.getElementById("gameLbEmpty").style.display = "block";
 }
 
-document.getElementById("btnLeaderboard").onclick = function() { _showLB(); };
+
+document.getElementById('btnBackGameLB').onclick=function(){ss(_lbBackScreen||'screenSelect');};
+document.getElementById('gameLbRefresh').onclick=function(){_loadGameLB();};
+
+document.getElementById('btnTetrisLB').onclick=function(){_showGameLB('tetris','screenTetrisDiff');};
+document.getElementById('btnSnakeLB').onclick=function(){_showGameLB('snake','screenSnakeDiff');};
+document.getElementById('btn2048LB').onclick=function(){_showGameLB('2048','screen2048Diff');};
+document.getElementById('btnMineLB').onclick=function(){_showGameLB('minesweeper','screenMinesweeperDiff');};
+document.getElementById('btnBreakoutLB').onclick=function(){_showGameLB('breakout','screenBreakoutDiff');};
 
 document.getElementById("btnStats").onclick=function(){
   _initAudio();
