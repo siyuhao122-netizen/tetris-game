@@ -183,6 +183,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="menu-sub">Goblin's Game Land</div>
   <div id="menuUsername" style="font-size:14px;color:var(--accent);margin-bottom:10px;cursor:pointer;" onclick="if(_userId){_showSettings();}else{_showAuthModal('login');}">点击登录</div>
   <button class="menu-btn" id="btnLeaderboard" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;margin-bottom:14px;">🏆 排行榜</button>
+  <button class="menu-btn" id="btnAchieve" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#a0f;font-size:16px;padding:10px 40px;margin-bottom:14px;">🏆 成就</button>
   <button class="menu-btn" id="btnStats" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#ff0;font-size:16px;padding:10px 40px;margin-bottom:14px;">📊 数据统计</button>
   <button class="menu-btn" id="btnStartMenu">🎮 开始游戏</button>
 </div>
@@ -761,6 +762,13 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 </div>
 </div>
 
+<!-- ACHIEVEMENT SCREEN -->
+<div class="screen" id="screenAchieve">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackAch">← 返回</button></div>
+  <div class="select-title">🏆 成就 <span id="achProgress" style="font-size:14px;color:#888;"></span></div>
+  <div id="achList" style="width:100%;max-width:400px;margin-top:8px;"></div>
+</div>
+
 <!-- STATS SCREEN -->
 <div class="screen" id="screenStats">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackStats">← 返回</button></div>
@@ -790,6 +798,13 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="snake">🐍 蛇</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="minesweeper">💣 扫雷</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="breakout">🧱 打砖块</button>
+    <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="gomoku">⚫ 五子棋</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbSortTabs">
+    <span style="font-size:11px;color:#888;line-height:28px;">排序:</span>
+    <button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;" data-sort="games">场次</button>
+    <button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sort="winrate">胜率</button>
+    <button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sort="streak">连胜</button>
   </div>
   <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbDiffTabs">
     <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button>
@@ -1047,7 +1062,9 @@ function tgs(){var c=TD[tc];return Math.min(Math.max(80,c.b-(tlv-1)*70),Math.max
 function tsp(){if(!tn)tn=trp();tcu={shape:tn.shape.map(function(r){return r.slice();}),x:Math.floor((10-tn.shape[0].length)/2),y:0,type:tn.type};tn=trp();if(!tcp(tcu.shape,tcu.x,tcu.y)){tg=1;tgo();}tda();}
 function tlp(){if(!tcu)return;for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by=tcu.y+r;if(by>=0)tb[by][tcu.x+c]=tcu.type+1;}_playDrop();tsc+=Math.floor(36*dm(tc));tse.textContent=tsc;_scorePop(tse);tcl();tsp();}
 function tIsTSpin(){if(!tcu||tcu.type!==5)return 0;var cx=tcu.x,cy=tcu.y,corners=0;var cks=[[0,0],[2,0],[0,2],[2,2]];for(var i=0;i<4;i++){var ccx=cx+cks[i][0],ccy=cy+cks[i][1];if(ccx<0||ccx>=10||ccy<0||ccy>=20||(ccy>=0&&tb[ccy]&&tb[ccy][ccx]))corners++;}return corners>=3?1:0;}
-function tcl(){var c=0;var _fl=[];for(var r=19;r>=0;r--){if(tb[r].every(function(v){return v!==0;})){_fl.push(r);tb.splice(r,1);tb.unshift(new Array(10).fill(0));c++;r++;}}if(c>0){for(var _fi=0;_fi<_fl.length;_fi++){tcx.fillStyle="rgba(255,255,255,0.8)";tcx.fillRect(0,_fl[_fi]*T_CELL,10*T_CELL,T_CELL);}_playClear();var _tSpin=_tLastRotate?tIsTSpin():0;var baseLine=100*dm(tc);var multiM=[0,1.0,2.5,4.5,7.0][Math.min(c,4)];var comboM=_tCombo>=2?2.5*(_tCombo-1):0;var effM=Math.max(multiM,comboM);if(_tSpin)effM*=2;tsc+=Math.floor(baseLine*effM);tse.textContent=tsc;_scorePop(tse);tln+=c;_tCombo++;tlv=Math.floor(tln/10)+1;if(_tSpin)_achieveBadge("T-SPIN!","✨");if(_tCombo>1)_achieveBadge("Combo x"+_tCombo+"!","🔥");tui();trd();}else{_tCombo=0;}_tLastRotate=0;}
+function tcl(){var c=0;var _fl=[];for(var r=19;r>=0;r--){if(tb[r].every(function(v){return v!==0;})){_fl.push(r);tb.splice(r,1);tb.unshift(new Array(10).fill(0));c++;r++;}}if(c>0){for(var _fi=0;_fi<_fl.length;_fi++){tcx.fillStyle="rgba(255,255,255,0.8)";tcx.fillRect(0,_fl[_fi]*T_CELL,10*T_CELL,T_CELL);}_playClear();var _tSpin=_tLastRotate?tIsTSpin():0;var baseLine=100*dm(tc);var multiM=[0,1.0,2.5,4.5,7.0][Math.min(c,4)];var comboM=_tCombo>=2?2.5*(_tCombo-1):0;var effM=Math.max(multiM,comboM);if(_tSpin)effM*=2;tsc+=Math.floor(baseLine*effM);tse.textContent=tsc;_scorePop(tse);tln+=c;_tCombo++;tlv=Math.floor(tln/10)+1;if(_tSpin){_achStats.tetris_tspin_count=(_achStats.tetris_tspin_count||0)+1;_achieveBadge("T-SPIN!","✨");if(_achStats.tetris_tspin_count>=3)_unlockAch('tetris_tspin3');}
+if(_tCombo>1)_achieveBadge("Combo x"+_tCombo+"!","🔥");
+if(c>=4)_unlockAch('tetris_tetris');tui();trd();}else{_tCombo=0;}_tLastRotate=0;}
 function tml(){if(!tcu||tg||tp)return;if(tcp(tcu.shape,tcu.x-1,tcu.y)){tcu.x--;_tLastRotate=0;_playMove();tda();}}
 function tmr(){if(!tcu||tg||tp)return;if(tcp(tcu.shape,tcu.x+1,tcu.y)){tcu.x++;tda();}}
 function trt(){if(!tcu||tg||tp)return;_playRotate();var rot=tcu.shape[0].map(function(_,i){return tcu.shape.map(function(r){return r[i];}).reverse();});for(var k=0;k<5;k++){var kk=[0,-1,1,-2,2][k];if(tcp(rot,tcu.x+kk,tcu.y)){tcu.shape=rot;tcu.x+=kk;_tLastRotate=1;tda();return;}}}
@@ -1062,7 +1079,9 @@ function tui(){tse.textContent=tsc;tle.textContent=tlv;tlie.textContent=tln;}
 function tdb(){tcx.clearRect(0,0,200,400);tcx.strokeStyle="#1a1a2e";for(var r=0;r<=20;r++){tcx.beginPath();tcx.moveTo(0,r*20);tcx.lineTo(200,r*20);tcx.stroke();}for(var c=0;c<=10;c++){tcx.beginPath();tcx.moveTo(c*20,0);tcx.lineTo(c*20,400);tcx.stroke();}for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(tb[r][c]===8){tcx.fillStyle="#333";tcx.fillRect(c*20+1,r*20+1,18,18);}else if(tb[r][c]){var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];tcx.fillStyle=CL[tb[r][c]-1];tcx.fillRect(c*20+1,r*20+1,18,18);}}if(tcu&&!tg){var gy=tcu.y;while(tcp(tcu.shape,tcu.x,gy+1))gy++;for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by=gy+r;if(by<0)continue;tcx.fillStyle="rgba(255,255,255,0.07)";tcx.fillRect((tcu.x+c)*20+1,by*20+1,18,18);tcx.strokeStyle="rgba(255,255,255,0.15)";tcx.strokeRect((tcu.x+c)*20+1,by*20+1,18,18);}}if(tcu&&!tg){var CL2=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by2=tcu.y+r;if(by2<0)continue;tcx.fillStyle=CL2[tcu.type];tcx.fillRect((tcu.x+c)*20+1,by2*20+1,18,18);}}}
 function tdp(){tncx.clearRect(0,0,60,60);if(tn){var s=tn.shape,rs=s.length,cs=s[0].length,ox=(60-cs*16)/2,oy=(60-rs*16)/2;var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<rs;r++)for(var c=0;c<cs;c++){if(!s[r][c])continue;tncx.fillStyle=CL[tn.type];tncx.fillRect(ox+c*16+1,oy+r*16+1,14,14);}}}
 function tda(){tdb();tdp();}
-function tgo(){_playGameOver();tsc=Math.floor(tsc*_vipMultiplier());recordGame("tetris",tc,tsc,tgt,0);var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();if(_userId)_submitLB("tetris",tc,tsc,0);}
+function tgo(){_playGameOver();tsc=Math.floor(tsc*_vipMultiplier());recordGame("tetris",tc,tsc,tgt,0);var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();if(_userId)_submitLB("tetris",tc,tsc,0);
+if(tsc>=5000)_unlockAch('tetris_score5000');if(tln>=100)_unlockAch('tetris_lines100');if(_tCombo>=5)_unlockAch('tetris_combo5');
+}
 var SD={easy:{l:"\u7b80\u5355",s:300,e:"🟢"},normal:{l:"\u666e\u901a",s:250,e:"🟡"},hard:{l:"\u56f0\u96be",s:200,e:"🔴"}};
 var _snakeObsOn=parseInt(localStorage.getItem("goblin_snake_obs")||"1",10);var _snakeObsShuffle=parseInt(localStorage.getItem("goblin_snake_shuffle")||"0",10);var _sGoldApple=null;var _sGoldActive=0;var _sGoldStart=0;var _sFoodCount=0;
 var sc="normal",sbody=[],sdir=1,snxt=2,sfood=null,ssc=0,sgt=0,spau=0,sgov=0,sdi=null,sti=null,sts=0,_sObstacles=[];
@@ -1115,7 +1134,7 @@ if(_sGoldActive&&Date.now()-_sGoldStart>10000){_sGoldActive=0;}
 sbody.unshift(nh);
 // Golden apple eat check
 var _ateGold=0;
-if(_sGoldApple&&nh.x===_sGoldApple.x&&nh.y===_sGoldApple.y){_ateGold=1;_sGoldApple=null;_sGoldActive=1;_sGoldStart=Date.now();_achieveBadge("🍎 3倍分数！","✨");}
+if(_sGoldApple&&nh.x===_sGoldApple.x&&nh.y===_sGoldApple.y){_ateGold=1;_sGoldApple=null;_sGoldActive=1;_sGoldStart=Date.now();_achStats.snake_golds=(_achStats.snake_golds||0)+1;_achieveBadge("🍎 3倍分数！","✨");}
 if(nh.x===sfood.x&&nh.y===sfood.y){_playEat();var sm=(dm(sc))*(_snakeObsOn?2:1)*(_snakeObsShuffle?2:1)*(_sGoldActive?3:1);ssc+=Math.floor(10*sm);sfood=null;var ospd=SD[sc].s;var len=sbody.length;var nspd=ospd;if(sc==="easy"&&len>=20)nspd=250;else if(sc==="normal"&&len>=15)nspd=200;else if(sc==="hard"){if(len>=20)nspd=140;else if(len>=10)nspd=175;}if(nspd<ospd){SD[sc].s=nspd;sRd();sste.textContent="⚡ 提速至 "+nspd+"ms！";setTimeout(function(){sste.textContent="";},2000);}if(_snakeObsShuffle){var _oc=_sObstacles.length;_sObstacles=[];var _hd=sbody[0];for(var _oi=0;_oi<500&&_sObstacles.length<_oc;_oi++){var ox=Math.floor(Math.random()*G),oy=Math.floor(Math.random()*G);if(Math.abs(ox-_hd.x)<=5&&Math.abs(oy-_hd.y)<=5)continue;var _ok2=1;for(var _oj=0;_oj<_sObstacles.length;_oj++)if(_sObstacles[_oj].x===ox&&_sObstacles[_oj].y===oy){_ok2=0;break;}if(_ok2)_sObstacles.push({x:ox,y:oy});}}sspawn();_sFoodCount++;
 // Golden apple spawn (every 3 foods)
 if(!_sGoldApple&&!_sGoldActive&&!sgov&&_sFoodCount>=3){_sFoodCount=0;
@@ -1138,7 +1157,10 @@ function sTp(){if(sgov){return;}spau=!spau;if(spau)_playPause();else _playResume
 function sda(){scx.clearRect(0,0,340,340);scx.strokeStyle="#1a2";scx.lineWidth=0.5;for(var r=0;r<=G;r++){scx.beginPath();scx.moveTo(0,r*SZ);scx.lineTo(340,r*SZ);scx.stroke();}for(var c=0;c<=G;c++){scx.beginPath();scx.moveTo(c*SZ,0);scx.lineTo(c*SZ,340);scx.stroke();}if(sfood){scx.fillStyle="#f44";scx.beginPath();scx.arc(sfood.x*SZ+SZ/2,sfood.y*SZ+SZ/2,6,0,Math.PI*2);scx.fill();}
 if(_sGoldApple){scx.fillStyle="#fd0";scx.shadowColor="#ff0";scx.shadowBlur=6;scx.beginPath();scx.arc(_sGoldApple.x*SZ+SZ/2,_sGoldApple.y*SZ+SZ/2,7,0,Math.PI*2);scx.fill();scx.shadowBlur=0;}
 if(_sGoldActive){scx.fillStyle="rgba(255,255,0,0.15)";scx.fillRect(0,0,340,340);}for(var oi2=0;oi2<_sObstacles.length;oi2++){var ob2=_sObstacles[oi2];scx.fillStyle="#822";scx.fillRect(ob2.x*SZ+1,ob2.y*SZ+1,SZ-2,SZ-2);scx.fillStyle="#622";scx.fillRect(ob2.x*SZ+SZ/2-3,ob2.y*SZ+SZ/2-3,6,6);}for(var i=0;i<sbody.length;i++){var b=sbody[i];var gr=Math.max(0,1-i/20);scx.fillStyle="rgb("+Math.floor(50+80*gr)+","+Math.floor(180+40*gr)+","+Math.floor(50+80*gr)+")";scx.fillRect(b.x*SZ+1,b.y*SZ+1,SZ-2,SZ-2);if(i===0){scx.fillStyle="#fff";scx.fillRect(b.x*SZ+4,b.y*SZ+4,2,2);scx.fillRect(b.x*SZ+10,b.y*SZ+4,2,2);}}}
-function sgo(){_playGameOver();ssc=Math.floor(ssc*_vipMultiplier());recordGame("snake",sc,ssc,sgt,0);var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);if(_userId)_submitLB("snake",sc,ssc,0);}
+function sgo(){_playGameOver();ssc=Math.floor(ssc*_vipMultiplier());recordGame("snake",sc,ssc,sgt,0);var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);if(_userId)_submitLB("snake",sc,ssc,0);
+var slen=sbody.length;if(slen>=20)_unlockAch('snake_len20');if(slen>=30)_unlockAch('snake_len30');if(slen>=50)_unlockAch('snake_len50');
+if(sgt>=300)_unlockAch('snake_time5');_achStats.snake_golds=(_achStats.snake_golds||0);if(_achStats.snake_golds>=10)_unlockAch('snake_gold10');if(_achStats.snake_golds>=30)_unlockAch('snake_gold30');
+}
 document.getElementById("cardTetris").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenTetrisDiff");};
 document.getElementById("cardSnake").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenSnakeDiff");_syncSnakeToggles();};
 ab("sObsToggle",_toggleSnakeObs);ab("sShuffleToggle",_toggleSnakeShuffle);
@@ -1392,6 +1414,11 @@ function gMove(dir){
 }
 
 function gCheckWinLose(target){
+  for(var r=0;r<G_SIZE;r++)for(var c=0;c<G_SIZE;c++){
+    if(gBoardArr[r][c]>=2048)_unlockAch('g2048_2048');
+    if(gBoardArr[r][c]>=4096)_unlockAch('g2048_4096');
+    if(gBoardArr[r][c]>=8192)_unlockAch('g2048_8192');
+  }
   // Check win
   for(var r=0;r<G_SIZE;r++){
     for(var c=0;c<G_SIZE;c++){
@@ -1758,6 +1785,8 @@ function bGO(){
   document.getElementById("gameOverOverlay").classList.add("active");window._gog="breakout";
   _initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();
   if(_userId)_submitLB("breakout",bc,bScore,0);
+  if(bLevel>=5)_unlockAch('breakout_level5');if(bLevel>=8)_unlockAch('breakout_level10');
+  if(bScore>=500)_unlockAch('breakout_score500');
 }
 
 // Touch/mouse input for Breakout
@@ -2631,6 +2660,11 @@ function _gmRecordGame(won){
   if(!_userId)return;
   var diff=(_gmMode==='pve')?_gmAILevel:(_gmMode==='pvp_match'?'match':'friend');
   _sbReq('POST','/rest/v1/leaderboard',{user_id:parseInt(_userId),game:'gomoku',difficulty:diff,score:won?1:0,time:_gmMoves.length});
+  if(won){_achStats.gomoku_streak=(_achStats.gomoku_streak||0)+1;_achStats.gomoku_wins=(_achStats.gomoku_wins||0)+1;
+    if(_achStats.gomoku_streak>=5)_unlockAch('gomoku_win5');if(_achStats.gomoku_streak>=20)_unlockAch('gomoku_win20');
+    if(_achStats.gomoku_wins>=100)_unlockAch('gomoku_100wins');
+    if(_gmMode==='pve'&&_gmAILevel==='hard'){_achStats.gomoku_aihard_wins=(_achStats.gomoku_aihard_wins||0)+1;if(_achStats.gomoku_aihard_wins>=10)_unlockAch('gomoku_aihard10');}
+  }else{_achStats.gomoku_streak=0;}
 }
 
 // Button wiring
@@ -2697,6 +2731,155 @@ function _gmQuickMatch(){
     }
   });
 }
+
+// ===== ACHIEVEMENTS =====
+var _achDefs={
+  tetris_lines100:{t:'消行达人',d:'累计消100行',g:'tetris'},
+  tetris_tetris:{t:'方块大师',d:'一次消4行',g:'tetris'},
+  tetris_tspin3:{t:'旋转艺术家',d:'一局3次T-spin',g:'tetris'},
+  tetris_combo5:{t:'连击高手',d:'达成Combo×5',g:'tetris'},
+  tetris_score5000:{t:'高分选手',d:'单局5000分',g:'tetris'},
+  snake_len20:{t:'小蛇',d:'身长达到20',g:'snake'},
+  snake_len30:{t:'中蛇',d:'身长达到30',g:'snake'},
+  snake_len50:{t:'巨蛇',d:'身长达到50',g:'snake'},
+  snake_gold10:{t:'淘金者',d:'累计吃10个金苹果',g:'snake'},
+  snake_gold30:{t:'金苹果猎人',d:'累计吃30个金苹果',g:'snake'},
+  snake_time5:{t:'持久战',d:'一局5分钟以上',g:'snake'},
+  minesweeper_60normal:{t:'快速排雷',d:'60秒通关普通',g:'minesweeper'},
+  minesweeper_60hard:{t:'拆弹专家',d:'60秒通关困难',g:'minesweeper'},
+  minesweeper_noflag:{t:'盲排',d:'不开标记通关',g:'minesweeper'},
+  minesweeper_streak3:{t:'连胜',d:'连胜3局',g:'minesweeper'},
+  breakout_level5:{t:'破壁者',d:'连过5关',g:'breakout'},
+  breakout_level10:{t:'拆墙大师',d:'连过8关',g:'breakout'},
+  breakout_noloss3:{t:'精准',d:'连过3关不丢球',g:'breakout'},
+  breakout_score500:{t:'高分砖家',d:'单局500分',g:'breakout'},
+  gomoku_win5:{t:'五子登科',d:'5连胜',g:'gomoku'},
+  gomoku_win20:{t:'棋圣',d:'20连胜',g:'gomoku'},
+  gomoku_aihard10:{t:'AI克星',d:'人机困难10连胜',g:'gomoku'},
+  gomoku_100wins:{t:'百胜将军',d:'总计100胜',g:'gomoku'},
+  g2048_2048:{t:'2048达成',d:'合成2048',g:'2048'},
+  g2048_4096:{t:'4096达成',d:'合成4096',g:'2048'},
+  g2048_8192:{t:'8192达成',d:'合成8192',g:'2048'}
+};
+
+var _achStats={tetris_lines:0,tetris_tspin_count:0,snake_golds:0,gomoku_wins:0,gomoku_streak:0,gomoku_aihard_wins:0,minesweeper_streak:0};
+var _achCombo={tetris:0,snake:0,minesweeper:0,breakout:0,gomoku:0,'2048':0};
+try{var _achUnlocked=JSON.parse(localStorage.getItem('goblin_ach')||'{}');}catch(e){_achUnlocked={};}
+
+function _unlockAch(key){
+  if(_achUnlocked[key])return;
+  _achUnlocked[key]=Date.now();try{localStorage.setItem('goblin_ach',JSON.stringify(_achUnlocked));}catch(e){}
+  if(_userId){_sbReq('POST','/rest/v1/achievements',{user_id:parseInt(_userId),key:key});}
+  var a=_achDefs[key];if(a)_achieveBadge('🏆 '+a.t+'!','✨');
+}
+
+function _showAchievements(){
+  if(!_userId){_showAuthModal('login');return;}
+  _sbReq('GET','/rest/v1/achievements?user_id=eq.'+_userId+'&select=key').then(function(r){return r.json();}).then(function(d){
+    if(d)d.forEach(function(a){_achUnlocked[a.key]=1;});
+    var html='';var total=0;var unlocked=0;
+    for(var k in _achDefs){
+      total++;
+      var a=_achDefs[k];var has=_achUnlocked[k];
+      if(has)unlocked++;
+      var icon=has?'✅':'🔒';var op=has?'1':'0.3';
+      html+='<div style="display:inline-block;width:48%;padding:4px;opacity:'+op+';text-align:left;font-size:12px;">'+icon+' '+a.t+'<br><span style="font-size:10px;color:#888;">'+a.d+'</span></div>';
+    }
+    document.getElementById("achList").innerHTML=html;
+    document.getElementById("achProgress").textContent='('+unlocked+'/'+total+')';
+    ss("screenAchieve");
+  });
+}
+
+document.getElementById("btnAchieve").onclick=_showAchievements;
+document.getElementById("btnBackAch").onclick=function(){ss("screenMenu");};
+
+// Achievement stats tracking - called from game over functions
+function _achTrack(g,d,score,time,won){
+  // These are called inline from each game's tgo/sgo/etc
+}
+
+// ===== GOMOKU LEADERBOARD SORT =====
+var _lbSort='winrate';
+document.querySelectorAll("#lbSortTabs .stat-tab").forEach(function(t){
+  t.onclick=function(){
+    document.querySelectorAll("#lbSortTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
+    this.classList.add("active");_lbSort=this.getAttribute("data-sort");_loadLB();
+  };
+});
+
+// Update _initLBTabs to handle gomoku and sort
+var _lbDiffTabsOrig=null;
+function _updateLBDiffs(){
+  var dt=document.getElementById("lbDiffTabs");
+  if(!dt)return;
+  if(_lbGame==='gomoku'){
+    dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="hard">🔴 困难</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="match">🌐 匹配</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="friend">👥 好友</button>';
+  }else if(_lbGame==='minesweeper'){
+    dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;display:none;" data-diff="daily" id="lbDailyTab">📅 每日</button>';
+  }else{
+    dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button>';
+  }
+  // Re-bind diff tabs
+  document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(t){
+    t.onclick=function(){
+      document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
+      this.classList.add("active");_lbDiff=this.getAttribute("data-diff");_loadLB();
+    };
+  });
+}
+
+// Extend _loadLB for Gomoku sorting
+var _origLoadLB=_loadLB;
+_loadLB=function(callback){
+  if(_lbGame!=='gomoku'){return _origLoadLB(callback);}
+  if(!_sbReady){_showLBEmpty();return;}
+  var orderCol='score';var orderDir='desc';
+  if(_lbSort==='winrate'){orderCol='score';orderDir='desc';}
+  else if(_lbSort==='games'){orderCol='time';orderDir='desc';}
+  else{orderCol='score';orderDir='desc';}
+  var q='/rest/v1/leaderboard?game=eq.gomoku&difficulty=eq.'+_lbDiff+'&select=id,score,time,created_at,user_id,users(display_name)&order='+orderCol+'.'+orderDir+'&limit=200';
+  _sbReq('GET',q).then(function(r){return r.json();}).then(function(data){
+    var rows=[];var best={};
+    (data||[]).forEach(function(r){
+      var uid=r.user_id;
+      if(!best[uid])best[uid]={wins:0,games:0,streak:0,name:r.users?r.users.display_name:'--',uid:uid,dt:r.created_at};
+      best[uid].games++;
+      if(r.score>=1)best[uid].wins++;
+      best[uid].streak=Math.max(best[uid].streak,r.score);
+    });
+    var sorted=Object.values(best);
+    if(_lbSort==='winrate')sorted.sort(function(a,b){return(b.wins/b.games)-(a.wins/a.games);});
+    else if(_lbSort==='games')sorted.sort(function(a,b){return b.games-a.games;});
+    else sorted.sort(function(a,b){return b.streak-a.streak;});
+    sorted.slice(0,50).forEach(function(r,i){
+      var wr=r.games>0?Math.round(r.wins/r.games*100):0;
+      rows.push('<tr><td>'+(i+1)+'</td><td>'+_esc(r.name)+'</td><td>'+r.games+'局 '+wr+'%</td><td>'+r.streak+'连胜</td></tr>');
+    });
+    document.getElementById("lbBody").innerHTML=rows.join('');
+    document.getElementById("lbEmpty").style.display=rows.length?'none':'block';
+    document.getElementById("lbScoreHeader").textContent='战绩';
+    if(callback)callback();
+  }).catch(function(){_showLBEmpty();});
+};
+
+// Update _initLBTabs game switch to update difficulty tabs
+var _origInitLB=_initLBTabs;
+(function(){
+  document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(t){
+    var orig=t.onclick;
+    t.onclick=function(){
+      document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
+      this.classList.add("active");_lbGame=this.getAttribute("data-game");
+      _lbDiff=_lbGame==='gomoku'?'easy':'easy';_updateLBDiffs();
+      document.getElementById("lbScoreHeader").textContent=_lbGame==='minesweeper'?'用时':_lbGame==='gomoku'?'战绩':'分数';
+      var st=document.getElementById("lbSortTabs");if(st)st.style.display=_lbGame==='gomoku'?'':'none';
+      var dt=document.getElementById("lbDailyTab");if(dt)dt.style.display=_lbGame==='minesweeper'?'':'none';
+      if(_lbGame!=='minesweeper'&&_lbDiff==='daily')_lbDiff='easy';
+      _loadLB();
+    };
+  });
+})();
 
 // ===== STATS SYSTEM =====
 function statsKey(g,d){return g+"_"+d+"_stats";}
@@ -3061,6 +3244,10 @@ function mGO(won){
   document.getElementById("goDetail").innerHTML="🚩 "+mFlags+"/"+mMines;
   window._mog="minesweeper";document.getElementById("gameOverOverlay").classList.add("active");
   if(won&&_userId)_submitLB("minesweeper",mc,0,mTimer);
+  if(won&&mc==='normal'&&mTimer<=60)_unlockAch('minesweeper_60normal');
+  if(won&&mc==='hard'&&mTimer<=60)_unlockAch('minesweeper_60hard');
+  if(won){_achStats.minesweeper_streak=(_achStats.minesweeper_streak||0)+1;if(_achStats.minesweeper_streak>=3)_unlockAch('minesweeper_streak3');}else{_achStats.minesweeper_streak=0;}
+
 }
 function mRestartConfirm(){
   if(!mStarted)return;
