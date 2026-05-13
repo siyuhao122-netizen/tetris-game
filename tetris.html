@@ -984,7 +984,7 @@ function _showAuthModal(mode) {
       _sbReq('GET', '/rest/v1/users?username=eq.' + encodeURIComponent(user) + '&select=id&limit=1').then(function(r) { return r.json(); })
       .then(function(d) {
         if (d && d.length > 0) { errEl.textContent = '账号已被注册'; errEl.style.display = 'block'; return; }
-        return _sbReq('POST', '/rest/v1/users', { username: user, password_hash: _hashPw(pass), display_name: dname });
+        return _sbReq('POST', '/rest/v1/users', { username: user, password_hash: _hashPw(pass), display_name: dname, status: 'online', last_seen: new Date().toISOString() });
       }).then(function(r) {
         if (!r || !r.ok) return;
         return r.json();
@@ -2385,7 +2385,22 @@ function _presenceState(){
 function _pushPresence(uid){
   var activeUid=uid||_userId;
   if(!activeUid)return Promise.resolve();
-  return _sbReq('PATCH','/rest/v1/users?id=eq.'+activeUid,{last_seen:new Date().toISOString(),status:_presenceState()}).catch(function(){});
+  var body={last_seen:new Date().toISOString(),status:_presenceState()};
+  return _sbReq('PATCH','/rest/v1/users?id=eq.'+activeUid,body).catch(function(e){
+    console.error('_pushPresence failed, retrying in 2s:',e);
+    return new Promise(function(resolve){
+      setTimeout(function(){
+        fetch(_sbUrl+'/rest/v1/users?id=eq.'+activeUid,{
+          method:'PATCH',
+          headers:{'apikey':_sbKey,'Authorization':'Bearer '+_sbKey,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify(body)
+        }).then(resolve).catch(function(e2){
+          console.error('_pushPresence retry failed:',e2);
+          resolve();
+        });
+      },2000);
+    });
+  });
 }
 function _stopSessionSync(uid){
   if(_chatPoll){clearInterval(_chatPoll);_chatPoll=null;}
