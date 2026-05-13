@@ -239,13 +239,40 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <div class="screen" id="screenBattleLobby">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackBattle">← 返回</button></div>
   <div class="select-title">🆚 方块对战</div>
-  <div class="o-detail" style="margin-bottom:20px;font-size:14px;color:#aaa;">创建房间或输入房间码加入</div>
-  <button class="menu-btn" id="btnCreateRoom" style="margin-bottom:20px;">🏠 创建房间</button>
-  <div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">
-    <input id="roomCodeInput" type="text" maxlength="6" placeholder="输入6位房间码" style="width:160px;padding:12px;border-radius:10px;border:1px solid var(--bdr);background:var(--surface);color:var(--txt);font-size:18px;text-align:center;text-transform:uppercase;" autocomplete="off">
-    <button class="menu-btn" id="btnJoinRoom" style="font-size:16px;padding:12px 24px;">🔗 加入</button>
+  <button class="menu-btn" id="btnFriendBattle" style="margin-bottom:16px;">👥 好友对战</button>
+  <button class="menu-btn" id="btnOnlineBattle" style="margin-bottom:16px;">🌐 在线匹配</button>
+</div>
+
+<!-- FRIENDS LIST -->
+<div class="screen" id="screenFriends">
+  <div style="width:100%;text-align:left;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+    <button class="back-btn" id="btnBackFriends">← 返回</button>
+    <button class="ctrl-btn" id="btnAddFriend" style="font-size:14px;padding:6px 14px;background:#2a2a1e;border-color:#f90;">➕ 添加好友</button>
   </div>
-  <div class="o-detail" id="lobbyMsg" style="margin-top:14px;font-size:13px;color:#f44;display:none;"></div>
+  <div class="select-title">👥 我的好友</div>
+  <div id="friendsList" style="width:100%;max-width:320px;margin-top:12px;"></div>
+  <div class="o-detail" id="friendsEmpty" style="color:#555;margin-top:20px;">暂无好友，去添加吧</div>
+</div>
+
+<!-- ADD FRIEND OVERLAY -->
+<div class="overlay" id="addFriendOverlay" style="display:none;z-index:200;">
+  <div class="overlay-box" style="max-width:300px;">
+    <div class="o-title" style="font-size:22px;margin-bottom:12px;">🔍 添加好友</div>
+    <input id="addFriendInput" type="text" maxlength="12" placeholder="输入对方账号名" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #555;background:#111;color:#fff;font-size:16px;text-align:center;margin-bottom:14px;box-sizing:border-box;" autocomplete="off">
+    <button class="o-btn" id="addFriendConfirm">🔍 搜索并添加</button>
+    <div class="o-detail" id="addFriendMsg" style="margin-top:10px;font-size:13px;color:#4a4;display:none;"></div>
+    <button class="o-btn secondary" id="addFriendClose" style="margin-top:8px;">关闭</button>
+  </div>
+</div>
+
+<!-- BATTLE INVITE OVERLAY -->
+<div class="overlay" id="inviteOverlay" style="display:none;z-index:200;">
+  <div class="overlay-box" style="max-width:300px;">
+    <div class="o-title" id="inviteTitle" style="font-size:20px;margin-bottom:12px;">⚔️ 对战邀请</div>
+    <div class="o-detail" id="inviteMsg" style="font-size:14px;color:#aaa;margin-bottom:16px;"></div>
+    <button class="o-btn" id="inviteAccept">✔ 接受</button>
+    <button class="o-btn secondary" id="inviteReject" style="margin-top:8px;">✖ 拒绝</button>
+  </div>
 </div>
 
 <!-- BATTLE WAITING -->
@@ -1829,7 +1856,146 @@ document.getElementById("battleResultBtn").onclick=function(){
 // Room management
 function _bGenCode(){var c="";for(var i=0;i<6;i++)c+="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)];return c;}
 
-document.getElementById("btnCreateRoom").onclick=function(){
+// Lobby buttons
+document.getElementById("btnOnlineBattle").onclick=function(){
+  _showOnlineLobby();
+};
+document.getElementById("btnFriendBattle").onclick=function(){
+  _loadFriends();
+};
+
+// Online match - show room code + join
+function _showOnlineLobby(){
+  document.getElementById("screenBattleLobby").innerHTML=document.getElementById("screenBattleLobby").innerHTML; // reset
+  var html='<div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackOnline">← 返回</button></div>';
+  html+='<div class="select-title">🌐 在线匹配</div>';
+  html+='<button class="menu-btn" id="btnCreateRoom2" style="margin-bottom:14px;">🏠 创建房间</button>';
+  html+='<div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;">';
+  html+='<input id="roomCodeInput" type="text" maxlength="6" placeholder="输入6位房间码" style="width:160px;padding:12px;border-radius:10px;border:1px solid var(--bdr);background:var(--surface);color:var(--txt);font-size:18px;text-align:center;text-transform:uppercase;" autocomplete="off">';
+  html+='<button class="menu-btn" id="btnJoinRoom2" style="font-size:16px;padding:12px 24px;">🔗 加入</button>';
+  html+='</div><div class="o-detail" id="lobbyMsg" style="margin-top:14px;font-size:13px;color:#f44;display:none;"></div>';
+  document.getElementById("screenBattleLobby").innerHTML=html;
+  document.getElementById("btnBackOnline").onclick=function(){ss("screenBattleLobby");_showMainLobby();};
+  document.getElementById("btnCreateRoom2").onclick=_createRoom;
+  document.getElementById("btnJoinRoom2").onclick=_joinRoom;
+}
+
+function _showMainLobby(){
+  var html='<div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackBattle2">← 返回</button></div>';
+  html+='<div class="select-title">🆚 方块对战</div>';
+  html+='<button class="menu-btn" id="btnFriendBattle2" style="margin-bottom:16px;">👥 好友对战</button>';
+  html+='<button class="menu-btn" id="btnOnlineBattle2" style="margin-bottom:16px;">🌐 在线匹配</button>';
+  document.getElementById("screenBattleLobby").innerHTML=html;
+  document.getElementById("btnBackBattle2").onclick=function(){ss("screenTetrisDiff");};
+  document.getElementById("btnOnlineBattle2").onclick=_showOnlineLobby;
+  document.getElementById("btnFriendBattle2").onclick=function(){_loadFriends();};
+}
+
+// Friends list
+function _loadFriends(){
+  if(!_userId){_showAuthModal('login');return;}
+  _sbReq('GET','/rest/v1/friends?user_id=eq.'+_userId+'&select=id,friend_id,users!friends_friend_id_fkey(display_name,username)&limit=50').then(function(r){return r.json();})
+  .then(function(data){
+    var html='';
+    if(data&&data.length>0){
+      data.forEach(function(f){
+        var u=f.users;var dname=u?u.display_name:'--';var uname=u?u.username:'--';
+        html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;" onclick="_challengeFriend('+f.friend_id+',\''+dname+'\')">';
+        html+='<div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:11px;color:#888;">@'+_esc(uname)+'</span></div>';
+        html+='</div>';
+      });
+    }
+    document.getElementById("friendsList").innerHTML=html;
+    document.getElementById("friendsEmpty").style.display=data&&data.length?'none':'block';
+    ss("screenFriends");
+  });
+}
+
+document.getElementById("btnBackFriends").onclick=function(){ss("screenBattleLobby");_showMainLobby();};
+document.getElementById("btnAddFriend").onclick=function(){document.getElementById("addFriendOverlay").style.display="flex";document.getElementById("addFriendInput").value="";document.getElementById("addFriendMsg").style.display="none";};
+document.getElementById("addFriendClose").onclick=function(){document.getElementById("addFriendOverlay").style.display="none";};
+
+document.getElementById("addFriendConfirm").onclick=function(){
+  var name=document.getElementById("addFriendInput").value.trim();
+  if(!name){return;}
+  _sbReq('GET','/rest/v1/users?username=eq.'+encodeURIComponent(name)+'&select=id,display_name&limit=1').then(function(r){return r.json();})
+  .then(function(d){
+    var el=document.getElementById("addFriendMsg");
+    if(!d||!d.length){el.textContent='用户不存在';el.style.color='#f44';el.style.display='block';return;}
+    var fid=d[0].id;
+    if(String(fid)===String(_userId)){el.textContent='不能添加自己';el.style.color='#f44';el.style.display='block';return;}
+    // Check if already friends
+    return _sbReq('GET','/rest/v1/friends?user_id=eq.'+_userId+'&friend_id=eq.'+fid+'&select=id&limit=1').then(function(r){return r.json();}).then(function(ex){
+      if(ex&&ex.length>0){el.textContent='已经是好友了';el.style.color='#f44';el.style.display='block';return;}
+      return _sbReq('POST','/rest/v1/friends',{user_id:parseInt(_userId),friend_id:fid});
+    }).then(function(){
+      el.textContent='已添加 '+d[0].display_name+' 为好友！';el.style.color='#4a4';el.style.display='block';
+      setTimeout(function(){document.getElementById("addFriendOverlay").style.display="none";},1000);
+    });
+  }).catch(function(){var el=document.getElementById("addFriendMsg");el.textContent='添加失败';el.style.color='#f44';el.style.display='block';});
+};
+
+// Challenge a friend
+function _challengeFriend(fid,fname){
+  var code=_bGenCode();
+  _sbReq('POST','/rest/v1/rooms',{code:code,status:'waiting',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();})
+  .then(function(data){
+    if(!data||!data.length)return;
+    var room=data[0];
+    return _sbReq('POST','/rest/v1/battle_invites',{from_id:parseInt(_userId),to_id:fid,room_code:code,status:'pending'}).then(function(){
+      document.getElementById("waitCode").textContent=code;
+      document.getElementById("waitStatus").textContent="等待 "+fname+" 接受邀请...";
+      _bRoom=room;_bPlayer=1;
+      ss("screenBattleWait");
+      _sbChannel=_sbClient.channel('room-'+room.id);
+      _sbChannel.on('broadcast',{event:'join'},function(){_bStartGame();_bStarted=1;_sbChannel.send({type:'broadcast',event:'start',payload:{}});});
+      _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
+      _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
+      _sbChannel.subscribe();
+    });
+  });
+}
+
+// Poll for invites (every 3s)
+var _invitePoll=null;
+function _startInvitePoll(){
+  if(_invitePoll)clearInterval(_invitePoll);
+  _invitePoll=setInterval(function(){
+    if(!_userId)return;
+    _sbReq('GET','/rest/v1/battle_invites?to_id=eq.'+_userId+'&status=eq.pending&select=id,from_id,room_code,users!battle_invites_from_id_fkey(display_name)&limit=1').then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.length>0){
+        var inv=d[0];var fname=inv.users?inv.users.display_name:'好友';
+        document.getElementById("inviteMsg").textContent=fname+' 邀请你对战！';
+        document.getElementById("inviteOverlay").style.display="flex";
+        document.getElementById("inviteAccept").onclick=function(){
+          document.getElementById("inviteOverlay").style.display="none";
+          _sbReq('PATCH','/rest/v1/battle_invites?id=eq.'+inv.id,{status:'accepted'}).then(function(){
+            _sbReq('PATCH','/rest/v1/rooms?code=eq.'+inv.room_code,{status:'playing',player2_id:parseInt(_userId)});
+          }).then(function(){
+            // Join room and connect
+            _bPlayer=2;_bRoom={code:inv.room_code};
+            _sbReq('GET','/rest/v1/rooms?code=eq.'+inv.room_code+'&select=id&limit=1').then(function(r){return r.json();}).then(function(rd){
+              if(rd&&rd.length){_bRoom=rd[0];_bStartGame();_bStarted=1;
+                _sbChannel=_sbClient.channel('room-'+rd[0].id);
+                _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
+                _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
+                _sbChannel.subscribe(function(s){if(s==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}});
+              }
+            });
+          });
+        };
+        document.getElementById("inviteReject").onclick=function(){
+          document.getElementById("inviteOverlay").style.display="none";
+          _sbReq('PATCH','/rest/v1/battle_invites?id=eq.'+inv.id,{status:'rejected'});
+        };
+      }
+    });
+  },3000);
+}
+_startInvitePoll();
+
+function _createRoom(){
   if(!_sbClient){document.getElementById("lobbyMsg").textContent="SDK未加载";document.getElementById("lobbyMsg").style.display="block";return;}
   var code=_bGenCode();
   _sbReq('POST','/rest/v1/rooms',{code:code,status:'waiting',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();})
@@ -1840,18 +2006,14 @@ document.getElementById("btnCreateRoom").onclick=function(){
     document.getElementById("waitStatus").textContent="等待对手加入...";
     ss("screenBattleWait");
     _sbChannel=_sbClient.channel('room-'+room.id);
-    _sbChannel.on('broadcast',{event:'join'},function(){
-      _bStartGame();_bStarted=1;
-      _sbChannel.send({type:'broadcast',event:'start',payload:{}});
-    });
+    _sbChannel.on('broadcast',{event:'join'},function(){_bStartGame();_bStarted=1;_sbChannel.send({type:'broadcast',event:'start',payload:{}});});
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
-    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
     _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
     _sbChannel.subscribe();
   });
-};
+}
 
-document.getElementById("btnJoinRoom").onclick=function(){
+function _joinRoom(){
   if(!_sbClient){document.getElementById("lobbyMsg").textContent="SDK未加载";document.getElementById("lobbyMsg").style.display="block";return;}
   var code=document.getElementById("roomCodeInput").value.trim().toUpperCase();
   if(code.length!==6){document.getElementById("lobbyMsg").textContent="请输入6位房间码";document.getElementById("lobbyMsg").style.display="block";return;}
@@ -1864,15 +2026,12 @@ document.getElementById("btnJoinRoom").onclick=function(){
     return _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:_userId?parseInt(_userId):null});
   }).then(function(r){return r?r.json():null;}).then(function(){
     if(!_bRoom)return;
-    _bStartGame();
+    _bStartGame();_bStarted=1;
     _sbChannel=_sbClient.channel('room-'+_bRoom.id);
     _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
-    _sbChannel.on('broadcast',{event:'lose'},function(){_bWin();});
     _sbChannel.on('broadcast',{event:'start'},function(){_bStarted=1;});
     _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
-    _sbChannel.subscribe(function(status){
-      if(status==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}
-    });
+    _sbChannel.subscribe(function(status){if(status==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}});
   });
 };
 
@@ -1883,14 +2042,13 @@ function _bStartGame(){
   _bStartPoll();
 }
 
-document.getElementById("btnBackBattle").onclick=function(){ss("screenSelect");};
+document.getElementById("btnBackWait").onclick=function(){_bCleanupRoom();ss("screenBattleLobby");_showMainLobby();};
 function _bCleanupRoom(){
   if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}
   if(_bRoom&&_bRoom.id){_sbReq('DELETE','/rest/v1/rooms?id=eq.'+_bRoom.id);_bRoom=null;}
 }
-document.getElementById("btnBackWait").onclick=function(){_bCleanupRoom();ss("screenBattleLobby");};
-document.getElementById("btnBackBG").onclick=function(){if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}if(_bPollId){clearInterval(_bPollId);_bPollId=null;}_bCleanupRoom();ss("screenBattleLobby");};
-document.getElementById("tDiffBattle").onclick=function(){_initAudio();ss("screenBattleLobby");};
+document.getElementById("btnBackBG").onclick=function(){if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}if(_bPollId){clearInterval(_bPollId);_bPollId=null;}_bCleanupRoom();ss("screenBattleLobby");_showMainLobby();};
+document.getElementById("tDiffBattle").onclick=function(){_initAudio();ss("screenBattleLobby");_showMainLobby();};
 
 // Battle button wiring
 (function(){
