@@ -1455,6 +1455,7 @@ function gWin(){recordGame("2048",gc,gScore,gTimer,1);document.getElementById("g
   _initAudio();
   document.addEventListener("click",function(){_initAudio();},{once:true});
   uhs();
+  if(_userId)_submitLB("2048",gc,gScore,gTimer,null,gc==='endless'?{max_value:gMaxTile()}:undefined);
 }
 
 function gLose(){
@@ -1471,6 +1472,7 @@ function gLose(){
   _initAudio();
   document.addEventListener("click",function(){_initAudio();},{once:true});
   uhs();
+  if(_userId)_submitLB("2048",gc,gScore,gTimer,null,gc==='endless'?{max_value:gMaxTile()}:undefined);
 }
 
 function gMaxTile(){
@@ -3018,23 +3020,21 @@ function recordGame(g,d,score,timeSec,won){
 // ===== LEADERBOARD (Supabase) =====
 var _lbGame = "tetris", _lbDiff = "easy";
 
-function _submitLB(game, difficulty, score, timeSec, callback) {
+function _submitLB(game, difficulty, score, timeSec, callback, extra) {
   if (!_userId) { if (callback) callback(false); return; }
   function _showSync(msg) {
     _achieveBadge(msg, '📡');
-    var el = document.getElementById("goDetail");
-    if (el && document.getElementById("gameOverOverlay").classList.contains("active")) {
+    var el = document.getElementById('goDetail');
+    if (el && document.getElementById('gameOverOverlay').classList.contains('active')) {
       el.textContent += ' | ' + msg;
     }
   }
-  // Always insert new record (no update allowed by RLS)
-  _sbReq('POST', '/rest/v1/leaderboard', {
-    user_id: parseInt(_userId), game: game, difficulty: difficulty,
-    score: score, time: timeSec
-  }).then(function() { _showSync('已同步排行榜'); if (callback) callback(true); })
-  .catch(function(e) { _showSync('请求失败'); if (callback) callback(false); });
+  var body = { user_id: parseInt(_userId), game: game, difficulty: difficulty, score: score, time: timeSec };
+  if (extra) { for (var k in extra) body[k] = extra[k]; }
+  _sbReq('POST', '/rest/v1/leaderboard', body)
+    .then(function() { _showSync('已同步排行榜'); if (callback) callback(true); })
+    .catch(function(e) { _showSync('请求失败'); if (callback) callback(false); });
 }
-
 function _loadLB(callback) {
   var orderCol = _lbGame === 'minesweeper' ? 'time' : 'score';
   var orderDir = _lbGame === 'minesweeper' ? 'asc' : 'desc';
