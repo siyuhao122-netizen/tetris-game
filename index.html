@@ -169,14 +169,14 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 </style>
 </head>
 <body>
-<button class="theme-toggle" id="btnTheme" title="切换主题">🌙</button>
-
-
 <!-- MENU -->
 <div class="screen active" id="screenMenu">
   <div style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:420px;margin-bottom:4px;">
-    <button class="ctrl-btn" id="btnVipMenu" style="font-size:13px;padding:5px 12px;background:#2a2a1e;border-color:#ff0;">💎 VIP</button>
-    <button class="ctrl-btn" id="btnFriendsMenu" style="font-size:13px;padding:5px 12px;background:#2a2a1e;border-color:#f90;position:relative;">👥 好友<span id="friendsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#f44;color:#fff;font-size:10px;width:18px;height:18px;border-radius:9px;line-height:18px;text-align:center;">0</span></button>
+    <div style="display:flex;gap:6px;">
+      <button class="ctrl-btn" id="btnVipMenu" style="font-size:13px;padding:5px 12px;background:#2a2a1e;border-color:#ff0;">💎 VIP</button>
+      <button class="ctrl-btn" id="btnFriendsMenu" style="font-size:13px;padding:5px 12px;background:#2a2a1e;border-color:#f90;position:relative;">👥 好友<span id="friendsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#f44;color:#fff;font-size:10px;width:18px;height:18px;border-radius:9px;line-height:18px;text-align:center;">0</span></button>
+    </div>
+    <button class="theme-toggle" id="btnTheme" title="切换主题" style="position:static;">🌙</button>
   </div>
   <div class="menu-goblin">👺</div>
   <div class="menu-title">哥布林小游戏</div>
@@ -1495,10 +1495,10 @@ gCanvas.addEventListener("touchend",function(e){
 // Wire 2048 direction buttons (once, at script load time)
 (function(){
   var _gUp=document.getElementById("gUp"),_gDn=document.getElementById("gDown"),_gLt=document.getElementById("gLeft"),_gRt=document.getElementById("gRight");
-  if(_gUp){_gUp.addEventListener("click",function(e){e.preventDefault();gMove(0);});_gUp.addEventListener("touchend",function(e){e.preventDefault();gMove(0);});}
-  if(_gDn){_gDn.addEventListener("click",function(e){e.preventDefault();gMove(2);});_gDn.addEventListener("touchend",function(e){e.preventDefault();gMove(2);});}
-  if(_gLt){_gLt.addEventListener("click",function(e){e.preventDefault();gMove(3);});_gLt.addEventListener("touchend",function(e){e.preventDefault();gMove(3);});}
-  if(_gRt){_gRt.addEventListener("click",function(e){e.preventDefault();gMove(1);});_gRt.addEventListener("touchend",function(e){e.preventDefault();gMove(1);});}
+  if(_gUp){_gUp.addEventListener("click",function(e){e.preventDefault();gMove(0);});}
+  if(_gDn){_gDn.addEventListener("click",function(e){e.preventDefault();gMove(2);});}
+  if(_gLt){_gLt.addEventListener("click",function(e){e.preventDefault();gMove(3);});}
+  if(_gRt){_gRt.addEventListener("click",function(e){e.preventDefault();gMove(1);});}
 })();
 
 // Event wiring
