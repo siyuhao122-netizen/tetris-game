@@ -279,12 +279,12 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     </div>
     <div class="status-msg" id="battleStatus" style="min-height:20px;">&nbsp;</div>
     <div class="controls" style="margin-top:2px;">
-      <div class="ctrl-row" style="gap:6px;">
-        <button class="ctrl-btn sdir" id="b1Left">◀</button>
-        <button class="ctrl-btn sdir" id="b1Rotate">↻</button>
-        <button class="ctrl-btn sdir" id="b1Right">▶</button>
+      <div class="ctrl-row" style="gap:14px;">
+        <button class="ctrl-btn" id="b1Left" style="min-width:62px;font-size:26px;">◀</button>
+        <button class="ctrl-btn" id="b1Rotate">↻</button>
+        <button class="ctrl-btn" id="b1Right" style="min-width:62px;font-size:26px;">▶</button>
       </div>
-      <div class="ctrl-row" style="gap:6px;margin-top:2px;">
+      <div class="ctrl-row" style="margin-top:4px;">
         <button class="ctrl-btn wide" id="b1Down">▼ 下落</button>
         <button class="ctrl-btn wide special" id="b1Drop">⬇ 硬降</button>
       </div>
@@ -1795,7 +1795,7 @@ function _b2Draw(){
 function _bLose(){
   _b1GameOver=1;_bStarted=0;
   if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}
-  if(_bRoom){_sbReq('PATCH','/rest/v1/rooms?id=eq.'+_bRoom.id,{loser:_bPlayer});}
+  if(_bRoom){_sbReq('PATCH','/rest/v1/rooms?id=eq.'+_bRoom.id,{status:'lost'+_bPlayer});}
   document.getElementById("battleResultTitle").textContent="💀 你输了！";
   document.getElementById("battleResultDetail").textContent="房间: "+(_bRoom?_bRoom.code:"");
   document.getElementById("battleResultOverlay").style.display="flex";
@@ -1812,8 +1812,11 @@ function _bStartPoll(){
   if(_bPollId)clearInterval(_bPollId);
   _bPollId=setInterval(function(){
     if(!_bRoom||_b1GameOver)return;
-    _sbReq('GET','/rest/v1/rooms?id=eq.'+_bRoom.id+'&select=loser&limit=1').then(function(r){return r.json();}).then(function(d){
-      if(d&&d.length>0&&d[0].loser&&!_b1GameOver){_bWin();}
+    _sbReq('GET','/rest/v1/rooms?id=eq.'+_bRoom.id+'&select=status&limit=1').then(function(r){return r.json();}).then(function(d){
+      if(d&&d.length>0&&d[0].status&&d[0].status.indexOf('lost')===0&&!_b1GameOver){
+        var lp=parseInt(d[0].status.replace('lost',''));
+        if(lp!==_bPlayer){_bWin();}
+      }
     });
   },2000);
 }
