@@ -1324,7 +1324,7 @@ function gSwipeRight(){
 }
 
 function gMove(dir){
-  if(gGameOver||gPause||!gStarted)return;
+  if(gGameOver||gPause||!gStarted){gStatusEl.textContent='st='+gStarted+' go='+gGameOver+' pa='+gPause;return;}
   var result;
   switch(dir){
     case 0:result=gSwipeUp();break;
