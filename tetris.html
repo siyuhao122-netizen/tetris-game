@@ -2101,6 +2101,83 @@ function tdfTowerAttack(tw){
   }
   _playTone(tw.type==='cannon'?150:tw.type==='arrow'?600:300,0.05,0.08);
 }
+function tdfSpawnEnemy(type,overrideHp){
+  var cfg=TD_ENEMIES[type];
+  var hp=overrideHp||cfg.hp;
+  if(tdfDifficulty==='endless'&&tdfWave>20){
+    var scaleWaves=tdfWave-20;
+    if(!cfg.boss)hp=Math.floor(cfg.hp*Math.pow(1.15,scaleWaves));
+  }
+  if(cfg.boss)hp=Math.floor(cfg.hp*Math.pow(1.25,Math.floor(tdfWave/5)));
+  var e={type:type,hp:hp,maxHp:hp,speed:cfg.speed,color:cfg.color,bounty:cfg.bounty,
+    x:tdfPath[0].x,y:tdfPath[0].y,pathIdx:1,slow:0,slowUntil:0,heal:cfg.heal||0,healRange:cfg.healRange||0,
+    weakCannon:cfg.weakCannon||false,boss:cfg.boss||false};
+  tdfEnemies.push(e);
+}
+function tdfSpawnWave(){
+  tdfEnemiesSpawned=0;
+  var count=3+tdfWave*2;
+  var types=[];
+  if(tdfWave%5===0){types.push('king');count+=1;}
+  if(tdfWave<=4)types=['scout'];
+  else if(tdfWave<=9)types=['scout','warrior'];
+  else if(tdfWave<=14)types=['warrior','warrior','tank'];
+  else types=['tank','tank','healer','warrior'];
+  for(var i=0;i<count;i++){
+    var t=types[Math.floor(Math.random()*types.length)];
+    if(t==='king'&&i>0)continue;
+    tdfSpawnQueue.push(t);
+  }
+  tdfPrepPhase=true;tdfPrepTimer=15;tdfReady=0;
+  if(tdfDifficulty==='endless'&&tdfWave>10){tdfPrepTimer=0;tdfPrepPhase=false;}
+  tdfTowers.forEach(function(tw){
+    var cfg=TD_TOWERS[tw.type];
+    if(cfg.goldPerWave){tdfGold+=cfg.goldPerWave+(tw.level-1)*5;}
+  });
+  document.getElementById('tdfGold').textContent=tdfGold;
+  document.getElementById('tdfWave').textContent=tdfWave;
+}
+function tdfMoveEnemies(){
+  for(var i=tdfEnemies.length-1;i>=0;i--){
+    var e=tdfEnemies[i];
+    var spd=e.speed;if(e.slow&&Date.now()<e.slowUntil)spd*=1-e.slow;
+    if(e.slow&&Date.now()>=e.slowUntil){e.slow=0;e.slowUntil=0;}
+    var wp=tdfPath[e.pathIdx];
+    var dx=wp.x-e.x,dy=wp.y-e.y;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<0.15){
+      e.x=wp.x;e.y=wp.y;e.pathIdx++;
+      if(e.pathIdx>=tdfPath.length){
+        tdfHP-=(e.boss?5:1);tdfEnemies.splice(i,1);
+        document.getElementById('tdfHP').textContent=tdfHP;
+        if(tdfHP<=0)tdfLose();
+        continue;
+      }
+    }else{
+      var move=spd*0.2;
+      if(move>dist)move=dist;
+      var ratio=move/(dist||0.001);
+      e.x+=dx*ratio;e.y+=dy*ratio;
+    }
+    if(e.heal){
+      for(var j=0;j<tdfEnemies.length;j++){
+        var ej=tdfEnemies[j];if(ej===e)continue;
+        var hdx=ej.x-e.x,hdy=ej.y-e.y;
+        if(Math.sqrt(hdx*hdx+hdy*hdy)<=e.healRange)ej.hp=Math.min(ej.maxHp,ej.hp+e.heal*0.2);
+      }
+    }
+  }
+}
+function tdfCheckDead(){
+  for(var i=tdfEnemies.length-1;i>=0;i--){
+    if(tdfEnemies[i].hp<=0){
+      var e=tdfEnemies[i];tdfGold+=e.bounty;tdfScore+=e.bounty;
+      tdfEnemies.splice(i,1);
+      document.getElementById('tdfGold').textContent=tdfGold;
+      _playTone(80,0.06,0.1);
+    }
+  }
+}
 
 // ====== BATTLE TETRIS ======
 var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0,_bTotalCleared=0;
