@@ -716,9 +716,19 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="board-wrap" style="position:relative;">
       <canvas id="gmBoard" class="gcanvas" width="390" height="390"></canvas>
     </div>
-    <div class="controls" style="margin-top:4px;">
-      <button class="ctrl-btn" id="gmUndo" style="font-size:14px;padding:6px 16px;">↩ 悔棋</button>
-      <button class="ctrl-btn" id="gmRestart" style="font-size:14px;padding:6px 16px;background:#1a2a1e;border-color:#484;">🔄 重新开始</button>
+    <div class="controls" style="margin-top:2px;">
+      <div class="dpad" style="grid-template-columns:56px 56px 56px;gap:2px;">
+        <div class="empty"></div>
+        <button class="ctrl-btn sdir" id="gmUp" style="width:52px;padding:10px 0;font-size:20px;">▲</button>
+        <div class="empty"></div>
+        <button class="ctrl-btn sdir" id="gmLeft" style="width:52px;padding:10px 0;font-size:20px;">◀</button>
+        <button class="ctrl-btn sdir" id="gmPlace" style="width:52px;padding:10px 0;font-size:16px;background:#1a2a1e;border-color:#484;">落子</button>
+        <button class="ctrl-btn sdir" id="gmRight" style="width:52px;padding:10px 0;font-size:20px;">▶</button>
+        <div class="empty"></div>
+        <button class="ctrl-btn sdir" id="gmDown" style="width:52px;padding:10px 0;font-size:20px;">▼</button>
+        <div class="empty"></div>
+      </div>
+      <button class="ctrl-btn" id="gmRestart" style="font-size:14px;padding:6px 16px;margin-top:4px;background:#1a2a1e;border-color:#484;">🔄 重新开始</button>
     </div>
   </div>
 </div>
@@ -800,7 +810,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="breakout">🧱 打砖块</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="gomoku">⚫ 五子棋</button>
   </div>
-  <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbSortTabs">
+  <div style="display:none;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbSortTabs">
     <span style="font-size:11px;color:#888;line-height:28px;">排序:</span>
     <button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;" data-sort="games">场次</button>
     <button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sort="winrate">胜率</button>
@@ -2221,12 +2231,31 @@ document.getElementById("btnChatBattle").onclick=function(){
   });
 };
 
-// Challenge a friend (15s cooldown)
+// Challenge a friend (15s cooldown) - supports both Tetris and Gomoku
 var _challengeCd={};
 function _challengeFriend(fid,fname){
   var now=Date.now();
   if(_challengeCd[fid]&&now-_challengeCd[fid]<15000){_achieveBadge('请等待15秒后再发送','⚠️');return;}
   _challengeCd[fid]=now;
+  if(_battleGame==='gomoku'){
+    // Gomoku friend battle
+    var code=_bGenCode();
+    _sbReq('POST','/rest/v1/rooms',{code:code,status:'waiting',game:'gomoku',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();})
+    .then(function(data){
+      if(!data||!data.length)return;
+      return _sbReq('POST','/rest/v1/battle_invites',{from_id:parseInt(_userId),to_id:fid,room_code:code,status:'pending'}).then(function(){
+        document.getElementById("waitCode").textContent=code;
+        document.getElementById("waitStatus").textContent="等待 "+fname+" 接受...";
+        ss("screenBattleWait");
+        _gmRoom={id:data[0].id,code:code};_gmMode='pvp_friend';_gmMyColor=1;_gmPlayer=1;
+        _sbChannel=_sbClient.channel('room-gm-'+data[0].id);
+        _sbChannel.on('broadcast',{event:'join'},function(){_gmInit('pvp_friend','');_gmTurn=1;});
+        _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+        _sbChannel.subscribe();
+      });
+    });
+    return;
+  }
   var code=_bGenCode();
   _sbReq('POST','/rest/v1/rooms',{code:code,status:'waiting',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();})
   .then(function(data){
@@ -2265,14 +2294,22 @@ function _startInvitePoll(){
           _sbReq('PATCH','/rest/v1/battle_invites?id=eq.'+inv.id,{status:'accepted'}).then(function(){
             _sbReq('PATCH','/rest/v1/rooms?code=eq.'+inv.room_code,{status:'playing',player2_id:parseInt(_userId)});
           }).then(function(){
-            // Join room and connect
-            _bPlayer=2;_bRoom={code:inv.room_code};
-            _sbReq('GET','/rest/v1/rooms?code=eq.'+inv.room_code+'&select=id&limit=1').then(function(r){return r.json();}).then(function(rd){
-              if(rd&&rd.length){_bRoom=rd[0];_bStartGame();_bStarted=1;
-                _sbChannel=_sbClient.channel('room-'+rd[0].id);
-                _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
-                _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
-                _sbChannel.subscribe(function(s){if(s==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}});
+            _sbReq('GET','/rest/v1/rooms?code=eq.'+inv.room_code+'&select=id,game&limit=1').then(function(r){return r.json();}).then(function(rd){
+              if(rd&&rd.length){
+                var room=rd[0];
+                if(room.game==='gomoku'){
+                  _gmRoom=room;_gmMode='pvp_friend';_gmMyColor=2;_gmPlayer=2;
+                  _gmInit('pvp_friend','');_gmTurn=1;
+                  _sbChannel=_sbClient.channel('room-gm-'+room.id);
+                  _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+                  _sbChannel.subscribe(function(s){if(s==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}});
+                }else{
+                  _bPlayer=2;_bRoom=room;_bStartGame();_bStarted=1;
+                  _sbChannel=_sbClient.channel('room-'+room.id);
+                  _sbChannel.on('broadcast',{event:'garbage'},function(p){_bGarbage+=p.payload.count;});
+                  _sbChannel.on('broadcast',{event:'board'},function(p){_b2Board=p.payload.board;_b2Piece=p.payload.piece;_b2Draw();});
+                  _sbChannel.subscribe(function(s){if(s==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}});
+                }
               }
             });
           });
@@ -2543,16 +2580,18 @@ _saveSession=function(uid,user,dname){
 
 // ====== GOMOKU ======
 var _gmBoard=[],_gmTurn=1,_gmOver=0,_gmMode='',_gmAILevel='',_gmMyColor=0,_gmRoom=null,_gmMoves=[];
-var _gmCanvas,_gmCtx,_gmSz=26;
+var _gmCanvas,_gmCtx,_gmSz=26,_gmCurR=7,_gmCurC=7;
+var _battleGame='tetris'; // which game for friend battle
 
 function _gmInit(mode,aiLevel){
   _gmBoard=[];for(var r=0;r<15;r++){_gmBoard[r]=new Array(15).fill(0);}
   _gmTurn=1;_gmOver=0;_gmMode=mode||'pve';_gmAILevel=aiLevel||'';_gmMoves=[];
+  _gmCurR=7;_gmCurC=7;
   _gmCanvas=document.getElementById("gmBoard");_gmCtx=_gmCanvas.getContext("2d");_setupHiDPI(_gmCanvas,_gmCtx,390,390);
   _gmMyColor=0;_gmDraw();ss("screenGomoku");
   if(_gmMode==='pve'){_gmMyColor=1;document.getElementById("gmStatus").textContent='你的回合 (黑棋)';}
   else if(_gmMode==='pvp_friend'||_gmMode==='pvp_match'){_gmMyColor=_gmPlayer||1;}
-  document.getElementById("gmUndo").style.display=(_gmMode==='pve'&&_gmAILevel==='easy')?'':'none';
+  document.getElementById("gmStatus").textContent=_gmTurn===_gmMyColor?'你的回合':'等待对手...';
 }
 
 function _gmDraw(){
@@ -2575,6 +2614,11 @@ function _gmDraw(){
     var lm=_gmMoves[_gmMoves.length-1];
     _gmCtx.strokeStyle='#f00';_gmCtx.lineWidth=2;
     _gmCtx.beginPath();_gmCtx.arc(_gmSz+lm.c*_gmSz,_gmSz+lm.r*_gmSz,11,0,Math.PI*2);_gmCtx.stroke();
+  }
+  // Cursor
+  if(!_gmOver&&_gmTurn===_gmMyColor){
+    _gmCtx.strokeStyle='#0f0';_gmCtx.lineWidth=2;
+    _gmCtx.beginPath();_gmCtx.arc(_gmSz+_gmCurC*_gmSz,_gmSz+_gmCurR*_gmSz,10,0,Math.PI*2);_gmCtx.stroke();
   }
 }
 
@@ -2676,6 +2720,7 @@ document.getElementById("btnGomokuAI").onclick=function(){ss("screenGomokuAI");}
 document.getElementById("btnBackGomokuAI").onclick=function(){ss("screenGomokuMode");};
 document.getElementById("btnBackGM").onclick=function(){_gmOver=1;if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenGomokuMode");};
 document.getElementById("gmRestart").onclick=function(){_gmInit(_gmMode,_gmAILevel);};
+document.getElementById("btnBackGomokuWait").onclick=function(){_gmOver=1;if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenGomokuMode");};
 document.getElementById("btnBackGomokuWait").onclick=function(){ss("screenGomokuMode");};
 
 ["easy","normal","hard"].forEach(function(d){
@@ -2684,17 +2729,26 @@ document.getElementById("btnBackGomokuWait").onclick=function(){ss("screenGomoku
   };
 });
 
-// Canvas click
-document.getElementById("gmBoard").addEventListener("click",function(e){
+// D-pad movement
+document.getElementById("gmUp").addEventListener("click",function(e){e.preventDefault();if(_gmCurR>0)_gmCurR--;_gmDraw();});
+document.getElementById("gmDown").addEventListener("click",function(e){e.preventDefault();if(_gmCurR<14)_gmCurR++;_gmDraw();});
+document.getElementById("gmLeft").addEventListener("click",function(e){e.preventDefault();if(_gmCurC>0)_gmCurC--;_gmDraw();});
+document.getElementById("gmRight").addEventListener("click",function(e){e.preventDefault();if(_gmCurC<14)_gmCurC++;_gmDraw();});
+document.getElementById("gmPlace").addEventListener("click",function(e){e.preventDefault();_gmTryPlace();});
+
+function _gmTryPlace(){
   if(_gmOver)return;
   if(_gmMode==='pve'&&_gmTurn!==_gmMyColor)return;
   if((_gmMode==='pvp_friend'||_gmMode==='pvp_match')&&_gmTurn!==_gmMyColor)return;
-  var rect=_gmCanvas.getBoundingClientRect();
-  var x=e.clientX-rect.left,y=e.clientY-rect.top;
-  var c=Math.round((x-_gmSz)/_gmSz),r=Math.round((y-_gmSz)/_gmSz);
-  if(r<0||r>=15||c<0||c>=15)return;
-  _gmPlace(r,c);
-});
+  if(_gmBoard[_gmCurR][_gmCurC])return;
+  _gmPlace(_gmCurR,_gmCurC);
+}
+
+// Friend battle for Gomoku
+document.getElementById("btnGomokuFriend").onclick=function(){
+  _battleGame='gomoku';
+  _loadFriends('battle');
+};
 
 // Quick match
 function _gmQuickMatch(){
