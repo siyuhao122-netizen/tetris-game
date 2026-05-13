@@ -807,20 +807,23 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="breakout">🧱 打砖块</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-game="gomoku">⚫ 五子棋</button>
   </div>
-  <div style="display:none;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbSortTabs">
-    <span style="font-size:11px;color:#888;line-height:28px;">排序:</span>
-    <button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;" data-sort="games">场次</button>
-    <button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sort="winrate">胜率</button>
-    <button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sort="streak">连胜</button>
+  <div style="display:none;align-items:center;justify-content:flex-end;width:100%;max-width:380px;margin-bottom:6px;" id="lbSortRow">
+    <span style="font-size:11px;color:#888;">排序:</span>
+    <select id="lbSortSel" style="margin-left:4px;padding:4px 8px;border-radius:6px;border:1px solid #555;background:#111;color:#fff;font-size:12px;">
+      <option value="winrate">胜率</option>
+      <option value="games">场次</option>
+      <option value="streak">最高连胜</option>
+    </select>
   </div>
-  <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;" id="lbDiffTabs">
+  <div style="display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap;justify-content:center;" id="lbDiffTabs">
     <button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button>
     <button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;display:none;" data-diff="daily" id="lbDailyTab">📅 每日</button>
   </div>
+  <div style="display:none;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;" id="lbSubDiff"></div>
   <table class="stats-table" id="lbTable">
-    <thead><tr><th>排名</th><th>玩家</th><th id="lbScoreHeader">分数</th><th>时间</th></tr></thead>
+    <thead><tr><th>排名</th><th>玩家</th><th>场次</th><th>胜率</th><th id="lbScoreHeader">最高连胜</th><th>时间</th></tr></thead>
     <tbody id="lbBody"></tbody>
   </table>
   <div class="stats-empty" id="lbEmpty">暂无排行数据</div>
@@ -2858,45 +2861,58 @@ function _achTrack(g,d,score,time,won){
   // These are called inline from each game's tgo/sgo/etc
 }
 
-// ===== GOMOKU LEADERBOARD SORT =====
-var _lbSort='winrate';
-document.querySelectorAll("#lbSortTabs .stat-tab").forEach(function(t){
-  t.onclick=function(){
-    document.querySelectorAll("#lbSortTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
-    this.classList.add("active");_lbSort=this.getAttribute("data-sort");_loadLB();
-  };
-});
+// ===== GOMOKU LEADERBOARD =====
+var _lbSort='winrate',_lbSubDiff='';
+document.getElementById("lbSortSel").onchange=function(){_lbSort=this.value;_loadLB();};
 
-// Update _initLBTabs to handle gomoku and sort
-var _lbDiffTabsOrig=null;
 function _updateLBDiffs(){
   var dt=document.getElementById("lbDiffTabs");
+  var sd=document.getElementById("lbSubDiff");
+  var sr=document.getElementById("lbSortRow");
+  var th=document.getElementById("lbScoreHeader");
   if(!dt)return;
   if(_lbGame==='gomoku'){
-    dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="hard">🔴 困难</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="match">🌐 匹配</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-diff="friend">👥 好友</button>';
-  }else if(_lbGame==='minesweeper'){
-    dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;display:none;" data-diff="daily" id="lbDailyTab">📅 每日</button>';
+    dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="pve">🤖 人机</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="match">🌐 匹配</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="friend">👥 好友</button>';
+    _lbDiff='pve';_lbSubDiff='easy';
+    if(sd){sd.style.display='';sd.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:11px;padding:4px 8px;" data-sub="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sub="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:11px;padding:4px 8px;" data-sub="hard">🔴 困难</button>';}
+    if(sr)sr.style.display='';if(th)th.textContent='最高连胜';
+    _bindSubDiff();
   }else{
-    dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button>';
+    _lbDiff='easy';_lbSubDiff='';
+    if(sd)sd.style.display='none';if(sr)sr.style.display='none';
+    if(th)th.textContent=_lbGame==='minesweeper'?'用时':'分数';
+    if(_lbGame==='minesweeper'){
+      dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;display:none;" data-diff="daily" id="lbDailyTab">📅 每日</button>';
+    }else{
+      dt.innerHTML='<button class="ctrl-btn stat-tab active" style="font-size:12px;padding:5px 10px;" data-diff="easy">🟢 简单</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="normal">🟡 普通</button><button class="ctrl-btn stat-tab" style="font-size:12px;padding:5px 10px;" data-diff="hard">🔴 困难</button>';
+    }
   }
-  // Re-bind diff tabs
   document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(t){
     t.onclick=function(){
       document.querySelectorAll("#lbDiffTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
-      this.classList.add("active");_lbDiff=this.getAttribute("data-diff");_loadLB();
+      this.classList.add("active");_lbDiff=this.getAttribute("data-diff");
+      if(_lbDiff==='pve'){_lbSubDiff='easy';_bindSubDiff();
+        var sd2=document.getElementById("lbSubDiff");if(sd2){sd2.style.display='';var fb=sd2.querySelector('[data-sub="easy"]');if(fb)fb.classList.add("active");}
+      }else{_lbSubDiff='';var sd2=document.getElementById("lbSubDiff");if(sd2)sd2.style.display='none';}
+      _loadLB();
+    };
+  });
+}
+function _bindSubDiff(){
+  document.querySelectorAll("#lbSubDiff .stat-tab").forEach(function(t){
+    t.onclick=function(){
+      document.querySelectorAll("#lbSubDiff .stat-tab").forEach(function(x){x.classList.remove("active");});
+      this.classList.add("active");_lbSubDiff=this.getAttribute("data-sub");_loadLB();
     };
   });
 }
 
-// Extend _loadLB for Gomoku sorting
 var _origLoadLB=_loadLB;
 _loadLB=function(callback){
   if(_lbGame!=='gomoku'){return _origLoadLB(callback);}
-  var orderCol='score';var orderDir='desc';
-  if(_lbSort==='winrate'){orderCol='score';orderDir='desc';}
-  else if(_lbSort==='games'){orderCol='time';orderDir='desc';}
-  else{orderCol='score';orderDir='desc';}
-  var q='/rest/v1/leaderboard?game=eq.gomoku&difficulty=eq.'+_lbDiff+'&select=id,score,time,created_at,user_id,users(display_name)&order='+orderCol+'.'+orderDir+'&limit=200';
+  var diff=_lbDiff==='pve'?_lbSubDiff:_lbDiff;
+  if(!diff)diff='easy';
+  var q='/rest/v1/leaderboard?game=eq.gomoku&difficulty=eq.'+diff+'&select=id,score,time,created_at,user_id,users(display_name)&limit=500';
   _sbReq('GET',q).then(function(r){return r.json();}).then(function(data){
     var rows=[];var best={};
     (data||[]).forEach(function(r){
@@ -2907,37 +2923,32 @@ _loadLB=function(callback){
       best[uid].streak=Math.max(best[uid].streak,r.score);
     });
     var sorted=Object.values(best);
-    if(_lbSort==='winrate')sorted.sort(function(a,b){return(b.wins/b.games)-(a.wins/a.games);});
+    if(_lbSort==='winrate')sorted.sort(function(a,b){var wa=a.games>0?a.wins/a.games:0,wb=b.games>0?b.wins/b.games:0;return wb-wa;});
     else if(_lbSort==='games')sorted.sort(function(a,b){return b.games-a.games;});
     else sorted.sort(function(a,b){return b.streak-a.streak;});
     sorted.slice(0,50).forEach(function(r,i){
       var wr=r.games>0?Math.round(r.wins/r.games*100):0;
-      rows.push('<tr><td>'+(i+1)+'</td><td>'+_esc(r.name)+'</td><td>'+r.games+'局 '+wr+'%</td><td>'+r.streak+'连胜</td></tr>');
+      rows.push('<tr><td>'+(i+1)+'</td><td>'+_esc(r.name)+'</td><td>'+r.games+'</td><td>'+wr+'%</td><td>'+r.streak+'</td><td>'+_esc((r.dt||'').substring(0,10))+'</td></tr>');
     });
     document.getElementById("lbBody").innerHTML=rows.join('');
     document.getElementById("lbEmpty").style.display=rows.length?'none':'block';
-    document.getElementById("lbScoreHeader").textContent='战绩';
+    document.getElementById("lbScoreHeader").textContent='最高连胜';
     if(callback)callback();
   }).catch(function(){_showLBEmpty();});
 };
 
-// Update _initLBTabs game switch to update difficulty tabs
-var _origInitLB=_initLBTabs;
-(function(){
-  document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(t){
-    var orig=t.onclick;
-    t.onclick=function(){
-      document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
-      this.classList.add("active");_lbGame=this.getAttribute("data-game");
-      _lbDiff=_lbGame==='gomoku'?'easy':'easy';_updateLBDiffs();
-      document.getElementById("lbScoreHeader").textContent=_lbGame==='minesweeper'?'用时':_lbGame==='gomoku'?'战绩':'分数';
-      var st=document.getElementById("lbSortTabs");if(st)st.style.display=_lbGame==='gomoku'?'':'none';
-      var dt=document.getElementById("lbDailyTab");if(dt)dt.style.display=_lbGame==='minesweeper'?'':'none';
-      if(_lbGame!=='minesweeper'&&_lbDiff==='daily')_lbDiff='easy';
-      _loadLB();
-    };
-  });
-})();
+document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(t){
+  t.onclick=function(){
+    document.querySelectorAll("#lbGameTabs .stat-tab").forEach(function(x){x.classList.remove("active");});
+    this.classList.add("active");_lbGame=this.getAttribute("data-game");
+    _updateLBDiffs();
+    var dt=document.getElementById("lbDailyTab");if(dt)dt.style.display=_lbGame==='minesweeper'?'':'none';
+    var sd=document.getElementById("lbSubDiff");if(sd&&_lbGame!=='gomoku')sd.style.display='none';
+    var sr=document.getElementById("lbSortRow");if(sr)sr.style.display=_lbGame==='gomoku'?'':'none';
+    if(_lbGame!=='minesweeper'&&_lbDiff==='daily')_lbDiff='easy';
+    _loadLB();
+  };
+});
 
 // ===== STATS SYSTEM =====
 function statsKey(g,d){return g+"_"+d+"_stats";}
