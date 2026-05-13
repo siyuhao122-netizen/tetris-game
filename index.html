@@ -227,6 +227,10 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     </div>
   </div>
 
+  <div class="game-card" id="cardGomoku">
+    <div class="name">⚫ 五子棋</div>
+    <div class="desc">15路棋盘，好友对战/人机/匹配</div>
+  </div>
   <div class="game-card" id="cardBreakout">
     <div class="name">🧱 打砖块</div>
     <div class="desc">滑动挡板，消灭砖块！</div>
@@ -672,6 +676,48 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="controls">
       <button class="ctrl-btn" id="bPause" style="background:#1a1a3e;border-color:#55f;min-width:48px;" onclick="bTogglePause()">⏸ 暂停</button>
       <button class="ctrl-btn" id="bRestart" style="background:#1a2a1e;border-color:#484;min-width:48px;" onclick="bRestartConfirm()">🔄 重新开始</button>
+    </div>
+  </div>
+</div>
+
+<!-- GOMOKU MODE SELECT -->
+<div class="screen" id="screenGomokuMode">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackGomoku">← 返回</button></div>
+  <div class="select-title">⚫ 五子棋</div>
+  <button class="menu-btn" id="btnGomokuFriend" style="margin-bottom:12px;">👥 好友对战</button>
+  <button class="menu-btn" id="btnGomokuMatch" style="margin-bottom:12px;">🌐 快速匹配</button>
+  <button class="menu-btn" id="btnGomokuAI" style="margin-bottom:12px;">🤖 人机对战</button>
+</div>
+
+<!-- GOMOKU AI DIFFICULTY -->
+<div class="screen" id="screenGomokuAI">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackGomokuAI">← 返回</button></div>
+  <div class="select-title">🤖 人机对战</div>
+  <div class="diff-card" id="gmAIEasy"><div class="dname">🟢 简单</div><div class="ddesc">随机落子</div></div>
+  <div class="diff-card" id="gmAINormal"><div class="dname">🟡 普通</div><div class="ddesc">基础攻防</div></div>
+  <div class="diff-card" id="gmAIHard"><div class="dname">🔴 困难</div><div class="ddesc">极大极小搜索</div></div>
+</div>
+
+<!-- GOMOKU MATCHING -->
+<div class="screen" id="screenGomokuWait">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackGomokuWait">← 取消</button></div>
+  <div class="select-title">🔍 匹配中...</div>
+  <div class="o-detail" style="font-size:14px;color:#aaa;">正在寻找对手</div>
+</div>
+
+<!-- GOMOKU GAME -->
+<div class="screen" id="screenGomoku">
+  <div style="width:100%;text-align:left;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+    <button class="back-btn" id="btnBackGM">← 退出</button>
+    <span class="o-detail" id="gmStatus" style="font-size:14px;color:#888;">你的回合</span>
+  </div>
+  <div class="game-wrapper">
+    <div class="board-wrap" style="position:relative;">
+      <canvas id="gmBoard" class="gcanvas" width="390" height="390"></canvas>
+    </div>
+    <div class="controls" style="margin-top:4px;">
+      <button class="ctrl-btn" id="gmUndo" style="font-size:14px;padding:6px 16px;">↩ 悔棋</button>
+      <button class="ctrl-btn" id="gmRestart" style="font-size:14px;padding:6px 16px;background:#1a2a1e;border-color:#484;">🔄 重新开始</button>
     </div>
   </div>
 </div>
@@ -2465,6 +2511,192 @@ _saveSession=function(uid,user,dname){
   _origSaveSession(uid,user,dname);
   _loadVip();
 };
+
+// ====== GOMOKU ======
+var _gmBoard=[],_gmTurn=1,_gmOver=0,_gmMode='',_gmAILevel='',_gmMyColor=0,_gmRoom=null,_gmMoves=[];
+var _gmCanvas,_gmCtx,_gmSz=26;
+
+function _gmInit(mode,aiLevel){
+  _gmBoard=[];for(var r=0;r<15;r++){_gmBoard[r]=new Array(15).fill(0);}
+  _gmTurn=1;_gmOver=0;_gmMode=mode||'pve';_gmAILevel=aiLevel||'';_gmMoves=[];
+  _gmCanvas=document.getElementById("gmBoard");_gmCtx=_gmCanvas.getContext("2d");_setupHiDPI(_gmCanvas,_gmCtx,390,390);
+  _gmMyColor=0;_gmDraw();ss("screenGomoku");
+  if(_gmMode==='pve'){_gmMyColor=1;document.getElementById("gmStatus").textContent='你的回合 (黑棋)';}
+  else if(_gmMode==='pvp_friend'||_gmMode==='pvp_match'){_gmMyColor=_gmPlayer||1;}
+  document.getElementById("gmUndo").style.display=(_gmMode==='pve'&&_gmAILevel==='easy')?'':'none';
+}
+
+function _gmDraw(){
+  _gmCtx.clearRect(0,0,390,390);_gmCtx.fillStyle='#dda';_gmCtx.fillRect(0,0,390,390);
+  _gmCtx.strokeStyle='#333';_gmCtx.lineWidth=1;
+  for(var i=0;i<15;i++){_gmCtx.beginPath();_gmCtx.moveTo(_gmSz,_gmSz+i*_gmSz);_gmCtx.lineTo(_gmSz+14*_gmSz,_gmSz+i*_gmSz);_gmCtx.stroke();}
+  for(var i=0;i<15;i++){_gmCtx.beginPath();_gmCtx.moveTo(_gmSz+i*_gmSz,_gmSz);_gmCtx.lineTo(_gmSz+i*_gmSz,_gmSz+14*_gmSz);_gmCtx.stroke();}
+  // Star points
+  var sps=[[3,3],[3,7],[3,11],[7,3],[7,7],[7,11],[11,3],[11,7],[11,11]];
+  _gmCtx.fillStyle='#333';sps.forEach(function(p){_gmCtx.beginPath();_gmCtx.arc(_gmSz+p[1]*_gmSz,_gmSz+p[0]*_gmSz,3,0,Math.PI*2);_gmCtx.fill();});
+  // Stones
+  for(var r=0;r<15;r++)for(var c=0;c<15;c++){
+    if(!_gmBoard[r][c])continue;
+    _gmCtx.fillStyle=_gmBoard[r][c]===1?'#000':'#fff';
+    _gmCtx.beginPath();_gmCtx.arc(_gmSz+c*_gmSz,_gmSz+r*_gmSz,11,0,Math.PI*2);_gmCtx.fill();
+    if(_gmBoard[r][c]===2){_gmCtx.strokeStyle='#999';_gmCtx.lineWidth=1;_gmCtx.stroke();}
+  }
+  // Last move highlight
+  if(_gmMoves.length>0){
+    var lm=_gmMoves[_gmMoves.length-1];
+    _gmCtx.strokeStyle='#f00';_gmCtx.lineWidth=2;
+    _gmCtx.beginPath();_gmCtx.arc(_gmSz+lm.c*_gmSz,_gmSz+lm.r*_gmSz,11,0,Math.PI*2);_gmCtx.stroke();
+  }
+}
+
+function _gmCheckWin(r,c){
+  var color=_gmBoard[r][c];if(!color)return 0;
+  var dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for(var d=0;d<4;d++){
+    var cnt=1;
+    for(var i=1;i<5;i++){var nr=r+dirs[d][0]*i,nc=c+dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===color)cnt++;else break;}
+    for(var i=1;i<5;i++){var nr=r-dirs[d][0]*i,nc=c-dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===color)cnt++;else break;}
+    if(cnt>=5)return color;
+  }
+  return 0;
+}
+
+function _gmPlace(r,c){
+  if(_gmOver||_gmBoard[r][c])return;
+  _gmBoard[r][c]=_gmTurn;_gmMoves.push({r:r,c:c,color:_gmTurn});
+  var w=_gmCheckWin(r,c);
+  if(w){
+    _gmOver=1;_gmDraw();
+    var msg=(_gmMode==='pve')?(w===_gmMyColor?'你赢了！':'AI赢了'):(w===_gmMyColor?'你赢了！':'对手赢了');
+    document.getElementById("gmStatus").textContent=msg;
+    _gmRecordGame(w===_gmMyColor?1:0);
+    setTimeout(function(){ss("screenGomokuMode");},3000);
+    return;
+  }
+  var draw=(_gmMoves.length>=225);
+  if(draw){_gmOver=1;_gmDraw();document.getElementById("gmStatus").textContent='平局！';setTimeout(function(){ss("screenGomokuMode");},3000);return;}
+  _gmTurn=_gmTurn===1?2:1;_gmDraw();
+  document.getElementById("gmStatus").textContent=(_gmTurn===_gmMyColor)?'你的回合':((_gmMode==='pve')?'AI思考中...':'等待对手...');
+  // AI move
+  if(_gmMode==='pve'&&_gmTurn!==_gmMyColor&&!_gmOver){setTimeout(_gmAIMove,300);}
+  // Multiplayer: send move
+  if((_gmMode==='pvp_friend'||_gmMode==='pvp_match')&&_sbChannel){_sbChannel.send({type:'broadcast',event:'gm_move',payload:{r:r,c:c}});}
+}
+
+// AI
+function _gmAIMove(){
+  if(_gmOver)return;
+  var move;
+  if(_gmAILevel==='easy'){var empties=[];for(var r=0;r<15;r++)for(var c=0;c<15;c++)if(!_gmBoard[r][c])empties.push({r:r,c:c});move=empties[Math.floor(Math.random()*empties.length)];}
+  else if(_gmAILevel==='normal'){move=_gmAISmart();}
+  else{move=_gmAISmart();}
+  if(move)_gmPlace(move.r,move.c);
+}
+
+function _gmAISmart(){
+  var best=null,bestScore=-Infinity;
+  var color=_gmTurn,opp=color===1?2:1;
+  var dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for(var r=0;r<15;r++)for(var c=0;c<15;c++){
+    if(_gmBoard[r][c])continue;
+    // Check if near existing stones (within 2)
+    var near=0;for(var dr=-2;dr<=2&&!near;dr++)for(var dc=-2;dc<=2&&!near;dc++){var nr2=r+dr,nc2=c+dc;if(nr2>=0&&nr2<15&&nc2>=0&&nc2<15&&_gmBoard[nr2][nc2])near=1;}
+    if(!near)continue;
+    var score=0;
+    _gmBoard[r][c]=color;
+    for(var d=0;d<4;d++){
+      var cnt=1,open=0;
+      for(var i=1;i<5;i++){var nr=r+dirs[d][0]*i,nc=c+dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===color)cnt++;else{if(nr>=0&&nr<15&&nc>=0&&nc<15&&!_gmBoard[nr][nc])open++;break;}}
+      for(var i=1;i<5;i++){var nr=r-dirs[d][0]*i,nc=c-dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===color)cnt++;else{if(nr>=0&&nr<15&&nc>=0&&nc<15&&!_gmBoard[nr][nc])open++;break;}}
+      score+=cnt>=5?100000:cnt===4?open>=1?5000:500:cnt===3?open>=1?400:100:cnt===2?10:0;
+    }
+    _gmBoard[r][c]=0;
+    // Also score opponent's potential
+    _gmBoard[r][c]=opp;
+    for(var d=0;d<4;d++){
+      var cnt2=1;
+      for(var i=1;i<5;i++){var nr=r+dirs[d][0]*i,nc=c+dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===opp)cnt2++;else break;}
+      for(var i=1;i<5;i++){var nr=r-dirs[d][0]*i,nc=c-dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===opp)cnt2++;else break;}
+      if(cnt2>=4)score+=4000;else if(cnt2===3)score+=300;
+    }
+    _gmBoard[r][c]=0;
+    // Center bonus
+    score+=(7-Math.abs(r-7))+(7-Math.abs(c-7));
+    if(score>bestScore){bestScore=score;best={r:r,c:c};}
+  }
+  return best||{r:7,c:7};
+}
+
+function _gmRecordGame(won){
+  if(!_userId)return;
+  var diff=(_gmMode==='pve')?_gmAILevel:(_gmMode==='pvp_match'?'match':'friend');
+  _sbReq('POST','/rest/v1/leaderboard',{user_id:parseInt(_userId),game:'gomoku',difficulty:diff,score:won?1:0,time:_gmMoves.length});
+}
+
+// Button wiring
+document.getElementById("cardGomoku").onclick=function(){_initAudio();ss("screenGomokuMode");};
+document.getElementById("btnBackGomoku").onclick=function(){ss("screenSelect");};
+document.getElementById("btnGomokuFriend").onclick=function(){_loadFriends('battle_gomoku');}; // reuse friends flow
+document.getElementById("btnGomokuMatch").onclick=function(){_gmQuickMatch();};
+document.getElementById("btnGomokuAI").onclick=function(){ss("screenGomokuAI");};
+document.getElementById("btnBackGomokuAI").onclick=function(){ss("screenGomokuMode");};
+document.getElementById("btnBackGM").onclick=function(){_gmOver=1;if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenGomokuMode");};
+document.getElementById("gmRestart").onclick=function(){_gmInit(_gmMode,_gmAILevel);};
+document.getElementById("btnBackGomokuWait").onclick=function(){ss("screenGomokuMode");};
+
+["easy","normal","hard"].forEach(function(d){
+  document.getElementById("gmAI"+d[0].toUpperCase()+d.slice(1)).onclick=function(){
+    _gmInit('pve',d);
+  };
+});
+
+// Canvas click
+document.getElementById("gmBoard").addEventListener("click",function(e){
+  if(_gmOver)return;
+  if(_gmMode==='pve'&&_gmTurn!==_gmMyColor)return;
+  if((_gmMode==='pvp_friend'||_gmMode==='pvp_match')&&_gmTurn!==_gmMyColor)return;
+  var rect=_gmCanvas.getBoundingClientRect();
+  var x=e.clientX-rect.left,y=e.clientY-rect.top;
+  var c=Math.round((x-_gmSz)/_gmSz),r=Math.round((y-_gmSz)/_gmSz);
+  if(r<0||r>=15||c<0||c>=15)return;
+  _gmPlace(r,c);
+});
+
+// Quick match
+function _gmQuickMatch(){
+  if(!_sbClient)return;
+  ss("screenGomokuWait");
+  _sbReq('GET','/rest/v1/rooms?game=eq.gomoku&status=eq.matching&select=*&limit=1').then(function(r){return r.json();}).then(function(d){
+    if(d&&d.length>0){
+      // Join existing match
+      var room=d[0];
+      _sbReq('PATCH','/rest/v1/rooms?id=eq.'+room.id,{status:'playing',player2_id:parseInt(_userId)}).then(function(){
+        _gmRoom=room;_gmMode='pvp_match';_gmMyColor=2;_gmPlayer=2;
+        _gmInit('pvp_match','');_gmTurn=1;
+        _sbChannel=_sbClient.channel('room-gm-'+room.id);
+        _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+        _sbChannel.subscribe();
+      });
+    }else{
+      // Create new match room
+      _sbReq('POST','/rest/v1/rooms',{code:_bGenCode(),status:'matching',game:'gomoku',player1_id:parseInt(_userId)}).then(function(r){return r.json();}).then(function(rd){
+        if(!rd||!rd.length)return;
+        var room=rd[0];_gmRoom=room;_gmMode='pvp_match';_gmMyColor=1;_gmPlayer=1;
+        // Wait for opponent
+        var poll=setInterval(function(){
+          _sbReq('GET','/rest/v1/rooms?id=eq.'+room.id+'&select=status,player2_id&limit=1').then(function(r){return r.json();}).then(function(pd){
+            if(pd&&pd.length&&pd[0].status==='playing'){clearInterval(poll);
+              _gmInit('pvp_match','');_gmTurn=1;
+              _sbChannel=_sbClient.channel('room-gm-'+room.id);
+              _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+              _sbChannel.subscribe();
+            }
+          });
+        },1000);
+      });
+    }
+  });
+}
 
 // ===== STATS SYSTEM =====
 function statsKey(g,d){return g+"_"+d+"_stats";}
