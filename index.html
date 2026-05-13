@@ -2248,6 +2248,7 @@ function _challengeFriend(fid,fname){
         _sbChannel=_sbClient.channel('room-gm-'+data[0].id);
         _sbChannel.on('broadcast',{event:'join'},function(){_gmInit('pvp_friend','');_gmTurn=1;});
         _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+_sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1;document.getElementById("gmStatus").textContent='对手退出，你赢了！';_gmRecordGame(1);setTimeout(function(){ss("screenGomokuMode");},3000);}});
         _sbChannel.subscribe();
       });
     });
@@ -2299,6 +2300,7 @@ function _startInvitePoll(){
                   _gmInit('pvp_friend','');_gmTurn=1;
                   _sbChannel=_sbClient.channel('room-gm-'+room.id);
                   _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+_sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1;document.getElementById("gmStatus").textContent='对手退出，你赢了！';_gmRecordGame(1);setTimeout(function(){ss("screenGomokuMode");},3000);}});
                   _sbChannel.subscribe(function(s){if(s==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}});
                 }else{
                   _bPlayer=2;_bRoom=room;_bStartGame();_bStarted=1;
@@ -2715,7 +2717,12 @@ document.getElementById("btnGomokuFriend").onclick=function(){_loadFriends('batt
 document.getElementById("btnGomokuMatch").onclick=function(){_gmQuickMatch();};
 document.getElementById("btnGomokuAI").onclick=function(){ss("screenGomokuAI");};
 document.getElementById("btnBackGomokuAI").onclick=function(){ss("screenGomokuMode");};
-document.getElementById("btnBackGM").onclick=function(){_gmOver=1;if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenGomokuMode");};
+document.getElementById("btnBackGM").onclick=function(){
+  if((_gmMode==='pvp_friend'||_gmMode==='pvp_match')&&!_gmOver&&_sbChannel){
+    _sbChannel.send({type:'broadcast',event:'gm_forfeit',payload:{}});
+  }
+  _gmOver=1;if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenGomokuMode");
+};
 document.getElementById("btnBackGomokuWait").onclick=function(){_gmOver=1;if(_sbChannel){_sbChannel.unsubscribe();_sbChannel=null;}ss("screenGomokuMode");};
 document.getElementById("btnBackGomokuWait").onclick=function(){ss("screenGomokuMode");};
 
@@ -2759,6 +2766,7 @@ function _gmQuickMatch(){
         _gmInit('pvp_match','');_gmTurn=1;
         _sbChannel=_sbClient.channel('room-gm-'+room.id);
         _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+_sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1;document.getElementById("gmStatus").textContent='对手退出，你赢了！';_gmRecordGame(1);setTimeout(function(){ss("screenGomokuMode");},3000);}});
         _sbChannel.subscribe();
       });
     }else{
@@ -2773,6 +2781,7 @@ function _gmQuickMatch(){
               _gmInit('pvp_match','');_gmTurn=1;
               _sbChannel=_sbClient.channel('room-gm-'+room.id);
               _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
+_sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1;document.getElementById("gmStatus").textContent='对手退出，你赢了！';_gmRecordGame(1);setTimeout(function(){ss("screenGomokuMode");},3000);}});
               _sbChannel.subscribe();
             }
           });
