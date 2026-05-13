@@ -1930,12 +1930,18 @@ function _loadFriends(){
     var html='';
     if(data&&data.length>0){
       var ids=data.map(function(f){return f.friend_id;});
-      return _sbReq('GET','/rest/v1/users?id=in.('+ids.join(',')+')&select=id,display_name,username').then(function(r){return r.json();}).then(function(users){
+      return _sbReq('GET','/rest/v1/users?id=in.('+ids.join(',')+')&select=id,display_name,username,last_seen,status').then(function(r){return r.json();}).then(function(users){
         var umap={};if(users)users.forEach(function(u){umap[u.id]=u;});
+        var now=Date.now();
         data.forEach(function(f){
           var u=umap[f.friend_id];var dname=u?u.display_name:'--';var uname=u?u.username:'--';
+          var st=u?u.status||'offline':'offline';
+          var ls=u&&u.last_seen?now-new Date(u.last_seen).getTime():999999;
+          if(ls>30000&&st!=='playing')st='offline';
+          var sc='';if(st==='online')sc='🟢 在线';else if(st==='playing')sc='🎮 游戏中';else sc='⚫ 离线';
           html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;" onclick="_openChat('+f.friend_id+',\''+dname+'\')">';
-          html+='<div><div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:11px;color:#888;">@'+_esc(uname)+'</span></div></div>';
+          html+='<div><div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:10px;color:#888;">@'+_esc(uname)+'</span></div>';
+          html+='<div style="font-size:10px;color:#888;">'+sc+'</div></div>';
           html+='<button class="ctrl-btn" style="font-size:11px;padding:3px 8px;background:#2a1a1a;border-color:#844;" onclick="event.stopPropagation();_delFriend('+f.friend_id+',\''+dname+'\')">🗑</button>';
           html+='</div>';
         });
@@ -2079,9 +2085,15 @@ document.getElementById("chatInput").addEventListener("keydown",function(e){if(e
 document.getElementById("btnBackChat").onclick=function(){if(_chatLoop){clearInterval(_chatLoop);_chatLoop=null;}ss("screenFriends");_loadFriends();};
 document.getElementById("btnChatBattle").onclick=function(){
   if(!_chatFriendId)return;
-  _sbReq('GET','/rest/v1/users?id=eq.'+_chatFriendId+'&select=display_name&limit=1').then(function(r){return r.json();}).then(function(u){
-    var n=u&&u.length?u[0].display_name:'好友';
-    _challengeFriend(_chatFriendId,n);
+  _sbReq('GET','/rest/v1/users?id=eq.'+_chatFriendId+'&select=display_name,status,last_seen').then(function(r){return r.json();}).then(function(u){
+    if(!u||!u.length)return;
+    var name=u[0].display_name||'好友';
+    var st=u[0].status||'offline';
+    var ls=u[0].last_seen?Date.now()-new Date(u[0].last_seen).getTime():999999;
+    if(ls>30000)st='offline';
+    if(st==='playing'){_achieveBadge('好友正在游戏中','⚠️');return;}
+    if(st==='offline'){_achieveBadge('好友不在线','⚠️');return;}
+    _challengeFriend(_chatFriendId,name);
   });
 };
 
@@ -2175,9 +2187,15 @@ function _updateUnread(){
 var _unreadMsgs=0;
 function _markChatRead(){try{localStorage.setItem("goblin_chat_read",new Date().toISOString());}catch(e){}_unreadMsgs=0;_updateBadges();}
 document.getElementById("btnFriendsMenu").addEventListener("click",function(){_markChatRead();});
+// Heartbeat - update online status every 15s
 if(_userId){
   _chatPoll=setInterval(_updateUnread,5000);
   _updateUnread();
+  setInterval(function(){
+    if(!_userId)return;
+    var st='online';if(typeof _bStarted!=='undefined'&&_bStarted)st='playing';
+    _sbReq('PATCH','/rest/v1/users?id=eq.'+_userId,{last_seen:new Date().toISOString(),status:st});
+  },15000);
 }
 
 function _createRoom(){
