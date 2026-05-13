@@ -1795,7 +1795,7 @@ function _b2Draw(){
 function _bLose(){
   _b1GameOver=1;_bStarted=0;
   if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}
-  if(_sbChannel){_sbChannel.send({type:'broadcast',event:'lose',payload:{}});}
+  if(_bRoom){_sbReq('PATCH','/rest/v1/rooms?id=eq.'+_bRoom.id,{loser:_bPlayer});}
   document.getElementById("battleResultTitle").textContent="💀 你输了！";
   document.getElementById("battleResultDetail").textContent="房间: "+(_bRoom?_bRoom.code:"");
   document.getElementById("battleResultOverlay").style.display="flex";
@@ -1807,8 +1807,19 @@ function _bWin(){
   document.getElementById("battleResultDetail").textContent="房间: "+(_bRoom?_bRoom.code:"");
   document.getElementById("battleResultOverlay").style.display="flex";
 }
+var _bPollId=null;
+function _bStartPoll(){
+  if(_bPollId)clearInterval(_bPollId);
+  _bPollId=setInterval(function(){
+    if(!_bRoom||_b1GameOver)return;
+    _sbReq('GET','/rest/v1/rooms?id=eq.'+_bRoom.id+'&select=loser&limit=1').then(function(r){return r.json();}).then(function(d){
+      if(d&&d.length>0&&d[0].loser&&!_b1GameOver){_bWin();}
+    });
+  },2000);
+}
 document.getElementById("battleResultBtn").onclick=function(){
   document.getElementById("battleResultOverlay").style.display="none";
+  if(_bPollId){clearInterval(_bPollId);_bPollId=null;}
   _bCleanupRoom();ss("screenBattleLobby");
 };
 
@@ -1865,7 +1876,8 @@ document.getElementById("btnJoinRoom").onclick=function(){
 function _bStartGame(){
   ss("screenBattle");_b1Init();
   document.getElementById("battleInfo").textContent="房间: "+_bRoom.code;
-  if(_bPlayer===2)_bStarted=1; // Joiner starts immediately
+  if(_bPlayer===2)_bStarted=1;
+  _bStartPoll();
 }
 
 document.getElementById("btnBackBattle").onclick=function(){ss("screenSelect");};
@@ -1874,7 +1886,7 @@ function _bCleanupRoom(){
   if(_bRoom&&_bRoom.id){_sbReq('DELETE','/rest/v1/rooms?id=eq.'+_bRoom.id);_bRoom=null;}
 }
 document.getElementById("btnBackWait").onclick=function(){_bCleanupRoom();ss("screenBattleLobby");};
-document.getElementById("btnBackBG").onclick=function(){if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}_bCleanupRoom();ss("screenBattleLobby");};
+document.getElementById("btnBackBG").onclick=function(){if(_b1Loop){clearInterval(_b1Loop);_b1Loop=null;}if(_bPollId){clearInterval(_bPollId);_bPollId=null;}_bCleanupRoom();ss("screenBattleLobby");};
 document.getElementById("tDiffBattle").onclick=function(){_initAudio();ss("screenBattleLobby");};
 
 // Battle button wiring
