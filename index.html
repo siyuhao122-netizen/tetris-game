@@ -175,6 +175,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <!-- MENU -->
 <div class="screen active" id="screenMenu">
   <div style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:420px;margin-bottom:4px;">
+    <button class="ctrl-btn" id="btnVipMenu" style="font-size:13px;padding:5px 12px;background:#2a2a1e;border-color:#ff0;">💎 VIP</button>
     <button class="ctrl-btn" id="btnFriendsMenu" style="font-size:13px;padding:5px 12px;background:#2a2a1e;border-color:#f90;position:relative;">👥 好友<span id="friendsBadge" style="display:none;position:absolute;top:-6px;right:-6px;background:#f44;color:#fff;font-size:10px;width:18px;height:18px;border-radius:9px;line-height:18px;text-align:center;">0</span></button>
   </div>
   <div class="menu-goblin">👺</div>
@@ -675,6 +676,32 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   </div>
 </div>
 
+<!-- VIP SCREEN -->
+<div class="screen" id="screenVip">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackVip">← 返回</button></div>
+  <div class="select-title">💎 会员中心</div>
+  <div id="vipStatus" style="font-size:15px;color:var(--accent);margin-bottom:16px;"></div>
+
+  <div class="game-card" style="border-color:#ff0;margin-bottom:8px;">
+    <div class="name">🆓 免费会员 · 3天</div>
+    <div class="desc">得分 ×1.5 | 扫雷用时 ×2/3</div>
+    <input id="vipCodeInput" type="text" maxlength="10" placeholder="输入兑换码" style="width:100%;padding:8px;border-radius:6px;border:1px solid #555;background:#111;color:#fff;font-size:14px;text-align:center;margin:8px 0;box-sizing:border-box;" autocomplete="off">
+    <button class="ctrl-btn" id="btnVipFree" style="background:#2a2a1e;border-color:#ff0;width:100%;">🎫 兑换</button>
+  </div>
+
+  <div class="game-card" style="border-color:#4af;margin-bottom:8px;">
+    <div class="name">⭐ VIP Plus · 1个月</div>
+    <div class="desc">得分 ×2 | 扫雷用时 ×1/2 | ￥1</div>
+    <button class="ctrl-btn" id="btnVipPlus" style="background:#1a1a3e;border-color:#4af;width:100%;margin-top:8px;">💎 ￥1 订阅</button>
+  </div>
+
+  <div class="game-card" style="border-color:#a0f;margin-bottom:8px;">
+    <div class="name">👑 VIP Pro · 1个月</div>
+    <div class="desc">得分 ×2.5 | 扫雷用时 ×1/3 | ￥2</div>
+    <button class="ctrl-btn" id="btnVipPro" style="background:#2a1a3e;border-color:#a0f;width:100%;margin-top:8px;">👑 ￥2 订阅</button>
+  </div>
+</div>
+
 <!-- STATS SCREEN -->
 <div class="screen" id="screenStats">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackStats">← 返回</button></div>
@@ -976,7 +1003,7 @@ function tui(){tse.textContent=tsc;tle.textContent=tlv;tlie.textContent=tln;}
 function tdb(){tcx.clearRect(0,0,200,400);tcx.strokeStyle="#1a1a2e";for(var r=0;r<=20;r++){tcx.beginPath();tcx.moveTo(0,r*20);tcx.lineTo(200,r*20);tcx.stroke();}for(var c=0;c<=10;c++){tcx.beginPath();tcx.moveTo(c*20,0);tcx.lineTo(c*20,400);tcx.stroke();}for(var r=0;r<20;r++)for(var c=0;c<10;c++){if(tb[r][c]===8){tcx.fillStyle="#333";tcx.fillRect(c*20+1,r*20+1,18,18);}else if(tb[r][c]){var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];tcx.fillStyle=CL[tb[r][c]-1];tcx.fillRect(c*20+1,r*20+1,18,18);}}if(tcu&&!tg){var gy=tcu.y;while(tcp(tcu.shape,tcu.x,gy+1))gy++;for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by=gy+r;if(by<0)continue;tcx.fillStyle="rgba(255,255,255,0.07)";tcx.fillRect((tcu.x+c)*20+1,by*20+1,18,18);tcx.strokeStyle="rgba(255,255,255,0.15)";tcx.strokeRect((tcu.x+c)*20+1,by*20+1,18,18);}}if(tcu&&!tg){var CL2=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<tcu.shape.length;r++)for(var c=0;c<tcu.shape[r].length;c++){if(!tcu.shape[r][c])continue;var by2=tcu.y+r;if(by2<0)continue;tcx.fillStyle=CL2[tcu.type];tcx.fillRect((tcu.x+c)*20+1,by2*20+1,18,18);}}}
 function tdp(){tncx.clearRect(0,0,60,60);if(tn){var s=tn.shape,rs=s.length,cs=s[0].length,ox=(60-cs*16)/2,oy=(60-rs*16)/2;var CL=["#0ff","#ff0","#a0f","#0f0","#f00","#00f","#f80"];for(var r=0;r<rs;r++)for(var c=0;c<cs;c++){if(!s[r][c])continue;tncx.fillStyle=CL[tn.type];tncx.fillRect(ox+c*16+1,oy+r*16+1,14,14);}}}
 function tda(){tdb();tdp();}
-function tgo(){_playGameOver();recordGame("tetris",tc,tsc,tgt,0);var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();if(_userId)_submitLB("tetris",tc,tsc,0);}
+function tgo(){_playGameOver();tsc=Math.floor(tsc*_vipMultiplier());recordGame("tetris",tc,tsc,tgt,0);var c=TD[tc];var m=String(Math.floor(tgt/60)).padStart(2,"0"),s=String(tgt%60).padStart(2,"0");document.getElementById("goScore").textContent=tsc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u4fc4\u7f57\u65af\u65b9\u5757";document.getElementById("goDetail").textContent="\u6d88\u884c "+tln+" \u884c \u00b7 \u7528\u65f6 "+m+":"+s;var nw=shs("tetris",tc,tsc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("tetris",tc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="tetris";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();if(_userId)_submitLB("tetris",tc,tsc,0);}
 var SD={easy:{l:"\u7b80\u5355",s:300,e:"🟢"},normal:{l:"\u666e\u901a",s:250,e:"🟡"},hard:{l:"\u56f0\u96be",s:200,e:"🔴"}};
 var _snakeObsOn=parseInt(localStorage.getItem("goblin_snake_obs")||"1",10);var _snakeObsShuffle=parseInt(localStorage.getItem("goblin_snake_shuffle")||"0",10);var _sGoldApple=null;var _sGoldActive=0;var _sGoldStart=0;var _sFoodCount=0;
 var sc="normal",sbody=[],sdir=1,snxt=2,sfood=null,ssc=0,sgt=0,spau=0,sgov=0,sdi=null,sti=null,sts=0,_sObstacles=[];
@@ -1052,7 +1079,7 @@ function sTp(){if(sgov){return;}spau=!spau;if(spau)_playPause();else _playResume
 function sda(){scx.clearRect(0,0,340,340);scx.strokeStyle="#1a2";scx.lineWidth=0.5;for(var r=0;r<=G;r++){scx.beginPath();scx.moveTo(0,r*SZ);scx.lineTo(340,r*SZ);scx.stroke();}for(var c=0;c<=G;c++){scx.beginPath();scx.moveTo(c*SZ,0);scx.lineTo(c*SZ,340);scx.stroke();}if(sfood){scx.fillStyle="#f44";scx.beginPath();scx.arc(sfood.x*SZ+SZ/2,sfood.y*SZ+SZ/2,6,0,Math.PI*2);scx.fill();}
 if(_sGoldApple){scx.fillStyle="#fd0";scx.shadowColor="#ff0";scx.shadowBlur=6;scx.beginPath();scx.arc(_sGoldApple.x*SZ+SZ/2,_sGoldApple.y*SZ+SZ/2,7,0,Math.PI*2);scx.fill();scx.shadowBlur=0;}
 if(_sGoldActive){scx.fillStyle="rgba(255,255,0,0.15)";scx.fillRect(0,0,340,340);}for(var oi2=0;oi2<_sObstacles.length;oi2++){var ob2=_sObstacles[oi2];scx.fillStyle="#822";scx.fillRect(ob2.x*SZ+1,ob2.y*SZ+1,SZ-2,SZ-2);scx.fillStyle="#622";scx.fillRect(ob2.x*SZ+SZ/2-3,ob2.y*SZ+SZ/2-3,6,6);}for(var i=0;i<sbody.length;i++){var b=sbody[i];var gr=Math.max(0,1-i/20);scx.fillStyle="rgb("+Math.floor(50+80*gr)+","+Math.floor(180+40*gr)+","+Math.floor(50+80*gr)+")";scx.fillRect(b.x*SZ+1,b.y*SZ+1,SZ-2,SZ-2);if(i===0){scx.fillStyle="#fff";scx.fillRect(b.x*SZ+4,b.y*SZ+4,2,2);scx.fillRect(b.x*SZ+10,b.y*SZ+4,2,2);}}}
-function sgo(){_playGameOver();recordGame("snake",sc,ssc,sgt,0);var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);if(_userId)_submitLB("snake",sc,ssc,0);}
+function sgo(){_playGameOver();ssc=Math.floor(ssc*_vipMultiplier());recordGame("snake",sc,ssc,sgt,0);var c=SD[sc];var m=String(Math.floor(sgt/60)).padStart(2,"0"),_s=String(sgt%60).padStart(2,"0");document.getElementById("goScore").textContent=ssc;document.getElementById("goDiff").textContent=c.e+" "+c.l+"\u6a21\u5f0f \u00b7 \u8d2a\u5403\u86c7";document.getElementById("goDetail").textContent="\u8eab\u957f "+sbody.length+" \u00b7 \u7528\u65f6 "+m+":"+_s;var nw=shs("snake",sc,ssc);document.getElementById("goRecord").textContent=nw?"🏆 \u65b0\u7eaa\u5f55\uff01":"🏆 \u6700\u9ad8 "+ghs("snake",sc);document.getElementById("gameOverOverlay").classList.add("active");window._gog="snake";_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();sbe.textContent=ghs("snake",sc);if(_userId)_submitLB("snake",sc,ssc,0);}
 document.getElementById("cardTetris").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenTetrisDiff");};
 document.getElementById("cardSnake").onclick=function(){_initAudio();document.addEventListener("click",function(){_initAudio();},{once:true});uhs();ss("screenSnakeDiff");_syncSnakeToggles();};
 ab("sObsToggle",_toggleSnakeObs);ab("sShuffleToggle",_toggleSnakeShuffle);
@@ -1662,7 +1689,7 @@ function bRestartConfirm(){
   showConfirm("确定重新开始？",function(){bInit();});
 }
 function bGO(){
-  _playGameOver();recordGame("breakout",bc,bScore,bTimer,0);
+  _playGameOver();bScore=Math.floor(bScore*_vipMultiplier());recordGame("breakout",bc,bScore,bTimer,0);
   var c=BD[bc];var m=String(Math.floor(bTimer/60)).padStart(2,"0"),s=String(bTimer%60).padStart(2,"0");
   document.getElementById("goScore").textContent=bScore;
   document.getElementById("goDiff").textContent=c.e+" "+c.l+" · 打砖块";
@@ -2307,6 +2334,103 @@ document.onkeydown=function(e){
   if(_origKBattle)_origKBattle(e);
 };
 
+// ===== VIP SYSTEM =====
+var _vipTier=null,_vipExpiry=null;
+
+function _loadVip(){
+  if(!_userId)return;
+  _sbReq('GET','/rest/v1/users?id=eq.'+_userId+'&select=vip_tier,vip_expiry&limit=1').then(function(r){return r.json();}).then(function(d){
+    if(d&&d.length){_vipTier=d[0].vip_tier;_vipExpiry=d[0].vip_expiry;}
+    _updateVipDisplay();
+  });
+}
+function _updateVipDisplay(){
+  var now=Date.now();
+  if(_vipExpiry&&new Date(_vipExpiry).getTime()<now){_vipTier=null;_vipExpiry=null;}
+  var el=document.getElementById("menuUsername");
+  var badge='';
+  if(_vipTier==='free')badge='<span style="color:#ff0;font-size:11px;">[VIP]</span> ';
+  else if(_vipTier==='plus')badge='<span style="color:#4af;font-size:11px;">[VIP+]</span> ';
+  else if(_vipTier==='pro')badge='<span style="color:#a0f;font-size:11px;">[VIP Pro]</span> ';
+  if(el)el.innerHTML=badge+(_displayName?_displayName+' ('+_username+')':'点击登录');
+  if(_vipTier){
+    el.setAttribute("title","到期: "+new Date(_vipExpiry).toLocaleDateString("zh-CN"));
+    el.style.cursor="pointer";
+  }
+}
+function _vipMultiplier(){
+  if(!_vipTier||!_vipExpiry)return 1;
+  if(new Date(_vipExpiry).getTime()<Date.now()){_vipTier=null;return 1;}
+  if(_vipTier==='free')return 1.5;
+  if(_vipTier==='plus')return 2;
+  if(_vipTier==='pro')return 2.5;
+  return 1;
+}
+function _vipTimeDivider(){
+  if(!_vipTier||!_vipExpiry)return 1;
+  if(new Date(_vipExpiry).getTime()<Date.now()){_vipTier=null;return 1;}
+  if(_vipTier==='free')return 2/3;
+  if(_vipTier==='plus')return 1/2;
+  if(_vipTier==='pro')return 1/3;
+  return 1;
+}
+
+document.getElementById("btnVipMenu").onclick=function(){
+  if(!_userId){_showAuthModal('login');return;}
+  _loadVip();_showVipScreen();
+};
+document.getElementById("btnBackVip").onclick=function(){ss("screenMenu");};
+
+function _showVipScreen(){
+  var now=Date.now();
+  var s='';
+  if(_vipTier&&_vipExpiry&&new Date(_vipExpiry).getTime()>now){
+    var tn='';if(_vipTier==='free')tn='免费会员';else if(_vipTier==='plus')tn='VIP Plus';else tn='VIP Pro';
+    s='当前: <b>'+tn+'</b> · 到期: '+new Date(_vipExpiry).toLocaleString("zh-CN");
+  }else{s='暂无会员';}
+  document.getElementById("vipStatus").textContent=s;
+  ss("screenVip");
+}
+
+document.getElementById("btnVipFree").onclick=function(){
+  var code=document.getElementById("vipCodeInput").value.trim();
+  if(!code)return;
+  _sbReq('GET','/rest/v1/vip_codes?code=eq.'+encodeURIComponent(code)+'&select=*&limit=1').then(function(r){return r.json();}).then(function(d){
+    if(!d||!d.length){_achieveBadge('兑换码无效','❌');return;}
+    var c=d[0];
+    if(c.used_by){_achieveBadge('兑换码已被使用','❌');return;}
+    var expiry=new Date(Date.now()+3*86400000).toISOString();
+    _sbReq('PATCH','/rest/v1/users?id=eq.'+_userId,{vip_tier:'free',vip_expiry:expiry}).then(function(){
+      _sbReq('PATCH','/rest/v1/vip_codes?id=eq.'+c.id,{used_by:parseInt(_userId),used_at:new Date().toISOString()});
+    }).then(function(){
+      _vipTier='free';_vipExpiry=expiry;_updateVipDisplay();_showVipScreen();_achieveBadge('VIP 已激活！','✅');
+    });
+  });
+};
+
+document.getElementById("btnVipPlus").onclick=function(){
+  if(!confirm('订阅 VIP Plus ￥1/月\n\n请先向微信转账后点击确定'))return;
+  var expiry=new Date(Date.now()+30*86400000).toISOString();
+  _sbReq('PATCH','/rest/v1/users?id=eq.'+_userId,{vip_tier:'plus',vip_expiry:expiry}).then(function(){
+    _vipTier='plus';_vipExpiry=expiry;_updateVipDisplay();_showVipScreen();_achieveBadge('VIP Plus 已激活！','✅');
+  });
+};
+
+document.getElementById("btnVipPro").onclick=function(){
+  if(!confirm('订阅 VIP Pro ￥2/月\n\n请先向微信转账后点击确定'))return;
+  var expiry=new Date(Date.now()+30*86400000).toISOString();
+  _sbReq('PATCH','/rest/v1/users?id=eq.'+_userId,{vip_tier:'pro',vip_expiry:expiry}).then(function(){
+    _vipTier='pro';_vipExpiry=expiry;_updateVipDisplay();_showVipScreen();_achieveBadge('VIP Pro 已激活！','✅');
+  });
+};
+
+// Load VIP on login
+var _origSaveSession=_saveSession;
+_saveSession=function(uid,user,dname){
+  _origSaveSession(uid,user,dname);
+  _loadVip();
+};
+
 // ===== STATS SYSTEM =====
 function statsKey(g,d){return g+"_"+d+"_stats";}
 function loadStats(g,d){
@@ -2661,6 +2785,7 @@ function mTogglePause(){
   else{document.getElementById("mPause").textContent="⏸ 暂停";mStatusEl.textContent=mFlagMode?"🚩 标记模式已开启":"💣 扫雷中...";}
 }
 function mGO(won){
+  mTimer=Math.floor(mTimer*_vipTimeDivider());
   document.querySelector("#gameOverOverlay .o-title").textContent=won?"🎉 你赢了！":"💣 踩雷了！";
   document.getElementById("goDiff").textContent=MG[mc].e+" "+MG[mc].label;
   var se=document.getElementById("goScore");se.textContent=mTimer+"s";se.style.color=won?"#4f4":"#f44";
