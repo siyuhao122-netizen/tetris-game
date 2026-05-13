@@ -1896,20 +1896,28 @@ function _showMainLobby(){
 // Friends list
 function _loadFriends(){
   if(!_userId){_showAuthModal('login');return;}
-  _sbReq('GET','/rest/v1/friends?user_id=eq.'+_userId+'&select=id,friend_id,users!friends_friend_id_fkey(display_name,username)&limit=50').then(function(r){return r.json();})
+  _sbReq('GET','/rest/v1/friends?user_id=eq.'+_userId+'&select=id,friend_id&limit=50').then(function(r){return r.json();})
   .then(function(data){
     var html='';
     if(data&&data.length>0){
-      data.forEach(function(f){
-        var u=f.users;var dname=u?u.display_name:'--';var uname=u?u.username:'--';
-        html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;" onclick="_challengeFriend('+f.friend_id+',\''+dname+'\')">';
-        html+='<div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:11px;color:#888;">@'+_esc(uname)+'</span></div>';
-        html+='</div>';
+      var ids=data.map(function(f){return f.friend_id;});
+      return _sbReq('GET','/rest/v1/users?id=in.('+ids.join(',')+')&select=id,display_name,username').then(function(r){return r.json();}).then(function(users){
+        var umap={};if(users)users.forEach(function(u){umap[u.id]=u;});
+        data.forEach(function(f){
+          var u=umap[f.friend_id];var dname=u?u.display_name:'--';var uname=u?u.username:'--';
+          html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;" onclick="_challengeFriend('+f.friend_id+',\''+dname+'\')">';
+          html+='<div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:11px;color:#888;">@'+_esc(uname)+'</span></div>';
+          html+='</div>';
+        });
+        document.getElementById("friendsList").innerHTML=html;
+        document.getElementById("friendsEmpty").style.display='none';
+        ss("screenFriends");
       });
+    } else {
+      document.getElementById("friendsList").innerHTML='';
+      document.getElementById("friendsEmpty").style.display='block';
+      ss("screenFriends");
     }
-    document.getElementById("friendsList").innerHTML=html;
-    document.getElementById("friendsEmpty").style.display=data&&data.length?'none':'block';
-    ss("screenFriends");
   });
 }
 
@@ -1965,10 +1973,12 @@ function _startInvitePoll(){
   if(_invitePoll)clearInterval(_invitePoll);
   _invitePoll=setInterval(function(){
     if(!_userId)return;
-    _sbReq('GET','/rest/v1/battle_invites?to_id=eq.'+_userId+'&status=eq.pending&select=id,from_id,room_code,users!battle_invites_from_id_fkey(display_name)&limit=1').then(function(r){return r.json();})
+    _sbReq('GET','/rest/v1/battle_invites?to_id=eq.'+_userId+'&status=eq.pending&select=id,from_id,room_code&limit=1').then(function(r){return r.json();})
     .then(function(d){
       if(d&&d.length>0){
-        var inv=d[0];var fname=inv.users?inv.users.display_name:'好友';
+        var inv=d[0];
+        _sbReq('GET','/rest/v1/users?id=eq.'+inv.from_id+'&select=display_name&limit=1').then(function(r){return r.json();}).then(function(ud){
+        var fname=(ud&&ud.length)?ud[0].display_name:'好友';
         document.getElementById("inviteMsg").textContent=fname+' 邀请你对战！';
         document.getElementById("inviteOverlay").style.display="flex";
         document.getElementById("inviteAccept").onclick=function(){
