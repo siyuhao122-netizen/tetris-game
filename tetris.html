@@ -2249,6 +2249,67 @@ function tdfLose(){
   if(tdfGold>=1000)_unlockAch('towerdefense_rich');
   _initAudio();uhs();
 }
+function tdfDraw(){
+  if(!tdfCtx)return;
+  tdfCtx.clearRect(0,0,TDF_COLS*TDF_CELL,TDF_ROWS*TDF_CELL);
+  // Draw grid cells
+  for(var r=0;r<TDF_ROWS;r++){
+    for(var c=0;c<TDF_COLS;c++){
+      var isPath=tdfPathSet[c+','+r];
+      tdfCtx.fillStyle=isPath?'#2a2a1a':'#0a0a2a';
+      tdfCtx.fillRect(c*TDF_CELL+1,r*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+    }
+  }
+  // Draw towers
+  tdfTowers.forEach(function(tw){
+    var cfg=TD_TOWERS[tw.type];
+    var cx=tw.x*TDF_CELL+TDF_CELL/2,cy=tw.y*TDF_CELL+TDF_CELL/2;
+    var r=TDF_CELL/2-3;
+    tdfCtx.fillStyle=cfg.color;
+    tdfCtx.beginPath();tdfCtx.arc(cx,cy,r,0,Math.PI*2);tdfCtx.fill();
+    tdfCtx.fillStyle='#fff';tdfCtx.font=(TDF_CELL/2)+'px sans-serif';
+    tdfCtx.textAlign='center';tdfCtx.textBaseline='middle';
+    tdfCtx.fillText(cfg.icon,cx,cy-1);
+    if(tw.level>1){
+      tdfCtx.fillStyle='#ff0';tdfCtx.font='bold '+(TDF_CELL/4)+'px sans-serif';
+      tdfCtx.fillText(tw.level,cx+TDF_CELL/3,cy+TDF_CELL/3);
+    }
+  });
+  // Draw enemies
+  tdfEnemies.forEach(function(e){
+    var cx=e.x*TDF_CELL,cy=e.y*TDF_CELL;
+    var r=TDF_CELL/2-4;
+    tdfCtx.fillStyle=e.color;
+    tdfCtx.beginPath();tdfCtx.arc(cx,cy,r,0,Math.PI*2);tdfCtx.fill();
+    // HP bar for damaged enemies
+    if(e.hp<e.maxHp){
+      tdfCtx.fillStyle='#333';
+      tdfCtx.fillRect(cx-r,cy-r-3,r*2,3);
+      tdfCtx.fillStyle='#4f8';
+      tdfCtx.fillRect(cx-r,cy-r-3,r*2*(e.hp/e.maxHp),3);
+    }
+    // Slow indicator
+    if(e.slow&&Date.now()<e.slowUntil){
+      tdfCtx.strokeStyle='#8ff';tdfCtx.lineWidth=1;
+      tdfCtx.beginPath();tdfCtx.arc(cx,cy,r+2,0,Math.PI*2);tdfCtx.stroke();
+    }
+    // Boss glow
+    if(e.boss){
+      tdfCtx.strokeStyle='#f0f';tdfCtx.lineWidth=2;
+      tdfCtx.beginPath();tdfCtx.arc(cx,cy,r+3,0,Math.PI*2);tdfCtx.stroke();
+    }
+  });
+  // Prep phase timer overlay
+  if(tdfPrepPhase&&tdfSpawnQueue.length===0&&tdfEnemies.length===0&&tdfPrepTimer>0){
+    tdfCtx.fillStyle='rgba(255,255,255,0.8)';tdfCtx.font='bold 20px sans-serif';
+    tdfCtx.textAlign='center';
+    tdfCtx.fillText(Math.ceil(tdfPrepTimer)+'s',TDF_COLS*TDF_CELL/2,TDF_ROWS*TDF_CELL/2+8);
+    if(tdfReady>0){
+      tdfCtx.fillStyle='#4f8';tdfCtx.font='14px sans-serif';
+      tdfCtx.fillText('Ready ('+tdfReady+'/2)',TDF_COLS*TDF_CELL/2,TDF_ROWS*TDF_CELL/2-16);
+    }
+  }
+}
 
 // ====== BATTLE TETRIS ======
 var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0,_bTotalCleared=0;
