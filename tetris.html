@@ -2311,6 +2311,62 @@ function tdfDraw(){
   }
 }
 
+function tdfGetCell(x,y){
+  if(!tdfCanvas)return null;
+  var rect=tdfCanvas.getBoundingClientRect();
+  if(!rect||rect.width===0)return null;
+  var sx=TDF_COLS*TDF_CELL/rect.width,sy=TDF_ROWS*TDF_CELL/rect.height;
+  var cx=Math.floor((x-rect.left)*sx/TDF_CELL),cy=Math.floor((y-rect.top)*sy/TDF_CELL);
+  if(cx>=0&&cx<TDF_COLS&&cy>=0&&cy<TDF_ROWS)return{x:cx,y:cy};
+  return null;
+}
+// Board click: place tower or upgrade/sell existing
+(function(){
+  var board=document.getElementById('tdfBoard');
+  if(board._tdfBound)return;board._tdfBound=true;
+  board.addEventListener('click',function(e){
+    if(!tdfStarted||tdfGameOver||tdfPause)return;
+    var cell=tdfGetCell(e.clientX,e.clientY);if(!cell)return;
+    var tw=tdfGrid[cell.y][cell.x];
+    if(tw){
+      var cost=tdfUpgradeCost(tw);
+      var canUp=(tdfMaxLevel===Infinity||tw.level<tdfMaxLevel)&&tdfGold>=cost;
+      if(canUp){
+        showConfirm('升级 '+TD_TOWERS[tw.type].label+' Lv.'+tw.level+' → '+(tw.level+1)+' ('+cost+'g)',
+          function(){tdfUpgradeTower(cell.x,cell.y,true);tdfDraw();},'取消');
+      }else{
+        showConfirm('出售 '+TD_TOWERS[tw.type].label+' Lv.'+tw.level+' (+'+Math.floor(tdfTotalSpent(tw)*0.5)+'g)',
+          function(){tdfSellTower(cell.x,cell.y,true);tdfDraw();},'取消');
+      }
+    }else if(tdfSelected){
+      if(tdfPlaceTower(cell.x,cell.y,tdfSelected,1,true))tdfDraw();
+    }
+  });
+})();
+// Tower palette selection
+document.querySelectorAll('#tdfPalette .tdf-tower-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var type=this.getAttribute('data-type');
+    if(tdfSelected===type){tdfSelected=null;this.classList.remove('sel');return;}
+    document.querySelectorAll('#tdfPalette .tdf-tower-btn').forEach(function(b){b.classList.remove('sel');});
+    tdfSelected=type;this.classList.add('sel');
+  });
+});
+// Ready button
+document.getElementById('tdfReadyBtn').addEventListener('click',function(){
+  tdfReady|=tdfPlayer;
+  this.textContent='✅ 已准备';
+  this.style.background='#2a2a1e';this.style.borderColor='#4f8';
+  if(tdfChannel)tdfChannel.send({type:'broadcast',event:'tdf_ready',payload:{player:tdfPlayer}});
+});
+// Pause overlay toggle
+document.getElementById('tdfPauseOverlay').addEventListener('click',function(){
+  if(!tdfStarted||tdfGameOver)return;
+  tdfPause=!tdfPause;
+  document.getElementById('tdfPauseOverlay').style.display=tdfPause?'flex':'none';
+  if(tdfPause)_playPause();else _playResume();
+});
+
 // ====== BATTLE TETRIS ======
 var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0,_bTotalCleared=0;
 var _b1Board=[],_b1Cur=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
