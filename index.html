@@ -1920,8 +1920,9 @@ function _loadFriends(){
         var umap={};if(users)users.forEach(function(u){umap[u.id]=u;});
         data.forEach(function(f){
           var u=umap[f.friend_id];var dname=u?u.display_name:'--';var uname=u?u.username:'--';
-          html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;" onclick="_challengeFriend('+f.friend_id+',\''+dname+'\')">';
-          html+='<div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:11px;color:#888;">@'+_esc(uname)+'</span></div>';
+          html+='<div class="game-card" style="cursor:pointer;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;" onclick="_challengeFriend('+f.friend_id+',\''+dname+'\')">';
+          html+='<div><div class="name" style="font-size:16px;">'+_esc(dname)+' <span style="font-size:11px;color:#888;">@'+_esc(uname)+'</span></div></div>';
+          html+='<button class="ctrl-btn" style="font-size:11px;padding:3px 8px;background:#2a1a1a;border-color:#844;" onclick="event.stopPropagation();_delFriend('+f.friend_id+',\''+dname+'\')">🗑</button>';
           html+='</div>';
         });
         document.getElementById("friendsList").innerHTML=html;
@@ -2010,6 +2011,17 @@ function _acceptReq(rid,fid){
 
 function _rejectReq(rid){
   _sbReq('PATCH','/rest/v1/friend_requests?id=eq.'+rid,{status:'rejected'}).then(function(){document.getElementById("requestsOverlay").style.display="none";});
+}
+
+function _delFriend(fid,fname){
+  if(!confirm('确定删除好友 '+fname+'？'))return;
+  _sbReq('GET','/rest/v1/friends?user_id=eq.'+_userId+'&friend_id=eq.'+fid+'&select=id&limit=1').then(function(r){return r.json();})
+  .then(function(d){if(d&&d.length)return _sbReq('DELETE','/rest/v1/friends?id=eq.'+d[0].id);})
+  .then(function(){
+    return _sbReq('GET','/rest/v1/friends?user_id=eq.'+fid+'&friend_id=eq.'+_userId+'&select=id&limit=1');
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.length)return _sbReq('DELETE','/rest/v1/friends?id=eq.'+d[0].id);
+  }).then(function(){_loadFriends();});
 }
 
 // Challenge a friend
