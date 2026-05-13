@@ -1946,6 +1946,86 @@ document.getElementById("goBack").onclick=function(){
   _origGBb();
 };
 
+// ===== TOWER DEFENSE =====
+var TDF={
+  easy:{waves:20,maxLevel:5,hp:25,gold:200,path:'s_curve',label:'简单',e:'🟢'},
+  normal:{waves:30,maxLevel:4,hp:20,gold:150,path:'winding',label:'普通',e:'🟡'},
+  hard:{waves:40,maxLevel:3,hp:15,gold:100,path:'maze',label:'困难',e:'🔴'},
+  endless:{waves:Infinity,maxLevel:Infinity,hp:20,gold:150,path:'winding',label:'无尽',e:'♾️'}
+};
+var TDF_CELL=28,TDF_COLS=14,TDF_ROWS=8;
+var tdfCanvas,tdfCtx,tdfDifficulty='normal',tdfGrid=[],tdfPath=[],tdfPathSet={};
+var tdfEnemies=[],tdfTowers=[],tdfHP=20,tdfGold=200,tdfWave=0,tdfWaveMax=20;
+var tdfPrepPhase=true,tdfPrepTimer=0,tdfReady=0,tdfSelected=null,tdfMaxLevel=4;
+var tdfScore=0,tdfStarted=0,tdfGameOver=0,tdfPause=0,tdfLoopId=null;
+var tdfRoom=null,tdfPlayer=0,tdfChannel=null,tdfSpawnQueue=[],tdfSpawnTimer=0;
+var tdfEnemiesSpawned=0,tdfStartHP=20,tdfWon=0;
+
+var TD_TOWERS={
+  arrow:{cost:50,damage:15,range:3,cooldown:500,icon:'🏹',color:'#4af',label:'箭塔'},
+  cannon:{cost:100,damage:40,range:2,cooldown:1500,icon:'💣',color:'#f80',label:'炮塔',splash:1},
+  ice:{cost:75,damage:0,range:2.5,cooldown:1000,icon:'❄️',color:'#8ff',label:'冰塔',slow:0.5,slowDur:1500},
+  mine:{cost:150,damage:0,range:0,cooldown:0,icon:'💰',color:'#ff0',label:'金矿',goldPerWave:10}
+};
+
+var TD_ENEMIES={
+  scout:{hp:30,speed:2,color:'#4f8',bounty:10,label:'侦察兵'},
+  warrior:{hp:80,speed:1.2,color:'#f90',bounty:20,label:'战士'},
+  tank:{hp:200,speed:0.6,color:'#f44',bounty:40,label:'重装兵',weakCannon:true},
+  healer:{hp:100,speed:1,color:'#a0f',bounty:25,label:'治疗兵',heal:5,healRange:2},
+  king:{hp:500,speed:0.5,color:'#f0f',bounty:200,label:'哥布林王',boss:true}
+};
+
+var TDF_PATHS={
+  s_curve:[
+    {x:0,y:0},{x:13,y:0},{x:13,y:1},{x:0,y:1},{x:0,y:2},{x:13,y:2},{x:13,y:3},{x:0,y:3},
+    {x:0,y:4},{x:13,y:4},{x:13,y:5},{x:0,y:5},{x:0,y:6},{x:13,y:6},{x:13,y:7},{x:14,y:7}
+  ],
+  winding:[
+    {x:0,y:0},{x:4,y:0},{x:4,y:2},{x:10,y:2},{x:10,y:0},{x:13,y:0},{x:13,y:3},{x:7,y:3},
+    {x:7,y:1},{x:0,y:1},{x:0,y:4},{x:6,y:4},{x:6,y:6},{x:13,y:6},{x:13,y:7},{x:14,y:7}
+  ],
+  maze:[
+    {x:0,y:0},{x:3,y:0},{x:3,y:3},{x:10,y:3},{x:10,y:1},{x:6,y:1},{x:6,y:5},{x:13,y:5},
+    {x:13,y:2},{x:0,y:2},{x:0,y:6},{x:8,y:6},{x:8,y:4},{x:3,y:4},{x:3,y:7},{x:13,y:7},{x:14,y:7}
+  ]
+};
+
+function tdfBuildPathSet(){
+  tdfPathSet={};
+  for(var i=0;i<tdfPath.length-1;i++){
+    var a=tdfPath[i],b=tdfPath[i+1];
+    var dx=Math.abs(b.x-a.x),dy=Math.abs(b.y-a.y);
+    var steps=Math.max(dx,dy);
+    for(var s=0;s<=steps;s++){
+      var t=steps===0?0:s/steps;
+      var cx=Math.round(a.x+(b.x-a.x)*t);
+      var cy=Math.round(a.y+(b.y-a.y)*t);
+      tdfPathSet[cx+','+cy]=1;
+    }
+  }
+}
+
+function tdfInit(){
+  var cfg=TDF[tdfDifficulty];
+  tdfGrid=[];for(var r=0;r<TDF_ROWS;r++){tdfGrid[r]=[];for(var c=0;c<TDF_COLS;c++)tdfGrid[r][c]=null;}
+  tdfPath=TDF_PATHS[cfg.path];
+  tdfBuildPathSet();
+  tdfEnemies=[];tdfTowers=[];tdfSpawnQueue=[];tdfSpawnTimer=0;tdfEnemiesSpawned=0;
+  tdfHP=cfg.hp;tdfStartHP=cfg.hp;tdfGold=cfg.gold;tdfWave=0;tdfWaveMax=cfg.waves;
+  tdfMaxLevel=cfg.maxLevel;tdfPrepPhase=true;tdfPrepTimer=15;tdfReady=0;tdfSelected=null;
+  tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;
+  if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=null;}
+  tdfCanvas=document.getElementById('tdfBoard');tdfCtx=tdfCanvas.getContext('2d');
+  _setupHiDPI(tdfCanvas,tdfCtx,TDF_COLS*TDF_CELL,TDF_ROWS*TDF_CELL);
+  document.getElementById('tdfHP').textContent=tdfHP;
+  document.getElementById('tdfGold').textContent=tdfGold;
+  document.getElementById('tdfWave').textContent='0';
+  document.getElementById('tdfWaveMax').textContent=tdfWaveMax===Infinity?'∞':tdfWaveMax;
+  document.querySelectorAll('#tdfPalette .tdf-tower-btn').forEach(function(b){b.classList.remove('sel');});
+  tdfDraw();
+}
+
 // ====== BATTLE TETRIS ======
 var _bRoom=null,_bPlayer=0,_bGarbage=0,_bStarted=0,_bTotalCleared=0;
 var _b1Board=[],_b1Cur=null,_b1Score=0,_b1GameOver=0,_b1Bag=[];
