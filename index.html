@@ -2002,6 +2002,7 @@ function _startInvitePoll(){
           document.getElementById("inviteOverlay").style.display="none";
           _sbReq('PATCH','/rest/v1/battle_invites?id=eq.'+inv.id,{status:'rejected'});
         };
+      });
       }
     });
   },3000);
