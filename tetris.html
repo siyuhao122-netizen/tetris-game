@@ -503,8 +503,15 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <div class="screen" id="screenTDLobby">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDLobby">← 返回</button></div>
   <div class="select-title">🏰 塔防守卫</div>
+  <button class="menu-btn" id="btnTDSolo" style="margin-bottom:16px;">🧑 单人模式</button>
   <button class="menu-btn" id="btnTDFriendBattle" style="margin-bottom:16px;">👥 好友合作</button>
   <button class="menu-btn" id="btnTDOnlineBattle" style="margin-bottom:16px;">🌐 快速匹配</button>
+</div>
+
+<div class="screen" id="screenTDWait">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDWait">← 取消匹配</button></div>
+  <div class="select-title">🌐 匹配中...</div>
+  <div class="o-detail" style="font-size:14px;color:#aaa;">正在寻找队友</div>
 </div>
 
 <!-- TOWER DEFENSE GAME -->
@@ -1932,6 +1939,11 @@ document.getElementById('btnTDOnlineBattle').onclick=function(){
   if(!_userId){_showAuthModal('login');return;}
   tdfCreateRoom('match');
 };
+document.getElementById('btnTDSolo').onclick=function(){_initAudio();tdfStartSolo();};
+document.getElementById('btnBackTDWait').onclick=function(){
+  if(tdfRoom){_sbReq('PATCH','/rest/v1/rooms?id=eq.'+tdfRoom.id,{status:'cancelled'}).catch(function(){});}
+  ss('screenTDLobby');
+};
 
 // Extend uhs for Breakout
 var _uhsB=uhs;
@@ -2442,15 +2454,28 @@ document.querySelectorAll('#tdfChatRow .tdf-chat-btn').forEach(function(btn,i){
   });
 });
 
+function tdfStartSolo(){
+  tdfRoom=null;tdfPlayer=1;tdfChannel=null;
+  document.getElementById('tdfRoomCode').textContent='单人模式';
+  document.getElementById('tdfChatRow').style.display='none';
+  document.getElementById('tdfReadyBtn').style.display='none';
+  ss('screenTowerDefense');tdfInit();tdfStartLoop();
+}
 function tdfCreateRoom(mode){
   var code=_bGenCode();
   var status=mode==='friend'?'waiting':'matching';
   _sbReq('POST','/rest/v1/rooms',{code:code,status:status,game:'towerdefense',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();}).then(function(d){
     tdfRoom=d&&d.length?d[0]:null;tdfPlayer=1;
     document.getElementById('tdfRoomCode').textContent='房间: '+code;
-    tdfSetupChannel();
-    ss('screenTowerDefense');tdfInit();tdfStartLoop();
-    if(mode==='matching')tdfPollMatch();
+    document.getElementById('tdfChatRow').style.display='';
+    document.getElementById('tdfReadyBtn').style.display='';
+    if(mode==='match'){
+      ss('screenTDWait');
+      tdfPollMatch();
+    }else{
+      tdfSetupChannel();
+      ss('screenTowerDefense');tdfInit();tdfStartLoop();
+    }
   });
 }
 function tdfJoinRoom(code){
@@ -2473,7 +2498,10 @@ function tdfPollMatch(){
         _sbReq('PATCH','/rest/v1/rooms?id=eq.'+d[0].id,{status:'playing',player2_id:parseInt(_userId)}).then(function(){
           tdfRoom=d[0];tdfPlayer=2;clearInterval(poll);
           document.getElementById('tdfRoomCode').textContent='房间: '+d[0].code;
-          tdfSetupChannel();tdfInit();tdfStartLoop();
+          document.getElementById('tdfChatRow').style.display='';
+          document.getElementById('tdfReadyBtn').style.display='';
+          tdfSetupChannel();
+          ss('screenTowerDefense');tdfInit();tdfStartLoop();
         });
       }
     });
