@@ -628,8 +628,8 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
         <button class="ctrl-btn sdir lg" id="sDown">▼</button>
         <button class="ctrl-btn sdir lg" id="sRight">▶</button>
       </div>
-      <div style="width:100%;margin-top:4px;">
-        <button class="ctrl-btn wide" id="sRestart" style="background:#1a2a1e;border-color:#484;width:100%;">🔄 重新开始</button>
+      <div style="width:100%;margin-top:12px;">
+        <button class="ctrl-btn wide" id="sRestart" style="background:#1a2a1e;border-color:#484;width:80%;margin:0 auto;">🔄 重新开始</button>
       </div>
       <div style="width:100%;margin-top:2px;">
         <button class="ctrl-btn wide" id="sPause" style="background:#1a1a3e;border-color:#55f;width:100%;">⏸ 暂停</button>
@@ -2020,7 +2020,7 @@ var TDF_CELL=28,TDF_COLS=14,TDF_ROWS=8;
 var tdfCanvas,tdfCtx,tdfDifficulty='normal',tdfGrid=[],tdfPath=[],tdfPathSet={};
 var tdfEnemies=[],tdfTowers=[],tdfHP=20,tdfGold=200,tdfWave=0,tdfWaveMax=20;
 var tdfPrepPhase=true,tdfPrepTimer=0,tdfReady=0,tdfSelected=null,tdfMaxLevel=4;
-var tdfScore=0,tdfStarted=0,tdfGameOver=0,tdfPause=0,tdfLoopId=null,tdfSpeed=1;
+var tdfScore=0,tdfStarted=0,tdfGameOver=0,tdfPause=0,tdfLoopId=null,tdfSpeed=1,tdfStartTime=0;
 var tdfRoom=null,tdfPlayer=0,tdfChannel=null,tdfSpawnQueue=[],tdfSpawnTimer=0;
 var tdfEnemiesSpawned=0,tdfStartHP=20,tdfWon=0;
 
@@ -2077,7 +2077,7 @@ function tdfInit(){
   tdfEnemies=[];tdfTowers=[];tdfSpawnQueue=[];tdfSpawnTimer=0;tdfEnemiesSpawned=0;
   tdfHP=cfg.hp;tdfStartHP=cfg.hp;tdfGold=cfg.gold;tdfWave=0;tdfWaveMax=cfg.waves;
   tdfMaxLevel=cfg.maxLevel;tdfPrepPhase=true;tdfPrepTimer=(tdfPlayer===1&&!tdfRoom)?3:15;tdfReady=0;tdfSelected=null;
-  tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;tdfSpeed=1;var btn=document.getElementById('tdfSpeedBtn');if(btn){btn.textContent='⚡1×';btn.style.color='#aaa';}
+  tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;tdfSpeed=1;tdfStartTime=Date.now();var btn=document.getElementById('tdfSpeedBtn');if(btn){btn.textContent='⚡1×';btn.style.color='#aaa';}
   if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=null;}
   tdfCanvas=document.getElementById('tdfBoard');tdfCtx=tdfCanvas.getContext('2d');
   _setupHiDPI(tdfCanvas,tdfCtx,TDF_COLS*TDF_CELL,TDF_ROWS*TDF_CELL);
@@ -2307,7 +2307,8 @@ function tdfWin(){
   var titleEl=document.querySelector('#gameOverOverlay .o-title');
   if(titleEl)titleEl.textContent='🎉 防守成功！';
   window._gog='towerdefense';
-  if(_userId)_submitLB('towerdefense',tdfDifficulty,tdfScore,0,null,{waves:tdfWave});
+  var tdfElapsed=Math.floor((Date.now()-tdfStartTime)/1000);
+  if(_userId)_submitLB('towerdefense',tdfDifficulty,tdfScore,tdfElapsed,null,{waves:tdfWave});
   if(tdfHP===tdfStartHP)_unlockAch('towerdefense_noleak');
   if(tdfWave>=10)_unlockAch('towerdefense_wave10');
   if(tdfWave>=20)_unlockAch('towerdefense_wave20');
@@ -2317,7 +2318,8 @@ function tdfWin(){
 function tdfLose(){
   tdfGameOver=1;_playGameOver();
   tdfScore=Math.floor(tdfScore*_vipMultiplier());
-  recordGame('towerdefense',tdfDifficulty,tdfScore,0,0);
+  var tdfElapsed=Math.floor((Date.now()-tdfStartTime)/1000);
+  recordGame('towerdefense',tdfDifficulty,tdfScore,tdfElapsed,0);
   var nw=shs('towerdefense',tdfDifficulty,tdfWave);
   document.getElementById('goScore').textContent=tdfScore;
   document.getElementById('goDiff').textContent=TDF[tdfDifficulty].e+' '+TDF[tdfDifficulty].label+' · 塔防';
@@ -2325,7 +2327,7 @@ function tdfLose(){
   document.getElementById('goRecord').textContent=nw?'🏆 新纪录！':'🏆 最高 '+ghs('towerdefense',tdfDifficulty)+'波';
   document.getElementById('gameOverOverlay').classList.add('active');
   window._gog='towerdefense';
-  if(_userId)_submitLB('towerdefense',tdfDifficulty,tdfScore,0,null,{waves:tdfWave});
+  if(_userId)_submitLB('towerdefense',tdfDifficulty,tdfScore,tdfElapsed,null,{waves:tdfWave});
   if(tdfWave>=10)_unlockAch('towerdefense_wave10');
   if(tdfGold>=1000)_unlockAch('towerdefense_rich');
   _initAudio();uhs();
@@ -2800,6 +2802,11 @@ function _syncFriendsPoll(){
 function _loadFriends(mode){
   if(!_userId){_showAuthModal('login');return;}
   _friendsMode=mode||'chat';
+  if(mode==='battle'){
+    if(_battleGame==='towerdefense')_friendsBackScreen='screenTowerDefenseDiff';
+    else if(_battleGame==='gomoku')_friendsBackScreen='screenGomokuMode';
+    else _friendsBackScreen='screenBattleLobby';
+  }
   var fa=document.getElementById("friendsActions");
   if(fa)fa.style.display=_friendsMode==='chat'?'':'none';
   if(_friendsMode==='battle'){document.getElementById("friendsEmpty").textContent='暂无好友，去菜单-好友添加';}
@@ -2839,7 +2846,11 @@ function _loadFriends(mode){
   });
 }
 
-document.getElementById("btnBackFriends").onclick=function(){ss("screenMenu");};
+var _friendsBackScreen='screenMenu';
+document.getElementById("btnBackFriends").onclick=function(){
+  if(_battleGame==='towerdefense'){_battleGame='tetris';}
+  ss(_friendsBackScreen);
+};
 document.getElementById("btnFriendsMenu").onclick=function(){_initAudio();_loadFriends();};
 document.getElementById("btnAddFriend").onclick=function(){document.getElementById("addFriendOverlay").style.display="flex";document.getElementById("addFriendInput").value="";document.getElementById("searchResults").innerHTML="";document.getElementById("addFriendMsg").style.display="none";};
 document.getElementById("addFriendClose").onclick=function(){document.getElementById("addFriendOverlay").style.display="none";};
@@ -3069,6 +3080,13 @@ function _startInvitePoll(){
                   _sbChannel.on('broadcast',{event:'gm_move'},function(p){_gmPlace(p.payload.r,p.payload.c);});
 _sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1;document.getElementById("gmStatus").textContent='对手退出，你赢了！';_gmRecordGame(1);setTimeout(function(){ss("screenGomokuMode");},3000);}});
                   _sbChannel.subscribe(function(s){if(s==='SUBSCRIBED'){_sbChannel.send({type:'broadcast',event:'join',payload:{}});}});
+                }else if(room.game==='towerdefense'){
+                  tdfRoom=room;tdfPlayer=2;tdfDifficulty='normal';
+                  document.getElementById('tdfRoomCode').textContent='房间: '+room.code;
+                  document.getElementById('tdfChatRow').style.display='';
+                  document.getElementById('tdfReadyBtn').style.display='';
+                  tdfSetupChannel();
+                  ss('screenTowerDefense');tdfInit();tdfStartLoop();
                 }else{
                   _bPlayer=2;_bRoom=room;_bStartGame();_bStarted=1;
                   _sbChannel=_sbClient.channel('room-'+room.id);
@@ -3215,7 +3233,7 @@ function _updateUnread(){
   });
 }
 function _markFriendRead(fid){try{localStorage.setItem('goblin_read_'+fid,new Date().toISOString());}catch(e){}_updateUnread();}
-if(_userId){_startSessionSync();}
+if(_userId){_startSessionSync();_loadVip();}
 
 function _createRoom(){
   if(!_sbClient){document.getElementById("lobbyMsg").textContent="SDK未加载";document.getElementById("lobbyMsg").style.display="block";return;}
@@ -3301,11 +3319,12 @@ document.onkeydown=function(e){
 // ===== VIP SYSTEM =====
 var _vipTier=null,_vipExpiry=null;
 
-function _loadVip(){
+function _loadVip(cb){
   if(!_userId)return;
   _sbReq('GET','/rest/v1/users?id=eq.'+_userId+'&select=vip_tier,vip_expiry&limit=1').then(function(r){return r.json();}).then(function(d){
     if(d&&d.length){_vipTier=d[0].vip_tier;_vipExpiry=d[0].vip_expiry;}
     _updateVipDisplay();
+    if(cb)cb();
   });
 }
 function _updateVipDisplay(){
@@ -3341,7 +3360,7 @@ function _vipTimeDivider(){
 
 document.getElementById("btnVipMenu").onclick=function(){
   if(!_userId){_showAuthModal('login');return;}
-  _loadVip();_showVipScreen();
+  _loadVip(function(){_showVipScreen();});
 };
 document.getElementById("btnBackVip").onclick=function(){ss("screenMenu");};
 
@@ -3476,6 +3495,8 @@ function _gmCheckWin(r,c){
 function _gmPlace(r,c){
   if(_gmOver||_gmBoard[r][c])return;
   _gmBoard[r][c]=_gmTurn;_gmMoves.push({r:r,c:c,color:_gmTurn});
+  // Multiplayer: send move BEFORE win/draw check (so opponent sees result)
+  if((_gmMode==='pvp_friend'||_gmMode==='pvp_match')&&_sbChannel){_sbChannel.send({type:'broadcast',event:'gm_move',payload:{r:r,c:c}});}
   var w=_gmCheckWin(r,c);
   if(w){
     _gmOver=1;_gmDraw();
@@ -3492,8 +3513,6 @@ function _gmPlace(r,c){
   document.getElementById("gmStatus").textContent=(_gmTurn===_gmMyColor)?'你的回合':((_gmMode==='pve')?'AI思考中...':'等待对手...');
   // AI move
   if(_gmMode==='pve'&&_gmTurn!==_gmMyColor&&!_gmOver){setTimeout(_gmAIMove,300);}
-  // Multiplayer: send move
-  if((_gmMode==='pvp_friend'||_gmMode==='pvp_match')&&_sbChannel){_sbChannel.send({type:'broadcast',event:'gm_move',payload:{r:r,c:c}});}
 }
 
 // AI
@@ -3524,17 +3543,23 @@ function _gmAISmart(){
       score+=cnt>=5?100000:cnt===4?open>=1?5000:500:cnt===3?open>=1?400:100:cnt===2?10:0;
     }
     _gmBoard[r][c]=0;
-    // Also score opponent's potential
+    // Also score opponent's potential with open-end tracking
     _gmBoard[r][c]=opp;
+    var blockScore=0;
     for(var d=0;d<4;d++){
-      var cnt2=1;
-      for(var i=1;i<5;i++){var nr=r+dirs[d][0]*i,nc=c+dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===opp)cnt2++;else break;}
-      for(var i=1;i<5;i++){var nr=r-dirs[d][0]*i,nc=c-dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===opp)cnt2++;else break;}
-      if(cnt2>=4)score+=4000;else if(cnt2===3)score+=300;
+      var cnt2=1,open2=0;
+      for(var i=1;i<5;i++){var nr=r+dirs[d][0]*i,nc=c+dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===opp)cnt2++;else{if(nr>=0&&nr<15&&nc>=0&&nc<15&&!_gmBoard[nr][nc])open2++;break;}}
+      for(var i=1;i<5;i++){var nr=r-dirs[d][0]*i,nc=c-dirs[d][1]*i;if(nr>=0&&nr<15&&nc>=0&&nc<15&&_gmBoard[nr][nc]===opp)cnt2++;else{if(nr>=0&&nr<15&&nc>=0&&nc<15&&!_gmBoard[nr][nc])open2++;break;}}
+      if(cnt2>=5)blockScore+=80000;
+      else if(cnt2>=4)blockScore+=open2>=1?8000:3000;
+      else if(cnt2===3)blockScore+=open2>=1?800:200;
     }
     _gmBoard[r][c]=0;
-    // Center bonus
-    score+=(7-Math.abs(r-7))+(7-Math.abs(c-7));
+    score+=blockScore;
+    // Center bonus (reduced for late game)
+    var totalStones=_gmMoves.length;
+    var centerWeight=Math.max(0,14-totalStones);
+    score+=((7-Math.abs(r-7))+(7-Math.abs(c-7)))*centerWeight/14;
     if(score>bestScore){bestScore=score;best={r:r,c:c};}
   }
   return best||{r:7,c:7};
@@ -3860,12 +3885,12 @@ function _showGameLB(game, backScreen){
 function _loadGameLB(){
   var isMine=_lbGame==='minesweeper';
   var is2048=_lbGame==='2048';
+  var isTD=_lbGame==='towerdefense';
   var isEndless=is2048&&_lbDiff==='endless';
-  var orderCol=isMine?'time':(isEndless?'max_value':'time');
-  var orderDir=isMine?'asc':(isEndless?'desc':'asc');
+  var isTDEndless=isTD&&_lbDiff==='endless';
   var selectCols='id,score,time,created_at,user_id,users(display_name)';
   if(isEndless)selectCols='id,score,time,max_value,created_at,user_id,users(display_name)';
-  var q='/rest/v1/leaderboard?game=eq.'+_lbGame+'&difficulty=eq.'+_lbDiff+'&select='+selectCols+'&order='+orderCol+'.'+orderDir+'&limit=200';
+  var q='/rest/v1/leaderboard?game=eq.'+_lbGame+'&difficulty=eq.'+_lbDiff+'&select='+selectCols+'&order=score.desc&limit=500';
   if(isMine)q+='&time=gt.0';
   _sbReq('GET',q).then(function(r){return r.json();}).then(function(data){
     var best={};
@@ -3875,14 +3900,22 @@ function _loadGameLB(){
       else {
         if(isMine||(!isEndless&&is2048)){if(r.time<best[uid].time)best[uid]=r;}
         else if(isEndless){if((r.max_value||0)>(best[uid].max_value||0)||((r.max_value||0)===(best[uid].max_value||0)&&r.score>best[uid].score))best[uid]=r;}
+        else if(isTD){var bw=r.waves||0,bw2=best[uid].waves||0;if(bw>bw2||(bw===bw2&&r.time<best[uid].time))best[uid]=r;}
         else{if(r.score>best[uid].score)best[uid]=r;}
       }
     });
     var sorted=Object.values(best);
     if(isMine||(!isEndless&&is2048))sorted.sort(function(a,b){return a.time-b.time;});
     else if(isEndless)sorted.sort(function(a,b){return (b.max_value||0)-(a.max_value||0)||b.score-a.score;});
+    else if(isTD)sorted.sort(function(a,b){return (b.waves||0)-(a.waves||0)||a.time-b.time;});
     else sorted.sort(function(a,b){return b.score-a.score;});
-    var headCols=isEndless?['排名','玩家','分数','最大值','时间']:(isMine?['排名','玩家','用时','时间']:(is2048?['排名','玩家','分数','耗时','时间']:['排名','玩家','分数','时间']));
+    var headCols;
+    if(isTDEndless)headCols=['排名','玩家','波数','用时','时间'];
+    else if(isTD)headCols=['排名','玩家','用时','波数','时间'];
+    else if(isEndless)headCols=['排名','玩家','分数','最大值','时间'];
+    else if(isMine)headCols=['排名','玩家','用时','时间'];
+    else if(is2048)headCols=['排名','玩家','分数','耗时','时间'];
+    else headCols=['排名','玩家','分数','时间'];
     document.getElementById('gameLbHead').innerHTML='<tr>'+headCols.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr>';
     var rows=[];
     sorted.slice(0,50).forEach(function(r,i){
@@ -3890,10 +3923,13 @@ function _loadGameLB(){
       var cls=isMe?' class="me"':'';
       var dname=r.users?r.users.display_name:'--';
       var d=new Date(r.created_at);var dt=r.created_at?(d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')):'--';
+      var tfmt=r.time?(String(Math.floor(r.time/60)).padStart(2,'0')+':'+String(r.time%60).padStart(2,'0')):'--';
       var val;
-      if(isEndless)val='<td>'+(r.max_value||r.score)+'</td><td>'+dt+'</td>';
+      if(isTDEndless)val='<td>'+(r.waves||0)+'</td><td>'+tfmt+'</td><td>'+dt+'</td>';
+      else if(isTD)val='<td>'+tfmt+'</td><td>'+(r.waves||0)+'</td><td>'+dt+'</td>';
+      else if(isEndless)val='<td>'+(r.max_value||r.score)+'</td><td>'+dt+'</td>';
       else if(isMine)val='<td>'+(r.time||0)+'s</td><td>'+dt+'</td>';
-      else if(is2048)val='<td>'+r.score+'</td><td>'+(r.time?(String(Math.floor(r.time/60)).padStart(2,'0')+':'+String(r.time%60).padStart(2,'0')):'--')+'</td><td>'+dt+'</td>';
+      else if(is2048)val='<td>'+r.score+'</td><td>'+tfmt+'</td><td>'+dt+'</td>';
       else val='<td>'+r.score+'</td><td>'+dt+'</td>';
       rows.push('<tr'+cls+'><td>'+(i+1)+'</td><td>'+_esc(dname)+'</td>'+val+'</tr>');
     });
