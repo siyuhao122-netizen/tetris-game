@@ -496,6 +496,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="diff-card" id="tdfDiffNormal"><div class="dname">🟡 普通</div><div class="ddesc">30波 · 塔最高4级 · 20❤</div><div class="dhigh">🏆 最高 <span id="tdfhsNormal">0</span>波</div></div>
   <div class="diff-card" id="tdfDiffHard"><div class="dname">🔴 困难</div><div class="ddesc">40波 · 塔最高3级 · 15❤</div><div class="dhigh">🏆 最高 <span id="tdfhsHard">0</span>波</div></div>
   <div class="diff-card" id="tdfDiffEndless"><div class="dname">♾️ 无尽</div><div class="ddesc">无限波 · 无等级上限 · 20❤</div><div class="dhigh">🏆 最高 <span id="tdfhsEndless">0</span>波</div></div>
+  <button class="menu-btn" id="btnTDPrepare" style="margin-top:12px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#4af;font-size:16px;padding:10px 40px;">🎒 确认卡组</button>
   <button class="menu-btn" id="btnTowerDefenseLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
 </div>
 
@@ -512,6 +513,13 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDWait">← 取消匹配</button></div>
   <div class="select-title">🌐 匹配中...</div>
   <div class="o-detail" style="font-size:14px;color:#aaa;">正在寻找队友</div>
+</div>
+
+<div class="screen" id="screenTDLoadout">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDLoadout">← 返回</button></div>
+  <div class="select-title">🎒 确认卡组</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:340px;margin-bottom:16px;" id="tdfLoadoutGrid"></div>
+  <button class="menu-btn" id="btnTDLoadoutConfirm" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#4f8;font-size:16px;padding:10px 40px;">✔ 确认完成</button>
 </div>
 
 <!-- TOWER DEFENSE GAME -->
@@ -2078,6 +2086,11 @@ function tdfInit(){
   document.getElementById('tdfWave').textContent='0';
   document.getElementById('tdfWaveMax').textContent=tdfWaveMax===Infinity?'∞':tdfWaveMax;
   document.querySelectorAll('#tdfPalette .tdf-tower-btn').forEach(function(b){b.classList.remove('sel');});
+  var loadout=tdfLoadLoadout();if(!loadout.length)loadout=['arrow','cannon','ice','mine'];
+  document.querySelectorAll('#tdfPalette .tdf-tower-btn').forEach(function(b){
+    var t=b.getAttribute('data-type');
+    b.style.display=loadout.indexOf(t)>=0?'':'none';
+  });
   tdfDraw();
 }
 
@@ -2516,6 +2529,20 @@ function tdfShowTowerPopup(tw){
 }
 function tdfHideTowerPopup(){
   document.getElementById('tdfTowerPopup').style.display='none';_tdfPopupTower=null;
+}
+function tdfLoadLoadout(){
+  try{return JSON.parse(localStorage.getItem('goblin_tdf_loadout')||'[]');}catch(e){return [];}
+}
+function tdfSaveLoadout(arr){localStorage.setItem('goblin_tdf_loadout',JSON.stringify(arr));}
+function tdfShowLoadout(){
+  var sel=tdfLoadLoadout();if(!sel.length)sel=['arrow','cannon','ice','mine'];
+  var types=['arrow','cannon','ice','mine'];
+  var grid=document.getElementById('tdfLoadoutGrid');
+  grid.innerHTML=types.map(function(t){
+    var cfg=TD_TOWERS[t];var checked=sel.indexOf(t)>=0;
+    return '<div class="gcard" style="cursor:pointer;padding:14px 10px;text-align:center;'+(checked?'border-color:#4f8;box-shadow:0 0 10px rgba(64,255,128,0.3);':'')+'" data-type="'+t+'" id="ldt_'+t+'"><div style="font-size:32px;">'+cfg.icon+'</div><div style="font-size:14px;font-weight:bold;">'+cfg.label+'</div><div style="font-size:10px;color:var(--gold);">'+cfg.cost+'g</div><div style="font-size:18px;margin-top:4px;color:'+(checked?'#4f8':'#555')+';">'+(checked?'✅':'⬜')+'</div></div>';
+  }).join('');
+  ss('screenTDLoadout');
 }
 function tdfCreateRoom(mode){
   var code=_bGenCode();
@@ -3855,6 +3882,12 @@ document.getElementById('btn2048LB').onclick=function(){_showGameLB('2048','scre
 document.getElementById('btnMineLB').onclick=function(){_showGameLB('minesweeper','screenMinesweeperDiff');};
 document.getElementById('btnBreakoutLB').onclick=function(){_showGameLB('breakout','screenBreakoutDiff');};
 document.getElementById('btnTowerDefenseLB').onclick=function(){_showGameLB('towerdefense','screenTowerDefenseDiff');};
+document.getElementById('btnTDPrepare').onclick=function(){tdfShowLoadout();};
+document.getElementById('btnBackTDLoadout').onclick=function(){ss('screenTowerDefenseDiff');};
+document.getElementById('btnTDLoadoutConfirm').onclick=function(){
+  tdfSaveLoadout(['arrow','cannon','ice','mine']);
+  ss('screenTowerDefenseDiff');
+};
 
 document.getElementById("btnStats").onclick=function(){
   _initAudio();
