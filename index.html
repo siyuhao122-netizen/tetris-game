@@ -2025,10 +2025,10 @@ var tdfRoom=null,tdfPlayer=0,tdfChannel=null,tdfSpawnQueue=[],tdfSpawnTimer=0;
 var tdfEnemiesSpawned=0,tdfStartHP=20,tdfWon=0;
 
 var TD_TOWERS={
-  arrow:{cost:50,damage:15,range:3,cooldown:500,icon:'🏹',color:'#4af',label:'箭塔'},
-  cannon:{cost:100,damage:40,range:2,cooldown:1500,icon:'💣',color:'#f80',label:'炮塔',splash:1},
-  ice:{cost:75,damage:0,range:2.5,cooldown:1000,icon:'❄️',color:'#8ff',label:'冰塔',slow:0.5,slowDur:1500},
-  mine:{cost:150,damage:0,range:0,cooldown:0,icon:'💰',color:'#ff0',label:'金矿',goldPerWave:10}
+  arrow:{cost:50,damage:15,range:3,cooldown:500,icon:'🏹',color:'#4af',label:'箭塔',img:'picture/TDW/arrow.png'},
+  cannon:{cost:100,damage:40,range:2,cooldown:1500,icon:'💣',color:'#f80',label:'炮塔',splash:1,img:'picture/TDW/cannon.png'},
+  ice:{cost:75,damage:0,range:2.5,cooldown:1000,icon:'❄️',color:'#8ff',label:'冰塔',slow:0.5,slowDur:1500,img:'picture/TDW/ice.png'},
+  mine:{cost:150,damage:0,range:0,cooldown:0,icon:'💰',color:'#ff0',label:'金矿',goldPerWave:10,img:'picture/TDW/mine.png'}
 };
 
 var TD_ENEMIES={
@@ -2076,11 +2076,15 @@ function tdfInit(){
   tdfBuildPathSet();
   tdfEnemies=[];tdfTowers=[];tdfSpawnQueue=[];tdfSpawnTimer=0;tdfEnemiesSpawned=0;
   tdfHP=cfg.hp;tdfStartHP=cfg.hp;tdfGold=cfg.gold;tdfWave=0;tdfWaveMax=cfg.waves;
-  tdfMaxLevel=cfg.maxLevel;tdfPrepPhase=true;tdfPrepTimer=15;tdfReady=0;tdfSelected=null;
+  tdfMaxLevel=cfg.maxLevel;tdfPrepPhase=true;tdfPrepTimer=(tdfPlayer===1&&!tdfRoom)?3:15;tdfReady=0;tdfSelected=null;
   tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;tdfSpeed=1;var btn=document.getElementById('tdfSpeedBtn');if(btn){btn.textContent='⚡1×';btn.style.color='#aaa';}
   if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=null;}
   tdfCanvas=document.getElementById('tdfBoard');tdfCtx=tdfCanvas.getContext('2d');
   _setupHiDPI(tdfCanvas,tdfCtx,TDF_COLS*TDF_CELL,TDF_ROWS*TDF_CELL);
+  // Preload tower images
+  Object.keys(TD_TOWERS).forEach(function(k){
+    if(!TD_TOWERS[k]._img){TD_TOWERS[k]._img=new Image();TD_TOWERS[k]._img.src=TD_TOWERS[k].img;}
+  });
   document.getElementById('tdfHP').textContent=tdfHP;
   document.getElementById('tdfGold').textContent=tdfGold;
   document.getElementById('tdfWave').textContent='0';
@@ -2196,7 +2200,7 @@ function tdfSpawnWave(){
     if(t==='king'&&i>0)continue;
     tdfSpawnQueue.push(t);
   }
-  tdfPrepPhase=true;tdfPrepTimer=15;tdfReady=0;
+  tdfPrepPhase=true;tdfPrepTimer=(tdfPlayer===1&&!tdfRoom)?3:15;tdfReady=0;
   if(tdfDifficulty==='endless'&&tdfWave>10){tdfPrepTimer=0;tdfPrepPhase=false;}
   tdfTowers.forEach(function(tw){
     var cfg=TD_TOWERS[tw.type];
@@ -2271,7 +2275,7 @@ function tdfTick(){
   tdfCheckDead();
   tdfTowers.forEach(function(tw){tdfTowerAttack(tw);});
   if(!tdfPrepPhase&&tdfSpawnQueue.length===0&&tdfEnemies.length===0){
-    tdfPrepPhase=true;tdfPrepTimer=15;tdfReady=0;
+    tdfPrepPhase=true;tdfPrepTimer=(tdfPlayer===1&&!tdfRoom)?3:15;tdfReady=0;
     if(tdfDifficulty=='endless'&&tdfWave>=10){tdfPrepTimer=0;tdfPrepPhase=false;}
   }
   tdfDraw();
@@ -2356,11 +2360,16 @@ function tdfDraw(){
     var cfg=TD_TOWERS[tw.type];
     var cx=tw.x*TDF_CELL+TDF_CELL/2,cy=tw.y*TDF_CELL+TDF_CELL/2;
     var r=TDF_CELL/2-3;
-    tdfCtx.fillStyle=cfg.color;
-    tdfCtx.beginPath();tdfCtx.arc(cx,cy,r,0,Math.PI*2);tdfCtx.fill();
-    tdfCtx.fillStyle='#fff';tdfCtx.font=(TDF_CELL/2)+'px sans-serif';
-    tdfCtx.textAlign='center';tdfCtx.textBaseline='middle';
-    tdfCtx.fillText(cfg.icon,cx,cy-1);
+    var img=cfg._img;
+    if(img&&img.complete&&img.naturalWidth>0){
+      tdfCtx.drawImage(img,cx-r,cy-r,r*2,r*2);
+    }else{
+      tdfCtx.fillStyle=cfg.color;
+      tdfCtx.beginPath();tdfCtx.arc(cx,cy,r,0,Math.PI*2);tdfCtx.fill();
+      tdfCtx.fillStyle='#fff';tdfCtx.font=(TDF_CELL/2)+'px sans-serif';
+      tdfCtx.textAlign='center';tdfCtx.textBaseline='middle';
+      tdfCtx.fillText(cfg.icon,cx,cy-1);
+    }
     if(tw.level>1){
       tdfCtx.fillStyle='#ff0';tdfCtx.font='bold '+(TDF_CELL/4)+'px sans-serif';
       tdfCtx.fillText(tw.level,cx+TDF_CELL/3,cy+TDF_CELL/3);
