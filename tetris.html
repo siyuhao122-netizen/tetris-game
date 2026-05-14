@@ -521,7 +521,10 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <span class="o-detail" id="tdfRoomCode" style="font-size:12px;color:#888;"></span>
   </div>
   <div class="game-wrapper">
-    <div class="tdf-status" id="tdfStatusBar">❤<span id="tdfHP">20</span> 💰<span id="tdfGold">200</span> 🌊<span id="tdfWave">0</span>/<span id="tdfWaveMax">20</span></div>
+    <div class="tdf-status" id="tdfStatusBar">
+      <button class="tdf-speed-btn" id="tdfSpeedBtn" style="background:#1a1a2e;border:1px solid #444;border-radius:6px;color:#aaa;font-size:13px;padding:2px 8px;cursor:pointer;">⚡1×</button>
+      ❤<span id="tdfHP">20</span> 💰<span id="tdfGold">200</span> 🌊<span id="tdfWave">0</span>/<span id="tdfWaveMax">20</span>
+    </div>
     <div class="board-wrap" style="position:relative;">
       <canvas id="tdfBoard" class="gcanvas" width="392" height="224"></canvas>
       <div id="tdfPauseOverlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:10;border-radius:4px;"><span style="font-size:32px;font-weight:bold;color:#fff;">⏸ 暂停</span></div>
@@ -1940,6 +1943,7 @@ document.getElementById('btnTDOnlineBattle').onclick=function(){
   tdfCreateRoom('match');
 };
 document.getElementById('btnTDSolo').onclick=function(){_initAudio();tdfStartSolo();};
+document.getElementById('tdfSpeedBtn').onclick=tdfToggleSpeed;
 document.getElementById('btnBackTDWait').onclick=function(){
   if(tdfRoom){_sbReq('PATCH','/rest/v1/rooms?id=eq.'+tdfRoom.id,{status:'cancelled'}).catch(function(){});}
   ss('screenTDLobby');
@@ -2002,7 +2006,7 @@ var TDF_CELL=28,TDF_COLS=14,TDF_ROWS=8;
 var tdfCanvas,tdfCtx,tdfDifficulty='normal',tdfGrid=[],tdfPath=[],tdfPathSet={};
 var tdfEnemies=[],tdfTowers=[],tdfHP=20,tdfGold=200,tdfWave=0,tdfWaveMax=20;
 var tdfPrepPhase=true,tdfPrepTimer=0,tdfReady=0,tdfSelected=null,tdfMaxLevel=4;
-var tdfScore=0,tdfStarted=0,tdfGameOver=0,tdfPause=0,tdfLoopId=null;
+var tdfScore=0,tdfStarted=0,tdfGameOver=0,tdfPause=0,tdfLoopId=null,tdfSpeed=1;
 var tdfRoom=null,tdfPlayer=0,tdfChannel=null,tdfSpawnQueue=[],tdfSpawnTimer=0;
 var tdfEnemiesSpawned=0,tdfStartHP=20,tdfWon=0;
 
@@ -2059,7 +2063,7 @@ function tdfInit(){
   tdfEnemies=[];tdfTowers=[];tdfSpawnQueue=[];tdfSpawnTimer=0;tdfEnemiesSpawned=0;
   tdfHP=cfg.hp;tdfStartHP=cfg.hp;tdfGold=cfg.gold;tdfWave=0;tdfWaveMax=cfg.waves;
   tdfMaxLevel=cfg.maxLevel;tdfPrepPhase=true;tdfPrepTimer=15;tdfReady=0;tdfSelected=null;
-  tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;
+  tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;tdfSpeed=1;var btn=document.getElementById('tdfSpeedBtn');if(btn){btn.textContent='⚡1×';btn.style.color='#aaa';}
   if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=null;}
   tdfCanvas=document.getElementById('tdfBoard');tdfCtx=tdfCanvas.getContext('2d');
   _setupHiDPI(tdfCanvas,tdfCtx,TDF_COLS*TDF_CELL,TDF_ROWS*TDF_CELL);
@@ -2460,6 +2464,13 @@ function tdfStartSolo(){
   document.getElementById('tdfChatRow').style.display='none';
   document.getElementById('tdfReadyBtn').style.display='none';
   ss('screenTowerDefense');tdfInit();tdfStartLoop();
+}
+function tdfToggleSpeed(){
+  if(tdfPrepPhase||tdfGameOver||!tdfStarted)return;
+  tdfSpeed=tdfSpeed===1?2:1;
+  var btn=document.getElementById('tdfSpeedBtn');
+  if(btn){btn.textContent=tdfSpeed===2?'⚡⚡2×':'⚡1×';btn.style.color=tdfSpeed===2?'#ff0':'#aaa';}
+  if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=setInterval(tdfTick,200/tdfSpeed);}
 }
 function tdfCreateRoom(mode){
   var code=_bGenCode();
