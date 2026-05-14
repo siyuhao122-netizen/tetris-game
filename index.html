@@ -2278,8 +2278,14 @@ function tdfTick(){
   tdfCheckDead();
   tdfTowers.forEach(function(tw){tdfTowerAttack(tw);});
   if(!tdfPrepPhase&&tdfSpawnQueue.length===0&&tdfEnemies.length===0){
-    tdfPrepPhase=true;tdfPrepTimer=(tdfPlayer===1&&!tdfRoom)?3:15;tdfReady=0;
-    if(tdfDifficulty=='endless'&&tdfWave>=10){tdfPrepTimer=0;tdfPrepPhase=false;}
+    if(tdfDifficulty=='endless'&&tdfWave>=10){
+      tdfWave++;
+      document.getElementById('tdfWave').textContent=tdfWave;
+      if(tdfWave>tdfWaveMax&&tdfWaveMax!==Infinity){tdfWin();return;}
+      tdfSpawnWave();
+    }else{
+      tdfPrepPhase=true;tdfPrepTimer=(tdfPlayer===1&&!tdfRoom)?3:15;tdfReady=0;
+    }
   }
   tdfDraw();
 }
