@@ -496,6 +496,7 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
   <div class="diff-card" id="tdfDiffNormal"><div class="dname">🟡 普通</div><div class="ddesc">30波 · 塔最高4级 · 20❤</div><div class="dhigh">🏆 最高 <span id="tdfhsNormal">0</span>波</div></div>
   <div class="diff-card" id="tdfDiffHard"><div class="dname">🔴 困难</div><div class="ddesc">40波 · 塔最高3级 · 15❤</div><div class="dhigh">🏆 最高 <span id="tdfhsHard">0</span>波</div></div>
   <div class="diff-card" id="tdfDiffEndless"><div class="dname">♾️ 无尽</div><div class="ddesc">无限波 · 无等级上限 · 20❤</div><div class="dhigh">🏆 最高 <span id="tdfhsEndless">0</span>波</div></div>
+  <button class="menu-btn" id="btnTDPrepare" style="margin-top:12px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#4af;font-size:16px;padding:10px 40px;">🎒 确认卡组</button>
   <button class="menu-btn" id="btnTowerDefenseLB" style="margin-top:16px;background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#f90;font-size:16px;padding:10px 40px;">🏆 排行榜</button>
 </div>
 
@@ -503,8 +504,22 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
 <div class="screen" id="screenTDLobby">
   <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDLobby">← 返回</button></div>
   <div class="select-title">🏰 塔防守卫</div>
+  <button class="menu-btn" id="btnTDSolo" style="margin-bottom:16px;">🧑 单人模式</button>
   <button class="menu-btn" id="btnTDFriendBattle" style="margin-bottom:16px;">👥 好友合作</button>
   <button class="menu-btn" id="btnTDOnlineBattle" style="margin-bottom:16px;">🌐 快速匹配</button>
+</div>
+
+<div class="screen" id="screenTDWait">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDWait">← 取消匹配</button></div>
+  <div class="select-title">🌐 匹配中...</div>
+  <div class="o-detail" style="font-size:14px;color:#aaa;">正在寻找队友</div>
+</div>
+
+<div class="screen" id="screenTDLoadout">
+  <div style="width:100%;text-align:left;margin-bottom:8px;"><button class="back-btn" id="btnBackTDLoadout">← 返回</button></div>
+  <div class="select-title">🎒 确认卡组</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:340px;margin-bottom:16px;" id="tdfLoadoutGrid"></div>
+  <button class="menu-btn" id="btnTDLoadoutConfirm" style="background:linear-gradient(135deg,#2a2a1e,#1a1a0e);border-color:#4f8;font-size:16px;padding:10px 40px;">✔ 确认完成</button>
 </div>
 
 <!-- TOWER DEFENSE GAME -->
@@ -514,10 +529,19 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <span class="o-detail" id="tdfRoomCode" style="font-size:12px;color:#888;"></span>
   </div>
   <div class="game-wrapper">
-    <div class="tdf-status" id="tdfStatusBar">❤<span id="tdfHP">20</span> 💰<span id="tdfGold">200</span> 🌊<span id="tdfWave">0</span>/<span id="tdfWaveMax">20</span></div>
+    <div class="tdf-status" id="tdfStatusBar">
+      <button class="tdf-speed-btn" id="tdfSpeedBtn" style="background:#1a1a2e;border:1px solid #444;border-radius:6px;color:#aaa;font-size:13px;padding:2px 8px;cursor:pointer;">⚡1×</button>
+      ❤<span id="tdfHP">20</span> 💰<span id="tdfGold">200</span> 🌊<span id="tdfWave">0</span>/<span id="tdfWaveMax">20</span>
+    </div>
     <div class="board-wrap" style="position:relative;">
       <canvas id="tdfBoard" class="gcanvas" width="392" height="224"></canvas>
       <div id="tdfPauseOverlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:10;border-radius:4px;"><span style="font-size:32px;font-weight:bold;color:#fff;">⏸ 暂停</span></div>
+      <div id="tdfTowerPopup" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;border:2px solid #555;border-radius:12px;padding:16px 20px;z-index:15;text-align:center;min-width:140px;">
+        <div id="tdfPopupTitle" style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#fff;"></div>
+        <button class="o-btn" id="tdfPopupUpgrade" style="display:block;width:100%;margin-bottom:6px;font-size:14px;padding:8px;">⬆ 升级</button>
+        <button class="o-btn secondary" id="tdfPopupSell" style="display:block;width:100%;margin-bottom:6px;font-size:14px;padding:8px;">💰 出售</button>
+        <button class="o-btn secondary" id="tdfPopupCancel" style="display:block;width:100%;font-size:14px;padding:8px;">✕ 取消</button>
+      </div>
     </div>
     <div class="tdf-palette" id="tdfPalette">
       <button class="tdf-tower-btn" data-type="arrow">🏹<br><span class="cost">50g</span></button>
@@ -1932,6 +1956,12 @@ document.getElementById('btnTDOnlineBattle').onclick=function(){
   if(!_userId){_showAuthModal('login');return;}
   tdfCreateRoom('match');
 };
+document.getElementById('btnTDSolo').onclick=function(){_initAudio();tdfStartSolo();};
+document.getElementById('tdfSpeedBtn').onclick=tdfToggleSpeed;
+document.getElementById('btnBackTDWait').onclick=function(){
+  if(tdfRoom){_sbReq('PATCH','/rest/v1/rooms?id=eq.'+tdfRoom.id,{status:'cancelled'}).catch(function(){});}
+  ss('screenTDLobby');
+};
 
 // Extend uhs for Breakout
 var _uhsB=uhs;
@@ -1990,7 +2020,7 @@ var TDF_CELL=28,TDF_COLS=14,TDF_ROWS=8;
 var tdfCanvas,tdfCtx,tdfDifficulty='normal',tdfGrid=[],tdfPath=[],tdfPathSet={};
 var tdfEnemies=[],tdfTowers=[],tdfHP=20,tdfGold=200,tdfWave=0,tdfWaveMax=20;
 var tdfPrepPhase=true,tdfPrepTimer=0,tdfReady=0,tdfSelected=null,tdfMaxLevel=4;
-var tdfScore=0,tdfStarted=0,tdfGameOver=0,tdfPause=0,tdfLoopId=null;
+var tdfScore=0,tdfStarted=0,tdfGameOver=0,tdfPause=0,tdfLoopId=null,tdfSpeed=1;
 var tdfRoom=null,tdfPlayer=0,tdfChannel=null,tdfSpawnQueue=[],tdfSpawnTimer=0;
 var tdfEnemiesSpawned=0,tdfStartHP=20,tdfWon=0;
 
@@ -2047,7 +2077,7 @@ function tdfInit(){
   tdfEnemies=[];tdfTowers=[];tdfSpawnQueue=[];tdfSpawnTimer=0;tdfEnemiesSpawned=0;
   tdfHP=cfg.hp;tdfStartHP=cfg.hp;tdfGold=cfg.gold;tdfWave=0;tdfWaveMax=cfg.waves;
   tdfMaxLevel=cfg.maxLevel;tdfPrepPhase=true;tdfPrepTimer=15;tdfReady=0;tdfSelected=null;
-  tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;
+  tdfScore=0;tdfStarted=1;tdfGameOver=0;tdfPause=0;tdfWon=0;tdfSpeed=1;var btn=document.getElementById('tdfSpeedBtn');if(btn){btn.textContent='⚡1×';btn.style.color='#aaa';}
   if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=null;}
   tdfCanvas=document.getElementById('tdfBoard');tdfCtx=tdfCanvas.getContext('2d');
   _setupHiDPI(tdfCanvas,tdfCtx,TDF_COLS*TDF_CELL,TDF_ROWS*TDF_CELL);
@@ -2056,6 +2086,11 @@ function tdfInit(){
   document.getElementById('tdfWave').textContent='0';
   document.getElementById('tdfWaveMax').textContent=tdfWaveMax===Infinity?'∞':tdfWaveMax;
   document.querySelectorAll('#tdfPalette .tdf-tower-btn').forEach(function(b){b.classList.remove('sel');});
+  var loadout=tdfLoadLoadout();if(!loadout.length)loadout=['arrow','cannon','ice','mine'];
+  document.querySelectorAll('#tdfPalette .tdf-tower-btn').forEach(function(b){
+    var t=b.getAttribute('data-type');
+    b.style.display=loadout.indexOf(t)>=0?'':'none';
+  });
   tdfDraw();
 }
 
@@ -2289,10 +2324,33 @@ function tdfDraw(){
   for(var r=0;r<TDF_ROWS;r++){
     for(var c=0;c<TDF_COLS;c++){
       var isPath=tdfPathSet[c+','+r];
-      tdfCtx.fillStyle=isPath?'#2a2a1a':'#0a0a2a';
-      tdfCtx.fillRect(c*TDF_CELL+1,r*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+      if(isPath){
+        tdfCtx.fillStyle='#3a3020';
+        tdfCtx.fillRect(c*TDF_CELL+1,r*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+        tdfCtx.strokeStyle='#5a4a30';tdfCtx.lineWidth=0.5;
+        tdfCtx.setLineDash([2,2]);
+        tdfCtx.strokeRect(c*TDF_CELL+1.5,r*TDF_CELL+1.5,TDF_CELL-3,TDF_CELL-3);
+        tdfCtx.setLineDash([]);
+        var arrow='▶';
+        if(r%2===0){arrow=c<TDF_COLS-1?'▶':'▶';}
+        else{arrow=c>0?'◀':'◀';}
+        tdfCtx.fillStyle='rgba(136,136,136,0.4)';tdfCtx.font=(TDF_CELL/3)+'px sans-serif';
+        tdfCtx.textAlign='center';tdfCtx.textBaseline='middle';
+        tdfCtx.fillText(arrow,c*TDF_CELL+TDF_CELL/2,r*TDF_CELL+TDF_CELL/2);
+      }else{
+        tdfCtx.fillStyle='#0a0a2a';
+        tdfCtx.fillRect(c*TDF_CELL+1,r*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+      }
     }
   }
+  // Entry marker (green glow on first path cell)
+  var fc=tdfPath[0];
+  tdfCtx.strokeStyle='#4f8';tdfCtx.lineWidth=2;tdfCtx.setLineDash([]);
+  tdfCtx.strokeRect(fc.x*TDF_CELL+1,fc.y*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+  // Exit marker (red glow on last on-board path cell)
+  var lc=tdfPath[tdfPath.length-2];
+  tdfCtx.strokeStyle='#f44';tdfCtx.lineWidth=2;
+  tdfCtx.strokeRect(lc.x*TDF_CELL+1,lc.y*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
   // Draw towers
   tdfTowers.forEach(function(tw){
     var cfg=TD_TOWERS[tw.type];
@@ -2362,15 +2420,7 @@ function tdfGetCell(x,y){
     var cell=tdfGetCell(e.clientX,e.clientY);if(!cell)return;
     var tw=tdfGrid[cell.y][cell.x];
     if(tw){
-      var cost=tdfUpgradeCost(tw);
-      var canUp=(tdfMaxLevel===Infinity||tw.level<tdfMaxLevel)&&tdfGold>=cost;
-      if(canUp){
-        showConfirm('升级 '+TD_TOWERS[tw.type].label+' Lv.'+tw.level+' → '+(tw.level+1)+' ('+cost+'g)',
-          function(){tdfUpgradeTower(cell.x,cell.y,true);tdfDraw();},'取消');
-      }else{
-        showConfirm('出售 '+TD_TOWERS[tw.type].label+' Lv.'+tw.level+' (+'+Math.floor(tdfTotalSpent(tw)*0.5)+'g)',
-          function(){tdfSellTower(cell.x,cell.y,true);tdfDraw();},'取消');
-      }
+      tdfShowTowerPopup(tw);
     }else if(tdfSelected){
       if(tdfPlaceTower(cell.x,cell.y,tdfSelected,1,true))tdfDraw();
     }
@@ -2399,6 +2449,7 @@ document.getElementById('tdfPauseOverlay').addEventListener('click',function(){
   document.getElementById('tdfPauseOverlay').style.display=tdfPause?'flex':'none';
   if(tdfPause)_playPause();else _playResume();
 });
+document.getElementById('tdfPopupCancel').onclick=tdfHideTowerPopup;
 
 // ====== TOWER DEFENSE MULTIPLAYER SYNC ======
 function tdfSetupChannel(){
@@ -2442,15 +2493,72 @@ document.querySelectorAll('#tdfChatRow .tdf-chat-btn').forEach(function(btn,i){
   });
 });
 
+function tdfStartSolo(){
+  tdfRoom=null;tdfPlayer=1;tdfChannel=null;
+  document.getElementById('tdfRoomCode').textContent='单人模式';
+  document.getElementById('tdfChatRow').style.display='none';
+  document.getElementById('tdfReadyBtn').style.display='none';
+  ss('screenTowerDefense');tdfInit();tdfStartLoop();
+}
+function tdfToggleSpeed(){
+  if(tdfPrepPhase||tdfGameOver||!tdfStarted)return;
+  tdfSpeed=tdfSpeed===1?2:1;
+  var btn=document.getElementById('tdfSpeedBtn');
+  if(btn){btn.textContent=tdfSpeed===2?'⚡⚡2×':'⚡1×';btn.style.color=tdfSpeed===2?'#ff0':'#aaa';}
+  if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=setInterval(tdfTick,200/tdfSpeed);}
+}
+var _tdfPopupTower=null;
+function tdfShowTowerPopup(tw){
+  _tdfPopupTower=tw;
+  var cfg=TD_TOWERS[tw.type];
+  document.getElementById('tdfPopupTitle').textContent=cfg.icon+' '+cfg.label+' Lv.'+tw.level;
+  var upBtn=document.getElementById('tdfPopupUpgrade');
+  var canUp=(tdfMaxLevel===Infinity||tw.level<tdfMaxLevel);
+  var cost=tdfUpgradeCost(tw);
+  if(canUp&&tdfGold>=cost){
+    upBtn.textContent='⬆ 升级 '+cost+'g';upBtn.style.opacity='1';upBtn.onclick=function(){tdfUpgradeTower(tw.x,tw.y,true);tdfHideTowerPopup();tdfDraw();};
+  }else if(!canUp){
+    upBtn.textContent='已满级';upBtn.style.opacity='0.4';upBtn.onclick=null;
+  }else{
+    upBtn.textContent='⬆ 升级 '+cost+'g (金币不足)';upBtn.style.opacity='0.4';upBtn.onclick=null;
+  }
+  var sellRefund=Math.floor(tdfTotalSpent(tw)*0.5);
+  document.getElementById('tdfPopupSell').textContent='💰 出售 +'+sellRefund+'g';
+  document.getElementById('tdfPopupSell').onclick=function(){tdfSellTower(tw.x,tw.y,true);tdfHideTowerPopup();tdfDraw();};
+  document.getElementById('tdfTowerPopup').style.display='block';
+}
+function tdfHideTowerPopup(){
+  document.getElementById('tdfTowerPopup').style.display='none';_tdfPopupTower=null;
+}
+function tdfLoadLoadout(){
+  try{return JSON.parse(localStorage.getItem('goblin_tdf_loadout')||'[]');}catch(e){return [];}
+}
+function tdfSaveLoadout(arr){localStorage.setItem('goblin_tdf_loadout',JSON.stringify(arr));}
+function tdfShowLoadout(){
+  var sel=tdfLoadLoadout();if(!sel.length)sel=['arrow','cannon','ice','mine'];
+  var types=['arrow','cannon','ice','mine'];
+  var grid=document.getElementById('tdfLoadoutGrid');
+  grid.innerHTML=types.map(function(t){
+    var cfg=TD_TOWERS[t];var checked=sel.indexOf(t)>=0;
+    return '<div class="gcard" style="cursor:pointer;padding:14px 10px;text-align:center;'+(checked?'border-color:#4f8;box-shadow:0 0 10px rgba(64,255,128,0.3);':'')+'" data-type="'+t+'" id="ldt_'+t+'"><div style="font-size:32px;">'+cfg.icon+'</div><div style="font-size:14px;font-weight:bold;">'+cfg.label+'</div><div style="font-size:10px;color:var(--gold);">'+cfg.cost+'g</div><div style="font-size:18px;margin-top:4px;color:'+(checked?'#4f8':'#555')+';">'+(checked?'✅':'⬜')+'</div></div>';
+  }).join('');
+  ss('screenTDLoadout');
+}
 function tdfCreateRoom(mode){
   var code=_bGenCode();
   var status=mode==='friend'?'waiting':'matching';
   _sbReq('POST','/rest/v1/rooms',{code:code,status:status,game:'towerdefense',player1_id:_userId?parseInt(_userId):null}).then(function(r){return r.json();}).then(function(d){
     tdfRoom=d&&d.length?d[0]:null;tdfPlayer=1;
     document.getElementById('tdfRoomCode').textContent='房间: '+code;
-    tdfSetupChannel();
-    ss('screenTowerDefense');tdfInit();tdfStartLoop();
-    if(mode==='matching')tdfPollMatch();
+    document.getElementById('tdfChatRow').style.display='';
+    document.getElementById('tdfReadyBtn').style.display='';
+    if(mode==='match'){
+      ss('screenTDWait');
+      tdfPollMatch();
+    }else{
+      tdfSetupChannel();
+      ss('screenTowerDefense');tdfInit();tdfStartLoop();
+    }
   });
 }
 function tdfJoinRoom(code){
@@ -2473,7 +2581,10 @@ function tdfPollMatch(){
         _sbReq('PATCH','/rest/v1/rooms?id=eq.'+d[0].id,{status:'playing',player2_id:parseInt(_userId)}).then(function(){
           tdfRoom=d[0];tdfPlayer=2;clearInterval(poll);
           document.getElementById('tdfRoomCode').textContent='房间: '+d[0].code;
-          tdfSetupChannel();tdfInit();tdfStartLoop();
+          document.getElementById('tdfChatRow').style.display='';
+          document.getElementById('tdfReadyBtn').style.display='';
+          tdfSetupChannel();
+          ss('screenTowerDefense');tdfInit();tdfStartLoop();
         });
       }
     });
@@ -3771,6 +3882,12 @@ document.getElementById('btn2048LB').onclick=function(){_showGameLB('2048','scre
 document.getElementById('btnMineLB').onclick=function(){_showGameLB('minesweeper','screenMinesweeperDiff');};
 document.getElementById('btnBreakoutLB').onclick=function(){_showGameLB('breakout','screenBreakoutDiff');};
 document.getElementById('btnTowerDefenseLB').onclick=function(){_showGameLB('towerdefense','screenTowerDefenseDiff');};
+document.getElementById('btnTDPrepare').onclick=function(){tdfShowLoadout();};
+document.getElementById('btnBackTDLoadout').onclick=function(){ss('screenTowerDefenseDiff');};
+document.getElementById('btnTDLoadoutConfirm').onclick=function(){
+  tdfSaveLoadout(['arrow','cannon','ice','mine']);
+  ss('screenTowerDefenseDiff');
+};
 
 document.getElementById("btnStats").onclick=function(){
   _initAudio();
