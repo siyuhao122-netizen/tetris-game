@@ -528,6 +528,12 @@ body{background:var(--bg);color:var(--txt);transition:background 0.3s,color 0.3s
     <div class="board-wrap" style="position:relative;">
       <canvas id="tdfBoard" class="gcanvas" width="392" height="224"></canvas>
       <div id="tdfPauseOverlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:10;border-radius:4px;"><span style="font-size:32px;font-weight:bold;color:#fff;">⏸ 暂停</span></div>
+      <div id="tdfTowerPopup" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#1a1a2e;border:2px solid #555;border-radius:12px;padding:16px 20px;z-index:15;text-align:center;min-width:140px;">
+        <div id="tdfPopupTitle" style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#fff;"></div>
+        <button class="o-btn" id="tdfPopupUpgrade" style="display:block;width:100%;margin-bottom:6px;font-size:14px;padding:8px;">⬆ 升级</button>
+        <button class="o-btn secondary" id="tdfPopupSell" style="display:block;width:100%;margin-bottom:6px;font-size:14px;padding:8px;">💰 出售</button>
+        <button class="o-btn secondary" id="tdfPopupCancel" style="display:block;width:100%;font-size:14px;padding:8px;">✕ 取消</button>
+      </div>
     </div>
     <div class="tdf-palette" id="tdfPalette">
       <button class="tdf-tower-btn" data-type="arrow">🏹<br><span class="cost">50g</span></button>
@@ -2378,15 +2384,7 @@ function tdfGetCell(x,y){
     var cell=tdfGetCell(e.clientX,e.clientY);if(!cell)return;
     var tw=tdfGrid[cell.y][cell.x];
     if(tw){
-      var cost=tdfUpgradeCost(tw);
-      var canUp=(tdfMaxLevel===Infinity||tw.level<tdfMaxLevel)&&tdfGold>=cost;
-      if(canUp){
-        showConfirm('升级 '+TD_TOWERS[tw.type].label+' Lv.'+tw.level+' → '+(tw.level+1)+' ('+cost+'g)',
-          function(){tdfUpgradeTower(cell.x,cell.y,true);tdfDraw();},'取消');
-      }else{
-        showConfirm('出售 '+TD_TOWERS[tw.type].label+' Lv.'+tw.level+' (+'+Math.floor(tdfTotalSpent(tw)*0.5)+'g)',
-          function(){tdfSellTower(cell.x,cell.y,true);tdfDraw();},'取消');
-      }
+      tdfShowTowerPopup(tw);
     }else if(tdfSelected){
       if(tdfPlaceTower(cell.x,cell.y,tdfSelected,1,true))tdfDraw();
     }
@@ -2415,6 +2413,7 @@ document.getElementById('tdfPauseOverlay').addEventListener('click',function(){
   document.getElementById('tdfPauseOverlay').style.display=tdfPause?'flex':'none';
   if(tdfPause)_playPause();else _playResume();
 });
+document.getElementById('tdfPopupCancel').onclick=tdfHideTowerPopup;
 
 // ====== TOWER DEFENSE MULTIPLAYER SYNC ======
 function tdfSetupChannel(){
@@ -2471,6 +2470,29 @@ function tdfToggleSpeed(){
   var btn=document.getElementById('tdfSpeedBtn');
   if(btn){btn.textContent=tdfSpeed===2?'⚡⚡2×':'⚡1×';btn.style.color=tdfSpeed===2?'#ff0':'#aaa';}
   if(tdfLoopId){clearInterval(tdfLoopId);tdfLoopId=setInterval(tdfTick,200/tdfSpeed);}
+}
+var _tdfPopupTower=null;
+function tdfShowTowerPopup(tw){
+  _tdfPopupTower=tw;
+  var cfg=TD_TOWERS[tw.type];
+  document.getElementById('tdfPopupTitle').textContent=cfg.icon+' '+cfg.label+' Lv.'+tw.level;
+  var upBtn=document.getElementById('tdfPopupUpgrade');
+  var canUp=(tdfMaxLevel===Infinity||tw.level<tdfMaxLevel);
+  var cost=tdfUpgradeCost(tw);
+  if(canUp&&tdfGold>=cost){
+    upBtn.textContent='⬆ 升级 '+cost+'g';upBtn.style.opacity='1';upBtn.onclick=function(){tdfUpgradeTower(tw.x,tw.y,true);tdfHideTowerPopup();tdfDraw();};
+  }else if(!canUp){
+    upBtn.textContent='已满级';upBtn.style.opacity='0.4';upBtn.onclick=null;
+  }else{
+    upBtn.textContent='⬆ 升级 '+cost+'g (金币不足)';upBtn.style.opacity='0.4';upBtn.onclick=null;
+  }
+  var sellRefund=Math.floor(tdfTotalSpent(tw)*0.5);
+  document.getElementById('tdfPopupSell').textContent='💰 出售 +'+sellRefund+'g';
+  document.getElementById('tdfPopupSell').onclick=function(){tdfSellTower(tw.x,tw.y,true);tdfHideTowerPopup();tdfDraw();};
+  document.getElementById('tdfTowerPopup').style.display='block';
+}
+function tdfHideTowerPopup(){
+  document.getElementById('tdfTowerPopup').style.display='none';_tdfPopupTower=null;
 }
 function tdfCreateRoom(mode){
   var code=_bGenCode();
