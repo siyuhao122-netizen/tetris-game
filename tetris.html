@@ -2311,10 +2311,33 @@ function tdfDraw(){
   for(var r=0;r<TDF_ROWS;r++){
     for(var c=0;c<TDF_COLS;c++){
       var isPath=tdfPathSet[c+','+r];
-      tdfCtx.fillStyle=isPath?'#2a2a1a':'#0a0a2a';
-      tdfCtx.fillRect(c*TDF_CELL+1,r*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+      if(isPath){
+        tdfCtx.fillStyle='#3a3020';
+        tdfCtx.fillRect(c*TDF_CELL+1,r*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+        tdfCtx.strokeStyle='#5a4a30';tdfCtx.lineWidth=0.5;
+        tdfCtx.setLineDash([2,2]);
+        tdfCtx.strokeRect(c*TDF_CELL+1.5,r*TDF_CELL+1.5,TDF_CELL-3,TDF_CELL-3);
+        tdfCtx.setLineDash([]);
+        var arrow='▶';
+        if(r%2===0){arrow=c<TDF_COLS-1?'▶':'▶';}
+        else{arrow=c>0?'◀':'◀';}
+        tdfCtx.fillStyle='rgba(136,136,136,0.4)';tdfCtx.font=(TDF_CELL/3)+'px sans-serif';
+        tdfCtx.textAlign='center';tdfCtx.textBaseline='middle';
+        tdfCtx.fillText(arrow,c*TDF_CELL+TDF_CELL/2,r*TDF_CELL+TDF_CELL/2);
+      }else{
+        tdfCtx.fillStyle='#0a0a2a';
+        tdfCtx.fillRect(c*TDF_CELL+1,r*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+      }
     }
   }
+  // Entry marker (green glow on first path cell)
+  var fc=tdfPath[0];
+  tdfCtx.strokeStyle='#4f8';tdfCtx.lineWidth=2;tdfCtx.setLineDash([]);
+  tdfCtx.strokeRect(fc.x*TDF_CELL+1,fc.y*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
+  // Exit marker (red glow on last on-board path cell)
+  var lc=tdfPath[tdfPath.length-2];
+  tdfCtx.strokeStyle='#f44';tdfCtx.lineWidth=2;
+  tdfCtx.strokeRect(lc.x*TDF_CELL+1,lc.y*TDF_CELL+1,TDF_CELL-2,TDF_CELL-2);
   // Draw towers
   tdfTowers.forEach(function(tw){
     var cfg=TD_TOWERS[tw.type];
