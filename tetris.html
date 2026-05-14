@@ -2368,7 +2368,7 @@ function tdfDraw(){
   });
   // Draw enemies
   tdfEnemies.forEach(function(e){
-    var cx=e.x*TDF_CELL,cy=e.y*TDF_CELL;
+    var cx=e.x*TDF_CELL+TDF_CELL/2,cy=e.y*TDF_CELL+TDF_CELL/2;
     var r=TDF_CELL/2-4;
     tdfCtx.fillStyle=e.color;
     tdfCtx.beginPath();tdfCtx.arc(cx,cy,r,0,Math.PI*2);tdfCtx.fill();
@@ -2586,6 +2586,20 @@ function tdfPollMatch(){
           tdfSetupChannel();
           ss('screenTowerDefense');tdfInit();tdfStartLoop();
         });
+      }
+    });
+  },2000);
+}
+function tdfPollInviteAccept(){
+  var poll=setInterval(function(){
+    _sbReq('GET','/rest/v1/rooms?id=eq.'+tdfRoom.id+'&select=status,player2_id&limit=1').then(function(r){return r.json();}).then(function(d){
+      if(d&&d.length>0&&d[0].status==='playing'&&d[0].player2_id){
+        clearInterval(poll);
+        tdfPlayer=1;
+        document.getElementById('tdfChatRow').style.display='';
+        document.getElementById('tdfReadyBtn').style.display='';
+        tdfSetupChannel();
+        ss('screenTowerDefense');tdfInit();tdfStartLoop();
       }
     });
   },2000);
@@ -2981,7 +2995,10 @@ _sbChannel.on('broadcast',{event:'gm_forfeit'},function(){if(!_gmOver){_gmOver=1
       document.getElementById('tdfRoomCode').textContent='房间: '+code;
       _sbReq('POST','/rest/v1/battle_invites',{from_id:parseInt(_userId),to_id:fid,room_code:code,status:'pending'}).then(function(){
         _achieveBadge('邀请已发送','📨');
-        ss('screenTowerDefense');tdfInit();tdfStartLoop();
+        ss('screenTDWait');
+        document.querySelector('#screenTDWait .select-title').textContent='📨 等待好友接受...';
+        document.querySelector('#screenTDWait .o-detail').textContent='邀请已发送，等待对方接受';
+        tdfPollInviteAccept();
       });
     });
     return;
