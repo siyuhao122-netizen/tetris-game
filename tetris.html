@@ -2025,10 +2025,10 @@ var tdfRoom=null,tdfPlayer=0,tdfChannel=null,tdfSpawnQueue=[],tdfSpawnTimer=0;
 var tdfEnemiesSpawned=0,tdfStartHP=20,tdfWon=0;
 
 var TD_TOWERS={
-  arrow:{cost:50,damage:15,range:3,cooldown:500,icon:'🏹',color:'#4af',label:'箭塔',img:'picture/TDW/arrow.png'},
-  cannon:{cost:100,damage:40,range:2,cooldown:1500,icon:'💣',color:'#f80',label:'炮塔',splash:1,img:'picture/TDW/cannon.png'},
-  ice:{cost:75,damage:0,range:2.5,cooldown:1000,icon:'❄️',color:'#8ff',label:'冰塔',slow:0.5,slowDur:1500,img:'picture/TDW/ice.png'},
-  mine:{cost:150,damage:0,range:0,cooldown:0,icon:'💰',color:'#ff0',label:'金矿',goldPerWave:10,img:'picture/TDW/mine.png'}
+  arrow:{cost:50,damage:15,range:3,cooldown:500,icon:'🏹',color:'#4af',label:'箭塔',img:'pic/TWD/Arrow Tower.jpg',proj:'pic/TWD/Arrow.jpg'},
+  cannon:{cost:100,damage:40,range:2,cooldown:1500,icon:'💣',color:'#f80',label:'炮塔',splash:1,img:'pic/TWD/Bomb Tower.jpg',proj:'pic/TWD/Bomb.jpg'},
+  ice:{cost:75,damage:0,range:2.5,cooldown:1000,icon:'❄️',color:'#8ff',label:'冰塔',slow:0.5,slowDur:1500,img:'pic/TWD/Ice Tower.jpg',proj:'pic/TWD/Ice.jpg'},
+  mine:{cost:150,damage:0,range:0,cooldown:0,icon:'💰',color:'#ff0',label:'金矿',goldPerWave:10,img:'pic/TWD/Gold Mine.jpg',effect:'pic/TWD/Gold Coin Production Effect.jpg'}
 };
 
 var TD_ENEMIES={
@@ -2083,7 +2083,10 @@ function tdfInit(){
   _setupHiDPI(tdfCanvas,tdfCtx,TDF_COLS*TDF_CELL,TDF_ROWS*TDF_CELL);
   // Preload tower images
   Object.keys(TD_TOWERS).forEach(function(k){
-    if(!TD_TOWERS[k]._img){TD_TOWERS[k]._img=new Image();TD_TOWERS[k]._img.src=TD_TOWERS[k].img;}
+    var cfg=TD_TOWERS[k];
+    if(!cfg._img){cfg._img=new Image();cfg._img.src=cfg.img;}
+    if(cfg.proj&&!cfg._proj){cfg._proj=new Image();cfg._proj.src=cfg.proj;}
+    if(cfg.effect&&!cfg._eff){cfg._eff=new Image();cfg._eff.src=cfg.effect;}
   });
   document.getElementById('tdfHP').textContent=tdfHP;
   document.getElementById('tdfGold').textContent=tdfGold;
